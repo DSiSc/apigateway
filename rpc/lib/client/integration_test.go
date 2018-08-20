@@ -13,8 +13,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
 	"github.com/DSiSc/apigateway/libs/log"
+	"github.com/stretchr/testify/require"
 )
 
 func TestWSClientReconnectWithJitter(t *testing.T) {

@@ -10,9 +10,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/DSiSc/apigateway/libs/log"
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/require"
-	"github.com/DSiSc/apigateway/libs/log"
 
 	types "github.com/DSiSc/apigateway/rpc/lib/types"
 )

@@ -13,9 +13,9 @@ import (
 	"github.com/pkg/errors"
 	metrics "github.com/rcrowley/go-metrics"
 
-	"github.com/tendermint/go-amino"
-	types "github.com/DSiSc/apigateway/rpc/lib/types"
 	cmn "github.com/DSiSc/apigateway/libs/common"
+	types "github.com/DSiSc/apigateway/rpc/lib/types"
+	"github.com/tendermint/go-amino"
 )
 
 const (

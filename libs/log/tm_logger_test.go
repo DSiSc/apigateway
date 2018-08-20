@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/go-logfmt/logfmt"
 	"github.com/DSiSc/apigateway/libs/log"
+	"github.com/go-logfmt/logfmt"
 )
 
 func TestLoggerLogsItsErrors(t *testing.T) {

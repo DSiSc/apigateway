@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"os"
 
-	amino "github.com/tendermint/go-amino"
-	rpcserver "github.com/DSiSc/apigateway/rpc/lib/server"
 	cmn "github.com/DSiSc/apigateway/libs/common"
 	"github.com/DSiSc/apigateway/libs/log"
+	rpcserver "github.com/DSiSc/apigateway/rpc/lib/server"
+	amino "github.com/tendermint/go-amino"
 )
 
 var routes = map[string]*rpcserver.RPCFunc{

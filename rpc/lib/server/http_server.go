@@ -14,8 +14,8 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/net/netutil"
 
-	types "github.com/DSiSc/apigateway/rpc/lib/types"
 	"github.com/DSiSc/apigateway/libs/log"
+	types "github.com/DSiSc/apigateway/rpc/lib/types"
 )
 
 // Config is an RPC server configuration.

@@ -13,10 +13,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	amino "github.com/tendermint/go-amino"
+	"github.com/DSiSc/apigateway/libs/log"
 	rs "github.com/DSiSc/apigateway/rpc/lib/server"
 	types "github.com/DSiSc/apigateway/rpc/lib/types"
-	"github.com/DSiSc/apigateway/libs/log"
+	amino "github.com/tendermint/go-amino"
 )
 
 //////////////////////////////////////////////////////////////////////////////

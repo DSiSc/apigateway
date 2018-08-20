@@ -17,10 +17,10 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
 
-	amino "github.com/tendermint/go-amino"
 	cmn "github.com/DSiSc/apigateway/libs/common"
 	"github.com/DSiSc/apigateway/libs/log"
 	types "github.com/DSiSc/apigateway/rpc/lib/types"
+	amino "github.com/tendermint/go-amino"
 )
 
 // RegisterRPCFuncs adds a route for each function in the funcMap, as well as general jsonrpc and websocket handlers for all functions.

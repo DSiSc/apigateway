@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/pkg/errors"
 	"github.com/DSiSc/apigateway/libs/log"
+	"github.com/pkg/errors"
 )
 
 func TestTracingLogger(t *testing.T) {

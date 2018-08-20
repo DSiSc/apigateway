@@ -16,13 +16,19 @@
 # limitations under the License.
 #
 
+set -x
+
 # TODO: regexes for packages to exclude from unit test
 excluded_packages=(
+gotools
+vendor
+version
+contrib
 )
 
 # TODO: regexes for packages that must be run serially
 serial_packages=(
-log
+libs
 )
 
 # packages which need to be tested with build tag pluginsenabled

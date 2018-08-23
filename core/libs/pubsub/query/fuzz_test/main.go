@@ -3,7 +3,7 @@ package fuzz_test
 import (
 	"fmt"
 
-	"github.com/DSiSc/apigateway/libs/pubsub/query"
+	"github.com/DSiSc/apigateway/core/libs/pubsub/query"
 )
 
 func Fuzz(data []byte) int {

@@ -10,7 +10,7 @@ import (
 
 	amino "github.com/tendermint/go-amino"
 
-	tmpubsub "github.com/DSiSc/apigateway/libs/pubsub"
+	tmpubsub "github.com/DSiSc/apigateway/core/libs/pubsub"
 )
 
 //----------------------------------------

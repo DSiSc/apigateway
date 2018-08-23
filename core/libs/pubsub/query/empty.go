@@ -1,6 +1,6 @@
 package query
 
-import "github.com/DSiSc/apigateway/libs/pubsub"
+import "github.com/DSiSc/apigateway/core/libs/pubsub"
 
 // Empty query matches any set of tags.
 type Empty struct {

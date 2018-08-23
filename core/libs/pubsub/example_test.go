@@ -8,8 +8,8 @@ import (
 
 	"github.com/DSiSc/apigateway/log"
 
-	"github.com/DSiSc/apigateway/libs/pubsub"
-	"github.com/DSiSc/apigateway/libs/pubsub/query"
+	"github.com/DSiSc/apigateway/core/libs/pubsub"
+	"github.com/DSiSc/apigateway/core/libs/pubsub/query"
 )
 
 func TestExample(t *testing.T) {

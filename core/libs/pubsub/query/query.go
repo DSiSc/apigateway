@@ -15,7 +15,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/DSiSc/apigateway/libs/pubsub"
+	"github.com/DSiSc/apigateway/core/libs/pubsub"
 )
 
 // Query holds the query string and the query parser.

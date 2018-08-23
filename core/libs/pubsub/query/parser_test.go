@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/DSiSc/apigateway/libs/pubsub/query"
+	"github.com/DSiSc/apigateway/core/libs/pubsub/query"
 )
 
 // TODO: fuzzy testing?

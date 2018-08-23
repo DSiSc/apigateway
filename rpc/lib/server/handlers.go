@@ -18,7 +18,7 @@ import (
 	"github.com/pkg/errors"
 
 	cmn "github.com/DSiSc/apigateway/common"
-	"github.com/DSiSc/apigateway/libs/log"
+	"github.com/DSiSc/apigateway/log"
 	types "github.com/DSiSc/apigateway/rpc/lib/types"
 	amino "github.com/tendermint/go-amino"
 )

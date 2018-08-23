@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/DSiSc/apigateway/libs/log"
+	"github.com/DSiSc/apigateway/log"
 	"github.com/go-logfmt/logfmt"
 )
 

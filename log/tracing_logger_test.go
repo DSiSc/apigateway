@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/DSiSc/apigateway/libs/log"
+	"github.com/DSiSc/apigateway/log"
 	"github.com/pkg/errors"
 )
 

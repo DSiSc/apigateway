@@ -20,5 +20,5 @@ type SendTxArgs struct {
 }
 
 type StringArgs struct {
-    From    string    `json:"from"`
+	From string `json:"from"`
 }

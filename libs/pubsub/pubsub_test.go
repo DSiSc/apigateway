@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/DSiSc/apigateway/libs/log"
+	"github.com/DSiSc/apigateway/log"
 
 	"github.com/DSiSc/apigateway/libs/pubsub"
 	"github.com/DSiSc/apigateway/libs/pubsub/query"

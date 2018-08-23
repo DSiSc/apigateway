@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/DSiSc/apigateway/libs/log"
+	"github.com/DSiSc/apigateway/log"
 )
 
 func TestMaxOpenConnections(t *testing.T) {

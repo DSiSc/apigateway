@@ -9,7 +9,7 @@ import (
 
 	"github.com/go-kit/kit/log/term"
 
-	"github.com/DSiSc/apigateway/libs/log"
+	"github.com/DSiSc/apigateway/log"
 	amino "github.com/tendermint/go-amino"
 
 	server "github.com/DSiSc/apigateway/rpc/lib/server"

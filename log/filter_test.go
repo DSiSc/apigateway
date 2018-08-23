@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/DSiSc/apigateway/libs/log"
+	"github.com/DSiSc/apigateway/log"
 )
 
 func TestVariousLevels(t *testing.T) {

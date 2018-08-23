@@ -26,6 +26,7 @@ help:
 	@echo
 	@echo 'Usage:'
 	@echo '    make build           Compile the project.'
+	@echo '    make vet-test        Run vet tests on a compiled project.'
 	@echo '    make test            Run tests on a compiled project.'
 	@echo '    make devenv          Prepare devenv for test or build.'
 	@echo '    make fetch-deps      Run govendor fetch for deps.'
@@ -40,7 +41,10 @@ build:
 	echo "GOPATH=${GOPATH}"
 	go build -ldflags "-X github.com/DSiSc/apigateway/version.GitCommit=${GIT_COMMIT}${GIT_DIRTY} -X github.com/DSiSc/apigateway/version.BuildDate=${BUILD_DATE}" ./...
 
-test: 
+vet-test:
+	go vet `go list ./...`
+
+test: vet-test 
 	cd unit-test && ./run.sh
 
 ## tools & deps

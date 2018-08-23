@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"os"
 
-	cmn "github.com/DSiSc/apigateway/libs/common"
+	cmn "github.com/DSiSc/apigateway/common"
 	"github.com/DSiSc/apigateway/libs/log"
 	rpcserver "github.com/DSiSc/apigateway/rpc/lib/server"
 	amino "github.com/tendermint/go-amino"

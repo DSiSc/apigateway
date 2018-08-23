@@ -16,7 +16,7 @@ import (
 	"errors"
 	"sync"
 
-	cmn "github.com/DSiSc/apigateway/libs/common"
+	cmn "github.com/DSiSc/apigateway/common"
 )
 
 type operation int

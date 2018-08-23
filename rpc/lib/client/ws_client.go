@@ -13,7 +13,7 @@ import (
 	"github.com/pkg/errors"
 	metrics "github.com/rcrowley/go-metrics"
 
-	cmn "github.com/DSiSc/apigateway/libs/common"
+	cmn "github.com/DSiSc/apigateway/common"
 	types "github.com/DSiSc/apigateway/rpc/lib/types"
 	"github.com/tendermint/go-amino"
 )

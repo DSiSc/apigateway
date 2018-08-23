@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"testing"
 
-	cmn "github.com/DSiSc/apigateway/libs/common"
+	cmn "github.com/DSiSc/apigateway/common"
 	"github.com/stretchr/testify/assert"
 	amino "github.com/tendermint/go-amino"
 )

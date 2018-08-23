@@ -17,7 +17,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
 
-	cmn "github.com/DSiSc/apigateway/libs/common"
+	cmn "github.com/DSiSc/apigateway/common"
 	"github.com/DSiSc/apigateway/libs/log"
 	types "github.com/DSiSc/apigateway/rpc/lib/types"
 	amino "github.com/tendermint/go-amino"

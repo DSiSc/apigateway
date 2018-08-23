@@ -16,7 +16,7 @@
 # limitations under the License.
 #
 
-set -x
+# set -x
 
 # TODO: regexes for packages to exclude from unit test
 excluded_packages=(

@@ -18,3 +18,7 @@ type SendTxArgs struct {
 	Data  *hexutil.Bytes `json:"data"`
 	Input *hexutil.Bytes `json:"input"`
 }
+
+type StringArgs struct {
+    From    string    `json:"from"`
+}

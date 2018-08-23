@@ -25,39 +25,70 @@ help:
 	@echo 'Management commands for DSiSc/apigateway:'
 	@echo
 	@echo 'Usage:'
+	@echo '    make lint            Check code style.'
+	@echo '    make spelling        Check code spelling.'
+	@echo '    make fmt             Check code formatting.'
+	@echo '    make static-check    Static code check: style & spelling & formatting.'
 	@echo '    make build           Compile the project.'
-	@echo '    make vet-test        Run vet tests on a compiled project.'
-	@echo '    make test            Run tests on a compiled project.'
+	@echo '    make vet             Examine source code and reports suspicious constructs.'
+	@echo '    make unit-test       Run unit tests with coverage report.'
+	@echo '    make test            Run unit tests with coverage report.'
 	@echo '    make devenv          Prepare devenv for test or build.'
 	@echo '    make fetch-deps      Run govendor fetch for deps.'
 	@echo '    make gotools         Prepare go tools depended.'
 	@echo '    make clean           Clean the directory tree.'
 	@echo
 
-all: test build
+all: static-check build test
+
+fmt:
+	gofmt -d -l .
+
+spelling:
+	bash scripts/check_spelling.sh
+
+lint:
+	@echo "Check code style..."
+	golint `go list ./...`
+
+static-check: fmt spelling lint
 
 build:
-	echo "building apigateway ${VERSION}"
-	echo "GOPATH=${GOPATH}"
-	go build -ldflags "-X github.com/DSiSc/apigateway/version.GitCommit=${GIT_COMMIT}${GIT_DIRTY} -X github.com/DSiSc/apigateway/version.BuildDate=${BUILD_DATE}" ./...
+	@echo "building apigateway ${VERSION}"
+	@echo "GOPATH=${GOPATH}"
+	go build -v -ldflags "-X github.com/DSiSc/apigateway/version.GitCommit=${GIT_COMMIT}${GIT_DIRTY} -X github.com/DSiSc/apigateway/version.BuildDate=${BUILD_DATE}" ./...
 
-vet-test:
+vet:
+	@echo "Examine source code and reports suspicious constructs..."
 	go vet `go list ./...`
 
-test: vet-test 
-	cd unit-test && ./run.sh
+.PHONY: unit-test
+unit-test:
+	@echo "Run unit tests with coverage report..."
+	bash scripts/unit_test_cov.sh
 
-## tools & deps
-devenv: gotools fetch-deps
+.PHONY: test
+test: vet unit-test
 
-fetch-deps: gotools-clean
+get-tools:
+        # official tools
+	go get -u golang.org/x/lint/golint
+	@# go get -u golang.org/x/tools/cmd/gotype
+	@# go get -u golang.org/x/tools/cmd/goimports
+	@# go get -u golang.org/x/tools/cmd/godoc
+	@# go get -u golang.org/x/tools/cmd/gorename
+	@# go get -u golang.org/x/tools/cmd/gomvpkg
+
+        # thirdparty tools
+	go get -u github.com/kardianos/govendor
+	go get -u github.com/stretchr/testify
+	@# go get -u github.com/axw/gocov/...
+	@# go get -u github.com/client9/misspell/cmd/misspell
+
+fetch-deps: get-tools
+	@echo "Run govendor fetch for deps..."
 	govendor init && govendor fetch +m 
 
-gotools:
-	cd gotools && make install
+## tools & deps
+devenv: get-tools fetch-deps
 
-.PHONY: clean
-clean: gotools-clean
-
-gotools-clean:
-	cd gotools && make clean

@@ -43,6 +43,12 @@
 			"revisionTime": "2017-11-12T03:14:02Z"
 		},
 		{
+			"checksumSHA1": "tF9006ehTE3MHE+1B5wu/Hfb5oE=",
+			"path": "github.com/gorilla/websocket",
+			"revision": "b378caee5b2a673abe3897c40fde529bff7b986e",
+			"revisionTime": "2018-08-18T02:50:34Z"
+		},
+		{
 			"checksumSHA1": "abKzFXAn0KDr5U+JON1ZgJ2lUtU=",
 			"path": "github.com/kr/logfmt",
 			"revision": "b84e30acd515aadc4b783ad4ff83aff3299bdfe0",
@@ -59,6 +65,12 @@
 			"path": "github.com/kr/text",
 			"revision": "e2ffdb16a802fe2bb95e2e35ff34f0e53aeef34f",
 			"revisionTime": "2018-05-06T08:24:08Z"
+		},
+		{
+			"checksumSHA1": "ljd3FhYRJ91cLZz3wsH9BQQ2JbA=",
+			"path": "github.com/pkg/errors",
+			"revision": "816c9085562cd7ee03e7f8188a1cfd942858cded",
+			"revisionTime": "2018-03-11T21:45:15Z"
 		},
 		{
 			"checksumSHA1": "LuFv4/jlrmFNnDb/5SCSEPAM9vU=",
@@ -83,6 +95,12 @@
 			"path": "github.com/stretchr/testify/require",
 			"revision": "f35b8ab0b5a2cef36673838d662e249dd9c94686",
 			"revisionTime": "2018-05-06T18:05:49Z"
+		},
+		{
+			"checksumSHA1": "wPCuOndAym1BCwoivXzqGdC1vxY=",
+			"path": "github.com/tendermint/go-amino",
+			"revision": "faa6e731944e2b7b6a46ad202902851e8ce85bee",
+			"revisionTime": "2018-08-17T09:49:26Z"
 		},
 		{
 			"checksumSHA1": "9gypWnVZJEaH3jMK9KqOp4xgQD4=",

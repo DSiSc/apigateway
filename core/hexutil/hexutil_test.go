@@ -28,27 +28,16 @@ import (
 // Types
 
 type hasBoolTest struct {
-	input string
-	want  bool
-}
-
-type marshalTest struct {
-	input interface{}
-	want  string
-}
-
-type unmarshalTest struct {
-	input        string
-	want         interface{}
-	wantErr      error // if set, decoding must fail on any platform
-	wantErr32bit error // if set, decoding must fail on 32bit platforms (used for Uint tests)
 }
 
 // ----------------------------------
 // Function Test*
 
 func TestEncode(t *testing.T) {
-	var encodeBytesTests = []marshalTest{
+	var encodeBytesTests = []struct {
+		input interface{}
+		want  string
+	}{
 		{[]byte{}, "0x"},
 		{[]byte{0}, "0x00"},
 		{[]byte{0, 0, 1, 2}, "0x00000102"},
@@ -62,7 +51,13 @@ func TestEncode(t *testing.T) {
 }
 
 func TestDecode(t *testing.T) {
-	var decodeBytesTests = []unmarshalTest{
+	var decodeBytesTests = []struct {
+		input        string
+		want         interface{}
+		wantErr      error // if set, decoding must fail on any platform
+		wantErr32bit error // if set, decoding must fail on 32bit platforms (used for Uint tests)
+	}{
+
 		// invalid
 		{input: ``, wantErr: ErrEmptyString},
 		{input: `0`, wantErr: ErrMissingPrefix},
@@ -97,7 +92,10 @@ func TestDecode(t *testing.T) {
 
 func TestHasPrefix(t *testing.T) {
 
-	var hasBoolTests = []hasBoolTest{
+	var hasBoolTests = []struct {
+		input string
+		want  bool
+	}{
 		{input: ``, want: false},
 		{input: `0`, want: false},
 		{input: `x`, want: false},

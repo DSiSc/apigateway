@@ -23,7 +23,7 @@ import (
 	"math/rand"
 	"reflect"
 
-	"github.com/DSiSc/apigateway/core/utils"
+	utilhex "github.com/DSiSc/apigateway/core/hexutil"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
 )
@@ -56,7 +56,7 @@ func BigToHash(b *big.Int) Hash { return BytesToHash(b.Bytes()) }
 
 // HexToHash sets byte representation of s to hash.
 // If b is larger than len(h), b will be cropped from the left.
-func HexToHash(s string) Hash { return BytesToHash(utils.FromHex(s)) }
+func HexToHash(s string) Hash { return BytesToHash(utilhex.DecodeWithoutErr(s)) }
 
 // Bytes gets the byte representation of the underlying hash.
 func (h Hash) Bytes() []byte { return h[:] }
@@ -65,7 +65,7 @@ func (h Hash) Bytes() []byte { return h[:] }
 func (h Hash) Big() *big.Int { return new(big.Int).SetBytes(h[:]) }
 
 // Hex converts a hash to a hex string.
-func (h Hash) Hex() string { return hexutil.Encode(h[:]) }
+func (h Hash) Hex() string { return utilhex.Encode(h[:]) }
 
 // TerminalString implements log.TerminalStringer, formatting a string for console
 // output during logging.
@@ -138,15 +138,15 @@ func BigToAddress(b *big.Int) Address { return BytesToAddress(b.Bytes()) }
 
 // HexToAddress returns Address with byte values of s.
 // If s is larger than len(h), s will be cropped from the left.
-func HexToAddress(s string) Address { return BytesToAddress(utils.FromHex(s)) }
+func HexToAddress(s string) Address { return BytesToAddress(utilhex.DecodeWithoutErr(s)) }
 
 // IsHexAddress verifies whether a string can represent a valid hex-encoded
 // Ethereum address or not.
 func IsHexAddress(s string) bool {
-	if utils.HasHexPrefix(s) {
+	if utilhex.HasPrefix(s) {
 		s = s[2:]
 	}
-	return len(s) == 2*AddressLength && utils.IsHex(s)
+	return len(s) == 2*AddressLength && utilhex.Validate(s)
 }
 
 // Bytes gets the string representation of the underlying address.

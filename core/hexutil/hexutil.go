@@ -29,6 +29,9 @@ const (
 	PREFIX   = "0x"
 )
 
+// -----------------------
+// package Functions
+
 func Encode(srcBytes []byte) string {
 
 	dstBytes := make([]byte, hex.EncodedLen(len(srcBytes)))

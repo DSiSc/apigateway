@@ -70,19 +70,14 @@ func init() {
 // marshaled without error.
 type Big big.Int
 
-// BigEncode encodes bigint as a hex string with 0x prefix.
-// The sign of the integer is ignored.
-func BigEncode(bigint *big.Int) string {
-	nbits := bigint.BitLen()
-	if nbits == 0 {
-		return "0x0"
-	}
-	return fmt.Sprintf("%#x", bigint)
+// NewBig new Big from big.Int
+func NewBig(bigint *big.Int) *Big {
+    return (*Big)(bigint)
 }
 
 // MarshalText implements encoding.TextMarshaler
 func (b Big) MarshalText() ([]byte, error) {
-	return []byte(BigEncode((*big.Int)(&b))), nil
+	return []byte(b.String()), nil
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
@@ -127,7 +122,20 @@ func (b *Big) UnmarshalText(input []byte) error {
 
 // String returns the hex encoding of b.
 func (b *Big) String() string {
-	return BigEncode((*big.Int)(b))
+
+	nbits := b.toBigInt().BitLen()
+	if nbits == 0 {
+		return "0x0"
+	}
+	return fmt.Sprintf("%#x", b.toBigInt())
+}
+
+func (b *Big) toBytes() []byte {
+    return []byte(b.String())
+}
+
+func (b *Big) toBigInt() *big.Int {
+    return (*big.Int)(b)
 }
 
 // -------------------------

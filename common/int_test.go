@@ -180,6 +180,16 @@ func TestMarshalBig(t *testing.T) {
 	}
 }
 
+func TestToBigInt(t *testing.T) {
+
+    input := referenceBig("0")
+    want := NewBig(input).toBigInt()
+    if input != want {
+        t.Errorf("Error with to BigInt: got %d, want %d", input, want)
+    }
+    
+}
+
 var unmarshalUint64Tests = []unmarshalTest{
 	// invalid encoding
 	{input: "", wantErr: errJSONEOF},
@@ -312,3 +322,4 @@ func TestUnmarshalUint(t *testing.T) {
 		}
 	}
 }
+

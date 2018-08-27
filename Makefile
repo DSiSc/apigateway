@@ -64,6 +64,11 @@ vet:
 
 .PHONY: unit-test
 unit-test:
+	@echo "Run unit tests without coverage report..."
+	go test -v -count=1 -race ./...
+
+.PHONY: coverage
+coverage:
 	@echo "Run unit tests with coverage report..."
 	bash scripts/unit_test_cov.sh
 

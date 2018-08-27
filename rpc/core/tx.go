@@ -2,7 +2,11 @@ package core
 
 import (
 	ctypes "github.com/DSiSc/apigateway/rpc/core/types"
+	//"github.com/DSiSc/craft/types"
 )
+
+// ------------------------------
+// package Consts, Vars
 
 // SendTransaction will create a transaction from the given param, sign it and submit to the txpool.
 //
@@ -66,6 +70,20 @@ import (
 // - `hash`: `[]byte` - hash of the transaction
 // - `error`: `error` - error detail info
 func SendTransaction(args ctypes.SendTxArgs) (string, error) {
+
+	// new types.Transaction base on SendTxArgs
+	// tx := types.NewTransaction(
+	//        args.Nonce.Touint64(),
+	//        types.BytesToAddress(args.To.Bytes()),
+	//        args.Value.ToBigInt(),
+	//        args.Gas.Touint64(),
+	//        args.GasPrice.ToBigInt(),
+	//        args.Data.Bytes(),
+	// )
+
+	// sign transacation
+	// send transacation to swch, wait for transaction ID
+	// return transaction ID
 
 	return "Not Implement", nil
 }

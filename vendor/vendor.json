@@ -7,6 +7,18 @@
 			"revision": ""
 		},
 		{
+			"checksumSHA1": "KP4smx6dIy22f4Jj3VEntxhNiBw=",
+			"path": "github.com/DSiSc/craft/serialize",
+			"revision": "7b4518324370310ca5e822f712de48d9f922cba1",
+			"revisionTime": "2018-08-27T14:51:51Z"
+		},
+		{
+			"checksumSHA1": "EcQA8/gI304QAsgTDJr1idXOKzE=",
+			"path": "github.com/DSiSc/craft/types",
+			"revision": "7b4518324370310ca5e822f712de48d9f922cba1",
+			"revisionTime": "2018-08-27T14:51:51Z"
+		},
+		{
 			"checksumSHA1": "CSPbwbyzqA6sfORicn4HFtIhF/c=",
 			"path": "github.com/davecgh/go-spew/spew",
 			"revision": "8991bc29aa16c548c550c7ff78260e27b9ab7c73",

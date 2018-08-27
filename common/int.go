@@ -22,22 +22,45 @@ import (
 	"strconv"
 )
 
+// ------------------------
+// package Consts, Vars
+
+const (
+	badNibble = ^uint64(0)
+	uintBits  = 32 << (uint64(^uint(0)) >> 63)
+)
+
 var (
-	bigT    = reflect.TypeOf((*Big)(nil))
-	uintT   = reflect.TypeOf(Uint(0))
-	uint64T = reflect.TypeOf(Uint64(0))
+	bigWordNibbles int
+	bigT           = reflect.TypeOf((*Big)(nil))
+	uintT          = reflect.TypeOf(Uint(0))
+	uint64T        = reflect.TypeOf(Uint64(0))
 
 	// errors
-	ErrSyntax        = NewError("invalid hex string")
-	ErrBig256Range   = NewError("hex number > 256 bits")
-	ErrUint64Range   = NewError("hex number > 64 bits")
-	ErrUintRange     = NewError(fmt.Sprintf("hex number > %d bits", uintBits))
-	ErrEmptyString   = NewError("empty hex string")
-	ErrMissingPrefix = NewError("hex string without 0x prefix")
-	ErrOddLength     = NewError("hex string of odd length")
-	ErrEmptyNumber   = NewError("hex string \"0x\"")
-	ErrLeadingZero   = NewError("hex number with leading zero digits")
+	ErrBig256Range = NewError("hex number > 256 bits")
+	ErrUint64Range = NewError("hex number > 64 bits")
+	ErrUintRange   = NewError(fmt.Sprintf("hex number > %d bits", uintBits))
 )
+
+// ------------------------
+// package init
+
+func init() {
+	// This is a weird way to compute the number of nibbles required for big.Word.
+	// The usual way would be to use constant arithmetic but go vet can't handle that.
+	b, _ := new(big.Int).SetString("FFFFFFFFFF", 16)
+	switch len(b.Bits()) {
+	case 1:
+		bigWordNibbles = 16
+	case 2:
+		bigWordNibbles = 8
+	default:
+		panic("weird big.Word size")
+	}
+}
+
+// ------------------------
+// package Struct Big
 
 // Big marshals/unmarshals as a JSON string with 0x prefix.
 // The zero value marshals as "0x0".
@@ -47,14 +70,24 @@ var (
 // marshaled without error.
 type Big big.Int
 
+// BigEncode encodes bigint as a hex string with 0x prefix.
+// The sign of the integer is ignored.
+func BigEncode(bigint *big.Int) string {
+	nbits := bigint.BitLen()
+	if nbits == 0 {
+		return "0x0"
+	}
+	return fmt.Sprintf("%#x", bigint)
+}
+
 // MarshalText implements encoding.TextMarshaler
 func (b Big) MarshalText() ([]byte, error) {
-	return []byte(EncodeBig((*big.Int)(&b))), nil
+	return []byte(BigEncode((*big.Int)(&b))), nil
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (b *Big) UnmarshalJSON(input []byte) error {
-	if !isString(input) {
+	if !IsString(input) {
 		return errNonString(bigT)
 	}
 	return wrapTypeError(b.UnmarshalText(input[1:len(input)-1]), bigT)
@@ -92,19 +125,24 @@ func (b *Big) UnmarshalText(input []byte) error {
 	return nil
 }
 
-// ToInt converts b to a big.Int.
-func (b *Big) ToInt() *big.Int {
-	return (*big.Int)(b)
-}
-
 // String returns the hex encoding of b.
 func (b *Big) String() string {
-	return EncodeBig(b.ToInt())
+	return BigEncode((*big.Int)(b))
 }
+
+// -------------------------
+// package Struct Unit64
 
 // Uint64 marshals/unmarshals as a JSON string with 0x prefix.
 // The zero value marshals as "0x0".
 type Uint64 uint64
+
+// Unit64Encode encodes i as a hex string with 0x prefix.
+func Unit64Encode(i uint64) string {
+	enc := make([]byte, 2, 10)
+	copy(enc, "0x")
+	return string(strconv.AppendUint(enc, i, 16))
+}
 
 // MarshalText implements encoding.TextMarshaler.
 func (b Uint64) MarshalText() ([]byte, error) {
@@ -116,7 +154,7 @@ func (b Uint64) MarshalText() ([]byte, error) {
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (b *Uint64) UnmarshalJSON(input []byte) error {
-	if !isString(input) {
+	if !IsString(input) {
 		return errNonString(uint64T)
 	}
 	return wrapTypeError(b.UnmarshalText(input[1:len(input)-1]), uint64T)
@@ -146,8 +184,11 @@ func (b *Uint64) UnmarshalText(input []byte) error {
 
 // String returns the hex encoding of b.
 func (b Uint64) String() string {
-	return EncodeUint64(uint64(b))
+	return Unit64Encode(uint64(b))
 }
+
+// ------------------------
+// package Struct Uint
 
 // Uint marshals/unmarshals as a JSON string with 0x prefix.
 // The zero value marshals as "0x0".
@@ -160,7 +201,7 @@ func (b Uint) MarshalText() ([]byte, error) {
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (b *Uint) UnmarshalJSON(input []byte) error {
-	if !isString(input) {
+	if !IsString(input) {
 		return errNonString(uintT)
 	}
 	return wrapTypeError(b.UnmarshalText(input[1:len(input)-1]), uintT)
@@ -181,37 +222,17 @@ func (b *Uint) UnmarshalText(input []byte) error {
 
 // String returns the hex encoding of b.
 func (b Uint) String() string {
-	return EncodeUint64(uint64(b))
+	return Unit64Encode(uint64(b))
 }
 
-func isString(input []byte) bool {
-	return len(input) >= 2 && input[0] == '"' && input[len(input)-1] == '"'
-}
-
-func bytesHave0xPrefix(input []byte) bool {
-	return len(input) >= 2 && input[0] == '0' && (input[1] == 'x' || input[1] == 'X')
-}
-
-func checkText(input []byte, wantPrefix bool) ([]byte, error) {
-	if len(input) == 0 {
-		return nil, nil // empty strings are allowed
-	}
-	if bytesHave0xPrefix(input) {
-		input = input[2:]
-	} else if wantPrefix {
-		return nil, ErrMissingPrefix
-	}
-	if len(input)%2 != 0 {
-		return nil, ErrOddLength
-	}
-	return input, nil
-}
+// ---------------------------------
+// package Function inner
 
 func checkNumberText(input []byte) (raw []byte, err error) {
 	if len(input) == 0 {
 		return nil, nil // empty strings are allowed
 	}
-	if !bytesHave0xPrefix(input) {
+	if !HexHasPrefix(string(input)) {
 		return nil, ErrMissingPrefix
 	}
 	input = input[2:]
@@ -235,41 +256,6 @@ func errNonString(typ reflect.Type) error {
 	return &json.UnmarshalTypeError{Value: "non-string", Type: typ}
 }
 
-// EncodeBig encodes bigint as a hex string with 0x prefix.
-// The sign of the integer is ignored.
-func EncodeBig(bigint *big.Int) string {
-	nbits := bigint.BitLen()
-	if nbits == 0 {
-		return "0x0"
-	}
-	return fmt.Sprintf("%#x", bigint)
-}
-
-var bigWordNibbles int
-
-func init() {
-	// This is a weird way to compute the number of nibbles required for big.Word.
-	// The usual way would be to use constant arithmetic but go vet can't handle that.
-	b, _ := new(big.Int).SetString("FFFFFFFFFF", 16)
-	switch len(b.Bits()) {
-	case 1:
-		bigWordNibbles = 16
-	case 2:
-		bigWordNibbles = 8
-	default:
-		panic("weird big.Word size")
-	}
-}
-
-// EncodeUint64 encodes i as a hex string with 0x prefix.
-func EncodeUint64(i uint64) string {
-	enc := make([]byte, 2, 10)
-	copy(enc, "0x")
-	return string(strconv.AppendUint(enc, i, 16))
-}
-
-const badNibble = ^uint64(0)
-
 func decodeNibble(in byte) uint64 {
 	switch {
 	case in >= '0' && in <= '9':
@@ -282,5 +268,3 @@ func decodeNibble(in byte) uint64 {
 		return badNibble
 	}
 }
-
-const uintBits = 32 << (uint64(^uint(0)) >> 63)

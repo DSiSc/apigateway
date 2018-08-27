@@ -20,6 +20,9 @@ import (
 	"strings"
 )
 
+// ---------------------------
+// package Struct Bytes
+
 // The main purpose of HexBytes is to enable HEX-encoding for json/encoding.
 type Bytes []byte
 
@@ -73,4 +76,11 @@ func (bz Bytes) Format(s fmt.State, verb rune) {
 	default:
 		s.Write([]byte(fmt.Sprintf("%X", []byte(bz))))
 	}
+}
+
+// -------------------------
+// package Functions
+
+func IsString(input []byte) bool {
+	return len(input) >= 2 && input[0] == '"' && input[len(input)-1] == '"'
 }

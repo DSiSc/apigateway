@@ -8,6 +8,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// -------------------------
+// package Test*
+
 // This is a trivial test for protobuf compatibility.
 func TestMarshal(t *testing.T) {
 	bz := []byte("hello world")

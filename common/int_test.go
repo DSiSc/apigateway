@@ -22,17 +22,8 @@ import (
 	"testing"
 )
 
-type unmarshalTest struct {
-	input        string
-	want         interface{}
-	wantErr      error // if set, decoding must fail on any platform
-	wantErr32bit error // if set, decoding must fail on 32bit platforms (used for Uint tests)
-}
-
-type marshalTest struct {
-	input interface{}
-	want  string
-}
+// ----------------------------
+// package Consts, Vars
 
 var (
 	encodeBigTests = []marshalTest{
@@ -57,23 +48,78 @@ var (
 		{uint(0xff), "0xff"},
 		{uint(0x11223344), "0x11223344"},
 	}
+
+	unmarshalBigTests = []unmarshalTest{
+		// invalid encoding
+		{input: "", wantErr: errJSONEOF},
+		{input: "null", wantErr: errNonString(bigT)},
+		{input: "10", wantErr: errNonString(bigT)},
+		{input: `"0"`, wantErr: wrapTypeError(ErrMissingPrefix, bigT)},
+		{input: `"0x"`, wantErr: wrapTypeError(ErrEmptyNumber, bigT)},
+		{input: `"0x01"`, wantErr: wrapTypeError(ErrLeadingZero, bigT)},
+		{input: `"0xx"`, wantErr: wrapTypeError(ErrSyntax, bigT)},
+		{input: `"0x1zz01"`, wantErr: wrapTypeError(ErrSyntax, bigT)},
+		{
+			input:   `"0x10000000000000000000000000000000000000000000000000000000000000000"`,
+			wantErr: wrapTypeError(ErrBig256Range, bigT),
+		},
+
+		// valid encoding
+		{input: `""`, want: big.NewInt(0)},
+		{input: `"0x0"`, want: big.NewInt(0)},
+		{input: `"0x2"`, want: big.NewInt(0x2)},
+		{input: `"0x2F2"`, want: big.NewInt(0x2f2)},
+		{input: `"0X2F2"`, want: big.NewInt(0x2f2)},
+		{input: `"0x1122aaff"`, want: big.NewInt(0x1122aaff)},
+		{input: `"0xbBb"`, want: big.NewInt(0xbbb)},
+		{input: `"0xfffffffff"`, want: big.NewInt(0xfffffffff)},
+		{
+			input: `"0x112233445566778899aabbccddeeff"`,
+			want:  referenceBig("112233445566778899aabbccddeeff"),
+		},
+		{
+			input: `"0xffffffffffffffffffffffffffffffffffff"`,
+			want:  referenceBig("ffffffffffffffffffffffffffffffffffff"),
+		},
+		{
+			input: `"0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"`,
+			want:  referenceBig("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
+		},
+	}
+
+	errJSONEOF = errors.New("unexpected end of JSON input")
 )
 
-func checkError(t *testing.T, input string, got, want error) bool {
-	if got == nil {
-		if want != nil {
-			t.Errorf("input %s: got no error, want %q", input, want)
-			return false
-		}
-		return true
-	}
-	if want == nil {
-		t.Errorf("input %s: unexpected error %q", input, got)
-	} else if got.Error() != want.Error() {
-		t.Errorf("input %s: got error %q, want %q", input, got, want)
-	}
-	return false
+// ---------------------------
+// package Struct
+
+type unmarshalTest struct {
+	input        string
+	want         interface{}
+	wantErr      error // if set, decoding must fail on any platform
+	wantErr32bit error // if set, decoding must fail on 32bit platforms (used for Uint tests)
 }
+
+type marshalTest struct {
+	input interface{}
+	want  string
+}
+
+//func checkError(t *testing.T, input string, got, want error) bool {
+//	if got == nil {
+//		if want != nil {
+//			t.Errorf("input %s: got no error, want %q", input, want)
+//			return false
+//		}
+//		return true
+//	}
+//	if want == nil {
+//		t.Errorf("input %s: unexpected error %q", input, got)
+//	} else if got.Error() != want.Error() {
+//		t.Errorf("input %s: got error %q, want %q", input, got, want)
+//	}
+//	return false
+//}
 
 func referenceBig(s string) *big.Int {
 	b, ok := new(big.Int).SetString(s, 16)
@@ -89,46 +135,6 @@ func referenceBytes(s string) []byte {
 		panic(err)
 	}
 	return b
-}
-
-var errJSONEOF = errors.New("unexpected end of JSON input")
-
-var unmarshalBigTests = []unmarshalTest{
-	// invalid encoding
-	{input: "", wantErr: errJSONEOF},
-	{input: "null", wantErr: errNonString(bigT)},
-	{input: "10", wantErr: errNonString(bigT)},
-	{input: `"0"`, wantErr: wrapTypeError(ErrMissingPrefix, bigT)},
-	{input: `"0x"`, wantErr: wrapTypeError(ErrEmptyNumber, bigT)},
-	{input: `"0x01"`, wantErr: wrapTypeError(ErrLeadingZero, bigT)},
-	{input: `"0xx"`, wantErr: wrapTypeError(ErrSyntax, bigT)},
-	{input: `"0x1zz01"`, wantErr: wrapTypeError(ErrSyntax, bigT)},
-	{
-		input:   `"0x10000000000000000000000000000000000000000000000000000000000000000"`,
-		wantErr: wrapTypeError(ErrBig256Range, bigT),
-	},
-
-	// valid encoding
-	{input: `""`, want: big.NewInt(0)},
-	{input: `"0x0"`, want: big.NewInt(0)},
-	{input: `"0x2"`, want: big.NewInt(0x2)},
-	{input: `"0x2F2"`, want: big.NewInt(0x2f2)},
-	{input: `"0X2F2"`, want: big.NewInt(0x2f2)},
-	{input: `"0x1122aaff"`, want: big.NewInt(0x1122aaff)},
-	{input: `"0xbBb"`, want: big.NewInt(0xbbb)},
-	{input: `"0xfffffffff"`, want: big.NewInt(0xfffffffff)},
-	{
-		input: `"0x112233445566778899aabbccddeeff"`,
-		want:  referenceBig("112233445566778899aabbccddeeff"),
-	},
-	{
-		input: `"0xffffffffffffffffffffffffffffffffffff"`,
-		want:  referenceBig("ffffffffffffffffffffffffffffffffffff"),
-	},
-	{
-		input: `"0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"`,
-		want:  referenceBig("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
-	},
 }
 
 func TestUnmarshalBig(t *testing.T) {

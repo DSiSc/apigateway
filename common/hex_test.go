@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
-package hexutil
+package common
 
 import (
 	"bytes"
@@ -26,9 +26,6 @@ import (
 
 // --------------------------------------
 // Types
-
-type hasBoolTest struct {
-}
 
 // ----------------------------------
 // Function Test*
@@ -43,7 +40,7 @@ func TestEncode(t *testing.T) {
 		{[]byte{0, 0, 1, 2}, "0x00000102"},
 	}
 	for _, test := range encodeBytesTests {
-		enc := Encode(test.input.([]byte))
+		enc := HexEncode(test.input.([]byte))
 		if enc != test.want {
 			t.Errorf("input %x: wrong encoding %s", test.input, enc)
 		}
@@ -78,7 +75,7 @@ func TestDecode(t *testing.T) {
 		},
 	}
 	for _, test := range decodeBytesTests {
-		dec, err := Decode(test.input)
+		dec, err := HexDecode(test.input)
 		if !checkError(t, test.input, err, test.wantErr) {
 			continue
 		}
@@ -104,7 +101,7 @@ func TestHasPrefix(t *testing.T) {
 	}
 
 	for _, test := range hasBoolTests {
-		dec := HasPrefix(test.input)
+		dec := HexHasPrefix(test.input)
 		if test.want != dec {
 			t.Errorf("input %s: wrong result %t", test.input, dec)
 		}
@@ -126,7 +123,7 @@ func TestValidate(t *testing.T) {
 		{"0xHELLO_MY_NAME_IS_STEVEN_@#$^&*", false},
 	}
 	for _, test := range tests {
-		if ok := Validate(test.input); ok != test.ok {
+		if ok := HexValidate(test.input); ok != test.ok {
 			t.Errorf("isHex(%q) = %v, want %v", test.input, ok, test.ok)
 		}
 	}
@@ -138,7 +135,7 @@ func TestValidate(t *testing.T) {
 func BenchmarkEncode(b *testing.B) {
 	input := []byte{0, 0, 1, 2}
 	for i := 0; i < b.N; i++ {
-		Encode(input)
+		HexEncode(input)
 	}
 }
 

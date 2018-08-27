@@ -13,10 +13,9 @@
 // limitations under the License.
 
 // Package hex utils functions.
-package hexutil
+package common
 
 import (
-	//    "fmt"
 	"encoding/hex"
 	"strconv"
 	"strings"
@@ -29,10 +28,20 @@ const (
 	PREFIX   = "0x"
 )
 
+// Errors
+var (
+	ErrEmptyString   = NewError("empty hex string")
+	ErrSyntax        = NewError("invalid hex string")
+	ErrMissingPrefix = NewError("hex string without 0x prefix")
+	ErrOddLength     = NewError("hex string of odd length")
+	ErrEmptyNumber   = NewError("hex string \"0x\"")
+	ErrLeadingZero   = NewError("hex number with leading zero digits")
+)
+
 // -----------------------
 // package Functions
 
-func Encode(srcBytes []byte) string {
+func HexEncode(srcBytes []byte) string {
 
 	dstBytes := make([]byte, hex.EncodedLen(len(srcBytes)))
 
@@ -41,13 +50,13 @@ func Encode(srcBytes []byte) string {
 	return PREFIX + string(dstBytes)
 }
 
-func Decode(srcStr string) ([]byte, error) {
+func HexDecode(srcStr string) ([]byte, error) {
 
 	if len(srcStr) == 0 {
 		return nil, ErrEmptyString
 	}
 
-	if !HasPrefix(srcStr) {
+	if !HexHasPrefix(srcStr) {
 		return nil, ErrMissingPrefix
 	}
 
@@ -62,14 +71,14 @@ func Decode(srcStr string) ([]byte, error) {
 
 }
 
-func DecodeWithoutErr(srcStr string) []byte {
+func HexDecodeWithoutErr(srcStr string) []byte {
 
-	dstBytes, _ := Decode(srcStr)
+	dstBytes, _ := HexDecode(srcStr)
 	return dstBytes
 }
 
 // Validate validates whether each byte is valid hexadecimal string.
-func Validate(str string) bool {
+func HexValidate(str string) bool {
 
 	_, err := hex.DecodeString(str)
 	if err != nil {
@@ -78,7 +87,7 @@ func Validate(str string) bool {
 	return true
 }
 
-func HasPrefix(str string) bool {
+func HexHasPrefix(str string) bool {
 	// NOTE(peerlink): suport prefix: "0x", "0X"
 	return strings.HasPrefix(str, PREFIX) || strings.HasPrefix(str, strings.ToUpper(PREFIX))
 }

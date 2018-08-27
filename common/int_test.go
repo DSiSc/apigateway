@@ -22,10 +22,33 @@ import (
 	"testing"
 )
 
+// ---------------------------
+// package Struct
+
+type unmarshalTest struct {
+	input        string
+	want         interface{}
+	wantErr      error // if set, decoding must fail on any platform
+	wantErr32bit error // if set, decoding must fail on 32bit platforms (used for Uint tests)
+}
+
+type marshalTest struct {
+	input interface{}
+	want  string
+}
+
 // ----------------------------
 // package Consts, Vars
-
 var (
+
+	// These are variables (not constants) to avoid constant overflow
+	// checks in the compiler on 32bit platforms.
+	maxUint33bits = uint64(^uint32(0)) + 1
+	maxUint64bits = ^uint64(0)
+
+
+    // ---------------------
+    // Test Cases
 	encodeBigTests = []marshalTest{
 		{referenceBig("0"), "0x0"},
 		{referenceBig("1"), "0x1"},
@@ -87,56 +110,62 @@ var (
 		},
 	}
 
+    unmarshalUintTests = []unmarshalTest{
+	    // invalid encoding
+	    {input: "", wantErr: errJSONEOF},
+	    {input: "null", wantErr: errNonString(uintT)},
+	    {input: "10", wantErr: errNonString(uintT)},
+	    {input: `"0"`, wantErr: wrapTypeError(ErrMissingPrefix, uintT)},
+	    {input: `"0x"`, wantErr: wrapTypeError(ErrEmptyNumber, uintT)},
+	    {input: `"0x01"`, wantErr: wrapTypeError(ErrLeadingZero, uintT)},
+	    {input: `"0x100000000"`, want: uint(maxUint33bits), wantErr32bit: wrapTypeError(ErrUintRange, uintT)},
+	    {input: `"0xfffffffffffffffff"`, wantErr: wrapTypeError(ErrUintRange, uintT)},
+	    {input: `"0xx"`, wantErr: wrapTypeError(ErrSyntax, uintT)},
+	    {input: `"0x1zz01"`, wantErr: wrapTypeError(ErrSyntax, uintT)},
+
+	    // valid encoding
+	    {input: `""`, want: uint(0)},
+	    {input: `"0x0"`, want: uint(0)},
+	    {input: `"0x2"`, want: uint(0x2)},
+	    {input: `"0x2F2"`, want: uint(0x2f2)},
+	    {input: `"0X2F2"`, want: uint(0x2f2)},
+	    {input: `"0x1122aaff"`, want: uint(0x1122aaff)},
+	    {input: `"0xbbb"`, want: uint(0xbbb)},
+	    {input: `"0xffffffff"`, want: uint(0xffffffff)},
+	    {input: `"0xffffffffffffffff"`, want: uint(maxUint64bits), wantErr32bit: wrapTypeError(ErrUintRange, uintT)},
+    }
+
+    unmarshalUint64Tests = []unmarshalTest{
+    	// invalid encoding
+    	{input: "", wantErr: errJSONEOF},
+    	{input: "null", wantErr: errNonString(uint64T)},
+    	{input: "10", wantErr: errNonString(uint64T)},
+    	{input: `"0"`, wantErr: wrapTypeError(ErrMissingPrefix, uint64T)},
+    	{input: `"0x"`, wantErr: wrapTypeError(ErrEmptyNumber, uint64T)},
+    	{input: `"0x01"`, wantErr: wrapTypeError(ErrLeadingZero, uint64T)},
+    	{input: `"0xfffffffffffffffff"`, wantErr: wrapTypeError(ErrUint64Range, uint64T)},
+    	{input: `"0xx"`, wantErr: wrapTypeError(ErrSyntax, uint64T)},
+    	{input: `"0x1zz01"`, wantErr: wrapTypeError(ErrSyntax, uint64T)},
+    
+    	// valid encoding
+    	{input: `""`, want: uint64(0)},
+    	{input: `"0x0"`, want: uint64(0)},
+    	{input: `"0x2"`, want: uint64(0x2)},
+    	{input: `"0x2F2"`, want: uint64(0x2f2)},
+    	{input: `"0X2F2"`, want: uint64(0x2f2)},
+    	{input: `"0x1122aaff"`, want: uint64(0x1122aaff)},
+    	{input: `"0xbbb"`, want: uint64(0xbbb)},
+    	{input: `"0xffffffffffffffff"`, want: uint64(0xffffffffffffffff)},
+    }
+
+    // ------------------------
+    // errors
 	errJSONEOF = errors.New("unexpected end of JSON input")
 )
 
-// ---------------------------
-// package Struct
 
-type unmarshalTest struct {
-	input        string
-	want         interface{}
-	wantErr      error // if set, decoding must fail on any platform
-	wantErr32bit error // if set, decoding must fail on 32bit platforms (used for Uint tests)
-}
-
-type marshalTest struct {
-	input interface{}
-	want  string
-}
-
-//func checkError(t *testing.T, input string, got, want error) bool {
-//	if got == nil {
-//		if want != nil {
-//			t.Errorf("input %s: got no error, want %q", input, want)
-//			return false
-//		}
-//		return true
-//	}
-//	if want == nil {
-//		t.Errorf("input %s: unexpected error %q", input, got)
-//	} else if got.Error() != want.Error() {
-//		t.Errorf("input %s: got error %q, want %q", input, got, want)
-//	}
-//	return false
-//}
-
-func referenceBig(s string) *big.Int {
-	b, ok := new(big.Int).SetString(s, 16)
-	if !ok {
-		panic("invalid")
-	}
-	return b
-}
-
-func referenceBytes(s string) []byte {
-	b, err := hex.DecodeString(s)
-	if err != nil {
-		panic(err)
-	}
-	return b
-}
-
+// --------------------------
+// package Test* json encoding
 func TestUnmarshalBig(t *testing.T) {
 	for _, test := range unmarshalBigTests {
 		var v Big
@@ -180,39 +209,6 @@ func TestMarshalBig(t *testing.T) {
 	}
 }
 
-func TestToBigInt(t *testing.T) {
-
-    input := referenceBig("0")
-    want := NewBig(input).toBigInt()
-    if input != want {
-        t.Errorf("Error with to BigInt: got %d, want %d", input, want)
-    }
-    
-}
-
-var unmarshalUint64Tests = []unmarshalTest{
-	// invalid encoding
-	{input: "", wantErr: errJSONEOF},
-	{input: "null", wantErr: errNonString(uint64T)},
-	{input: "10", wantErr: errNonString(uint64T)},
-	{input: `"0"`, wantErr: wrapTypeError(ErrMissingPrefix, uint64T)},
-	{input: `"0x"`, wantErr: wrapTypeError(ErrEmptyNumber, uint64T)},
-	{input: `"0x01"`, wantErr: wrapTypeError(ErrLeadingZero, uint64T)},
-	{input: `"0xfffffffffffffffff"`, wantErr: wrapTypeError(ErrUint64Range, uint64T)},
-	{input: `"0xx"`, wantErr: wrapTypeError(ErrSyntax, uint64T)},
-	{input: `"0x1zz01"`, wantErr: wrapTypeError(ErrSyntax, uint64T)},
-
-	// valid encoding
-	{input: `""`, want: uint64(0)},
-	{input: `"0x0"`, want: uint64(0)},
-	{input: `"0x2"`, want: uint64(0x2)},
-	{input: `"0x2F2"`, want: uint64(0x2f2)},
-	{input: `"0X2F2"`, want: uint64(0x2f2)},
-	{input: `"0x1122aaff"`, want: uint64(0x1122aaff)},
-	{input: `"0xbbb"`, want: uint64(0xbbb)},
-	{input: `"0xffffffffffffffff"`, want: uint64(0xffffffffffffffff)},
-}
-
 func TestUnmarshalUint64(t *testing.T) {
 	for _, test := range unmarshalUint64Tests {
 		var v Uint64
@@ -247,7 +243,7 @@ func TestMarshalUint64(t *testing.T) {
 			t.Errorf("%d: MarshalJSON output mismatch: got %q, want %q", in, out, want)
 			continue
 		}
-		if out := (Uint64)(in).String(); out != test.want {
+		if out := (*Uint64)(&in).String(); out != test.want {
 			t.Errorf("%x: String mismatch: got %q, want %q", in, out, test.want)
 			continue
 		}
@@ -266,43 +262,11 @@ func TestMarshalUint(t *testing.T) {
 			t.Errorf("%d: MarshalJSON output mismatch: got %q, want %q", in, out, want)
 			continue
 		}
-		if out := (Uint)(in).String(); out != test.want {
+		if out := (*Uint)(&in).String(); out != test.want {
 			t.Errorf("%x: String mismatch: got %q, want %q", in, out, test.want)
 			continue
 		}
 	}
-}
-
-var (
-	// These are variables (not constants) to avoid constant overflow
-	// checks in the compiler on 32bit platforms.
-	maxUint33bits = uint64(^uint32(0)) + 1
-	maxUint64bits = ^uint64(0)
-)
-
-var unmarshalUintTests = []unmarshalTest{
-	// invalid encoding
-	{input: "", wantErr: errJSONEOF},
-	{input: "null", wantErr: errNonString(uintT)},
-	{input: "10", wantErr: errNonString(uintT)},
-	{input: `"0"`, wantErr: wrapTypeError(ErrMissingPrefix, uintT)},
-	{input: `"0x"`, wantErr: wrapTypeError(ErrEmptyNumber, uintT)},
-	{input: `"0x01"`, wantErr: wrapTypeError(ErrLeadingZero, uintT)},
-	{input: `"0x100000000"`, want: uint(maxUint33bits), wantErr32bit: wrapTypeError(ErrUintRange, uintT)},
-	{input: `"0xfffffffffffffffff"`, wantErr: wrapTypeError(ErrUintRange, uintT)},
-	{input: `"0xx"`, wantErr: wrapTypeError(ErrSyntax, uintT)},
-	{input: `"0x1zz01"`, wantErr: wrapTypeError(ErrSyntax, uintT)},
-
-	// valid encoding
-	{input: `""`, want: uint(0)},
-	{input: `"0x0"`, want: uint(0)},
-	{input: `"0x2"`, want: uint(0x2)},
-	{input: `"0x2F2"`, want: uint(0x2f2)},
-	{input: `"0X2F2"`, want: uint(0x2f2)},
-	{input: `"0x1122aaff"`, want: uint(0x1122aaff)},
-	{input: `"0xbbb"`, want: uint(0xbbb)},
-	{input: `"0xffffffff"`, want: uint(0xffffffff)},
-	{input: `"0xffffffffffffffff"`, want: uint(maxUint64bits), wantErr32bit: wrapTypeError(ErrUintRange, uintT)},
 }
 
 func TestUnmarshalUint(t *testing.T) {
@@ -323,3 +287,54 @@ func TestUnmarshalUint(t *testing.T) {
 	}
 }
 
+// ----------------------
+// package Test* others
+func TestToBigInt(t *testing.T) {
+
+    input := referenceBig("0")
+    want := NewBig(input).ToBigInt()
+    if input.String() != want.String() {
+
+        t.Errorf("Error with to BigInt: got %x, want %x", input, want)
+    }
+    
+}
+
+func TestToUint64(t *testing.T) {
+
+    input := uint64(1)
+    want := NewUint64(input).Touint64()
+
+    if input != want {
+        t.Errorf("Error with to unit64: got %d, want %d", input, want)
+    }
+}
+
+func TestToUint(t *testing.T) {
+
+    input := uint(1)
+    want := NewUint(input).Touint()
+
+    if input != want {
+        t.Errorf("Error with to unit: got %d, want %d", input, want)
+    }
+}
+
+// -------------------------
+// package Functions inner
+
+func referenceBig(s string) *big.Int {
+	b, ok := new(big.Int).SetString(s, 16)
+	if !ok {
+		panic("invalid")
+	}
+	return b
+}
+
+func referenceBytes(s string) []byte {
+	b, err := hex.DecodeString(s)
+	if err != nil {
+		panic(err)
+	}
+	return b
+}

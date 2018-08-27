@@ -121,21 +121,23 @@ func (b *Big) UnmarshalText(input []byte) error {
 }
 
 // String returns the hex encoding of b.
-func (b *Big) String() string {
+func (b Big) String() string {
 
-	nbits := b.toBigInt().BitLen()
+	nbits := b.ToBigInt().BitLen()
 	if nbits == 0 {
 		return "0x0"
 	}
-	return fmt.Sprintf("%#x", b.toBigInt())
+	return fmt.Sprintf("%#x", b.ToBigInt())
 }
 
-func (b *Big) toBytes() []byte {
+// ToBytes return []byte
+func (b Big) ToBytes() []byte {
     return []byte(b.String())
 }
 
-func (b *Big) toBigInt() *big.Int {
-    return (*big.Int)(b)
+// ToBigInt return big.Int
+func (b Big) ToBigInt() *big.Int {
+    return (*big.Int)(&b)
 }
 
 // -------------------------
@@ -144,6 +146,11 @@ func (b *Big) toBigInt() *big.Int {
 // Uint64 marshals/unmarshals as a JSON string with 0x prefix.
 // The zero value marshals as "0x0".
 type Uint64 uint64
+
+// NewUint64 create Uint64 from uint64
+func NewUint64(i uint64) *Uint64 {
+    return (*Uint64)(&i)
+}
 
 // Unit64Encode encodes i as a hex string with 0x prefix.
 func Unit64Encode(i uint64) string {
@@ -154,10 +161,7 @@ func Unit64Encode(i uint64) string {
 
 // MarshalText implements encoding.TextMarshaler.
 func (b Uint64) MarshalText() ([]byte, error) {
-	buf := make([]byte, 2, 10)
-	copy(buf, `0x`)
-	buf = strconv.AppendUint(buf, uint64(b), 16)
-	return buf, nil
+    return []byte(Unit64Encode(uint64(b))), nil
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
@@ -195,12 +199,26 @@ func (b Uint64) String() string {
 	return Unit64Encode(uint64(b))
 }
 
+// ToBytes return []byte
+func (b Uint64) ToBytes() []byte {
+    return []byte(b.String())
+}
+
+// Touint64 return uint64
+func (b Uint64) Touint64() uint64 {
+    return (uint64)(b)
+}
+
 // ------------------------
 // package Struct Uint
 
 // Uint marshals/unmarshals as a JSON string with 0x prefix.
 // The zero value marshals as "0x0".
 type Uint uint
+
+func NewUint(i uint) *Uint {
+    return (*Uint)(&i)
+}
 
 // MarshalText implements encoding.TextMarshaler.
 func (b Uint) MarshalText() ([]byte, error) {
@@ -231,6 +249,16 @@ func (b *Uint) UnmarshalText(input []byte) error {
 // String returns the hex encoding of b.
 func (b Uint) String() string {
 	return Unit64Encode(uint64(b))
+}
+
+// ToBytes return the []byte
+func (b Uint) ToBytes() []byte{
+    return []byte(b.String())
+}
+
+// Touint return the uint
+func (b Uint) Touint() uint {
+    return (uint)(b)
 }
 
 // ---------------------------------

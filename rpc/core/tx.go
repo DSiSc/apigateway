@@ -7,7 +7,7 @@ import (
 // SendTransaction will create a transaction from the given param, sign it and submit to the txpool.
 //
 // ```shell
-// curl -X POST --data '{"jsonrpc":"2.0","method":"eth_sendTransaction","params":[{see above}],"id":1}'
+// curl -X POST --data '{"jsonrpc":"2.0","method":"eth_sendTransaction","params":[{see query exapmle}],"id":1}'
 // ```
 //
 // ```go
@@ -65,7 +65,7 @@ import (
 //
 // - `hash`: `[]byte` - hash of the transaction
 // - `error`: `error` - error detail info
-func SendTransaction(args ctypes.SendTxArgs) ([]byte, error) {
+func SendTransaction(args ctypes.SendTxArgs) (string, error) {
 
-	return []byte("Not Implement"), nil
+	return "Not Implement", nil
 }

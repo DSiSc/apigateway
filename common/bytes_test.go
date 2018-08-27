@@ -40,6 +40,10 @@ func TestJSONMarshal(t *testing.T) {
 		{[]byte(``), `{"B1":"","B2":""}`},
 		{[]byte(`a`), `{"B1":"YQ==","B2":"61"}`},
 		{[]byte(`abc`), `{"B1":"YWJj","B2":"616263"}`},
+
+		{[]byte(`0x`), `{"B1":"MHg=","B2":"3078"}`},
+		{[]byte(`0xa`), `{"B1":"MHhh","B2":"307861"}`},
+		{[]byte(`0xabc`), `{"B1":"MHhhYmM=","B2":"3078616263"}`},
 	}
 
 	for i, tc := range cases {

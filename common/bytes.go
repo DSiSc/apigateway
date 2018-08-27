@@ -52,7 +52,14 @@ func (bz *Bytes) UnmarshalJSON(data []byte) error {
 	if len(data) < 2 || data[0] != '"' || data[len(data)-1] != '"' {
 		return fmt.Errorf("Invalid hex string: %s", data)
 	}
-	bz2, err := hex.DecodeString(string(data[1 : len(data)-1]))
+
+	bdata := string(data[1 : len(data)-1])
+	// FIXME(peerlink): data start with "0x" or "0X"
+	if HexHasPrefix(bdata) {
+		bdata = bdata[2:]
+	}
+
+	bz2, err := hex.DecodeString(bdata)
 	if err != nil {
 		return err
 	}

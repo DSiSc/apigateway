@@ -1,4 +1,6 @@
-package core
+// +build integration
+
+package test
 
 import (
 	"net/http"
@@ -12,6 +14,7 @@ import (
 	"github.com/DSiSc/apigateway/log"
 	amino "github.com/tendermint/go-amino"
 
+	core "github.com/DSiSc/apigateway/rpc/core"
 	server "github.com/DSiSc/apigateway/rpc/lib/server"
 )
 
@@ -54,12 +57,12 @@ func setup() {
 		panic(err)
 	}
 
-	AddTestRoutes()
+	core.AddTestRoutes()
 
 	tcpLogger := logger.With("socket", "tcp")
 	mux := http.NewServeMux()
-	server.RegisterRPCFuncs(mux, Routes, RoutesCdc, tcpLogger)
-	wm := server.NewWebsocketManager(Routes, RoutesCdc, server.ReadWait(5*time.Second), server.PingPeriod(1*time.Second))
+	server.RegisterRPCFuncs(mux, core.Routes, RoutesCdc, tcpLogger)
+	wm := server.NewWebsocketManager(core.Routes, RoutesCdc, server.ReadWait(5*time.Second), server.PingPeriod(1*time.Second))
 	wm.SetLogger(tcpLogger)
 	mux.HandleFunc(websocketEndpoint, wm.WebsocketHandler)
 	go func() {
@@ -71,8 +74,8 @@ func setup() {
 
 	unixLogger := logger.With("socket", "unix")
 	mux2 := http.NewServeMux()
-	server.RegisterRPCFuncs(mux2, Routes, RoutesCdc, unixLogger)
-	wm = server.NewWebsocketManager(Routes, RoutesCdc)
+	server.RegisterRPCFuncs(mux2, core.Routes, RoutesCdc, unixLogger)
+	wm = server.NewWebsocketManager(core.Routes, RoutesCdc)
 	wm.SetLogger(unixLogger)
 	mux2.HandleFunc(websocketEndpoint, wm.WebsocketHandler)
 	go func() {

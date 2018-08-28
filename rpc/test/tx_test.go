@@ -1,4 +1,6 @@
-package core
+// +build integration
+
+package test
 
 import (
 	"encoding/json"

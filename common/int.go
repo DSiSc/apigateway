@@ -72,7 +72,7 @@ type Big big.Int
 
 // NewBig new Big from big.Int
 func NewBig(bigint *big.Int) *Big {
-    return (*Big)(bigint)
+	return (*Big)(bigint)
 }
 
 // MarshalText implements encoding.TextMarshaler
@@ -132,12 +132,12 @@ func (b Big) String() string {
 
 // ToBytes return []byte
 func (b Big) ToBytes() []byte {
-    return []byte(b.String())
+	return []byte(b.String())
 }
 
 // ToBigInt return big.Int
 func (b Big) ToBigInt() *big.Int {
-    return (*big.Int)(&b)
+	return (*big.Int)(&b)
 }
 
 // -------------------------
@@ -149,7 +149,7 @@ type Uint64 uint64
 
 // NewUint64 create Uint64 from uint64
 func NewUint64(i uint64) *Uint64 {
-    return (*Uint64)(&i)
+	return (*Uint64)(&i)
 }
 
 // Unit64Encode encodes i as a hex string with 0x prefix.
@@ -161,7 +161,7 @@ func Unit64Encode(i uint64) string {
 
 // MarshalText implements encoding.TextMarshaler.
 func (b Uint64) MarshalText() ([]byte, error) {
-    return []byte(Unit64Encode(uint64(b))), nil
+	return []byte(Unit64Encode(uint64(b))), nil
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
@@ -201,12 +201,12 @@ func (b Uint64) String() string {
 
 // ToBytes return []byte
 func (b Uint64) ToBytes() []byte {
-    return []byte(b.String())
+	return []byte(b.String())
 }
 
 // Touint64 return uint64
 func (b Uint64) Touint64() uint64 {
-    return (uint64)(b)
+	return (uint64)(b)
 }
 
 // ------------------------
@@ -217,7 +217,7 @@ func (b Uint64) Touint64() uint64 {
 type Uint uint
 
 func NewUint(i uint) *Uint {
-    return (*Uint)(&i)
+	return (*Uint)(&i)
 }
 
 // MarshalText implements encoding.TextMarshaler.
@@ -252,13 +252,13 @@ func (b Uint) String() string {
 }
 
 // ToBytes return the []byte
-func (b Uint) ToBytes() []byte{
-    return []byte(b.String())
+func (b Uint) ToBytes() []byte {
+	return []byte(b.String())
 }
 
 // Touint return the uint
 func (b Uint) Touint() uint {
-    return (uint)(b)
+	return (uint)(b)
 }
 
 // ---------------------------------

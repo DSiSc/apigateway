@@ -46,9 +46,8 @@ var (
 	maxUint33bits = uint64(^uint32(0)) + 1
 	maxUint64bits = ^uint64(0)
 
-
-    // ---------------------
-    // Test Cases
+	// ---------------------
+	// Test Cases
 	encodeBigTests = []marshalTest{
 		{referenceBig("0"), "0x0"},
 		{referenceBig("1"), "0x1"},
@@ -110,59 +109,58 @@ var (
 		},
 	}
 
-    unmarshalUintTests = []unmarshalTest{
-	    // invalid encoding
-	    {input: "", wantErr: errJSONEOF},
-	    {input: "null", wantErr: errNonString(uintT)},
-	    {input: "10", wantErr: errNonString(uintT)},
-	    {input: `"0"`, wantErr: wrapTypeError(ErrMissingPrefix, uintT)},
-	    {input: `"0x"`, wantErr: wrapTypeError(ErrEmptyNumber, uintT)},
-	    {input: `"0x01"`, wantErr: wrapTypeError(ErrLeadingZero, uintT)},
-	    {input: `"0x100000000"`, want: uint(maxUint33bits), wantErr32bit: wrapTypeError(ErrUintRange, uintT)},
-	    {input: `"0xfffffffffffffffff"`, wantErr: wrapTypeError(ErrUintRange, uintT)},
-	    {input: `"0xx"`, wantErr: wrapTypeError(ErrSyntax, uintT)},
-	    {input: `"0x1zz01"`, wantErr: wrapTypeError(ErrSyntax, uintT)},
+	unmarshalUintTests = []unmarshalTest{
+		// invalid encoding
+		{input: "", wantErr: errJSONEOF},
+		{input: "null", wantErr: errNonString(uintT)},
+		{input: "10", wantErr: errNonString(uintT)},
+		{input: `"0"`, wantErr: wrapTypeError(ErrMissingPrefix, uintT)},
+		{input: `"0x"`, wantErr: wrapTypeError(ErrEmptyNumber, uintT)},
+		{input: `"0x01"`, wantErr: wrapTypeError(ErrLeadingZero, uintT)},
+		{input: `"0x100000000"`, want: uint(maxUint33bits), wantErr32bit: wrapTypeError(ErrUintRange, uintT)},
+		{input: `"0xfffffffffffffffff"`, wantErr: wrapTypeError(ErrUintRange, uintT)},
+		{input: `"0xx"`, wantErr: wrapTypeError(ErrSyntax, uintT)},
+		{input: `"0x1zz01"`, wantErr: wrapTypeError(ErrSyntax, uintT)},
 
-	    // valid encoding
-	    {input: `""`, want: uint(0)},
-	    {input: `"0x0"`, want: uint(0)},
-	    {input: `"0x2"`, want: uint(0x2)},
-	    {input: `"0x2F2"`, want: uint(0x2f2)},
-	    {input: `"0X2F2"`, want: uint(0x2f2)},
-	    {input: `"0x1122aaff"`, want: uint(0x1122aaff)},
-	    {input: `"0xbbb"`, want: uint(0xbbb)},
-	    {input: `"0xffffffff"`, want: uint(0xffffffff)},
-	    {input: `"0xffffffffffffffff"`, want: uint(maxUint64bits), wantErr32bit: wrapTypeError(ErrUintRange, uintT)},
-    }
+		// valid encoding
+		{input: `""`, want: uint(0)},
+		{input: `"0x0"`, want: uint(0)},
+		{input: `"0x2"`, want: uint(0x2)},
+		{input: `"0x2F2"`, want: uint(0x2f2)},
+		{input: `"0X2F2"`, want: uint(0x2f2)},
+		{input: `"0x1122aaff"`, want: uint(0x1122aaff)},
+		{input: `"0xbbb"`, want: uint(0xbbb)},
+		{input: `"0xffffffff"`, want: uint(0xffffffff)},
+		{input: `"0xffffffffffffffff"`, want: uint(maxUint64bits), wantErr32bit: wrapTypeError(ErrUintRange, uintT)},
+	}
 
-    unmarshalUint64Tests = []unmarshalTest{
-    	// invalid encoding
-    	{input: "", wantErr: errJSONEOF},
-    	{input: "null", wantErr: errNonString(uint64T)},
-    	{input: "10", wantErr: errNonString(uint64T)},
-    	{input: `"0"`, wantErr: wrapTypeError(ErrMissingPrefix, uint64T)},
-    	{input: `"0x"`, wantErr: wrapTypeError(ErrEmptyNumber, uint64T)},
-    	{input: `"0x01"`, wantErr: wrapTypeError(ErrLeadingZero, uint64T)},
-    	{input: `"0xfffffffffffffffff"`, wantErr: wrapTypeError(ErrUint64Range, uint64T)},
-    	{input: `"0xx"`, wantErr: wrapTypeError(ErrSyntax, uint64T)},
-    	{input: `"0x1zz01"`, wantErr: wrapTypeError(ErrSyntax, uint64T)},
-    
-    	// valid encoding
-    	{input: `""`, want: uint64(0)},
-    	{input: `"0x0"`, want: uint64(0)},
-    	{input: `"0x2"`, want: uint64(0x2)},
-    	{input: `"0x2F2"`, want: uint64(0x2f2)},
-    	{input: `"0X2F2"`, want: uint64(0x2f2)},
-    	{input: `"0x1122aaff"`, want: uint64(0x1122aaff)},
-    	{input: `"0xbbb"`, want: uint64(0xbbb)},
-    	{input: `"0xffffffffffffffff"`, want: uint64(0xffffffffffffffff)},
-    }
+	unmarshalUint64Tests = []unmarshalTest{
+		// invalid encoding
+		{input: "", wantErr: errJSONEOF},
+		{input: "null", wantErr: errNonString(uint64T)},
+		{input: "10", wantErr: errNonString(uint64T)},
+		{input: `"0"`, wantErr: wrapTypeError(ErrMissingPrefix, uint64T)},
+		{input: `"0x"`, wantErr: wrapTypeError(ErrEmptyNumber, uint64T)},
+		{input: `"0x01"`, wantErr: wrapTypeError(ErrLeadingZero, uint64T)},
+		{input: `"0xfffffffffffffffff"`, wantErr: wrapTypeError(ErrUint64Range, uint64T)},
+		{input: `"0xx"`, wantErr: wrapTypeError(ErrSyntax, uint64T)},
+		{input: `"0x1zz01"`, wantErr: wrapTypeError(ErrSyntax, uint64T)},
 
-    // ------------------------
-    // errors
+		// valid encoding
+		{input: `""`, want: uint64(0)},
+		{input: `"0x0"`, want: uint64(0)},
+		{input: `"0x2"`, want: uint64(0x2)},
+		{input: `"0x2F2"`, want: uint64(0x2f2)},
+		{input: `"0X2F2"`, want: uint64(0x2f2)},
+		{input: `"0x1122aaff"`, want: uint64(0x1122aaff)},
+		{input: `"0xbbb"`, want: uint64(0xbbb)},
+		{input: `"0xffffffffffffffff"`, want: uint64(0xffffffffffffffff)},
+	}
+
+	// ------------------------
+	// errors
 	errJSONEOF = errors.New("unexpected end of JSON input")
 )
-
 
 // --------------------------
 // package Test* json encoding
@@ -291,33 +289,33 @@ func TestUnmarshalUint(t *testing.T) {
 // package Test* others
 func TestToBigInt(t *testing.T) {
 
-    input := referenceBig("0")
-    want := NewBig(input).ToBigInt()
-    if input.String() != want.String() {
+	input := referenceBig("0")
+	want := NewBig(input).ToBigInt()
+	if input.String() != want.String() {
 
-        t.Errorf("Error with to BigInt: got %x, want %x", input, want)
-    }
-    
+		t.Errorf("Error with to BigInt: got %x, want %x", input, want)
+	}
+
 }
 
 func TestToUint64(t *testing.T) {
 
-    input := uint64(1)
-    want := NewUint64(input).Touint64()
+	input := uint64(1)
+	want := NewUint64(input).Touint64()
 
-    if input != want {
-        t.Errorf("Error with to unit64: got %d, want %d", input, want)
-    }
+	if input != want {
+		t.Errorf("Error with to unit64: got %d, want %d", input, want)
+	}
 }
 
 func TestToUint(t *testing.T) {
 
-    input := uint(1)
-    want := NewUint(input).Touint()
+	input := uint(1)
+	want := NewUint(input).Touint()
 
-    if input != want {
-        t.Errorf("Error with to unit: got %d, want %d", input, want)
-    }
+	if input != want {
+		t.Errorf("Error with to unit: got %d, want %d", input, want)
+	}
 }
 
 // -------------------------

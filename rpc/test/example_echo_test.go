@@ -1,4 +1,6 @@
-package core
+// +build integration
+
+package test
 
 import (
 	"testing"
@@ -20,7 +22,7 @@ func TestEchoViaHTTP(t *testing.T) {
 		"arg": testVal,
 	}
 
-	result := new(ResultEcho)
+	result := new(ctypes.ResultEcho)
 	_, err := cl.Call("echo", params, result)
 
 	require.Nil(t, err)
@@ -42,7 +44,7 @@ func TestEchoArgsViaHTTP(t *testing.T) {
 		"arg": param_args,
 	}
 
-	result := new(ResultEcho)
+	result := new(ctypes.ResultEcho)
 	_, err := cl.Call("echo_args", params, result)
 
 	require.Nil(t, err)

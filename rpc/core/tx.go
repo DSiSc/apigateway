@@ -1,9 +1,19 @@
 package core
 
 import (
+	cmn "github.com/DSiSc/apigateway/common"
 	ctypes "github.com/DSiSc/apigateway/rpc/core/types"
-	//"github.com/DSiSc/craft/types"
+	"github.com/DSiSc/craft/types"
+	sw "github.com/DSiSc/gossipswitch"
 )
+
+var (
+	swch chan sw.SwitchMsg
+)
+
+func SetSwCh(ch chan sw.SwitchMsg) {
+	swch = ch
+}
 
 // ------------------------------
 // package Consts, Vars
@@ -69,21 +79,29 @@ import (
 //
 // - `hash`: `[]byte` - hash of the transaction
 // - `error`: `error` - error detail info
-func SendTransaction(args ctypes.SendTxArgs) (string, error) {
-
+func SendTransaction(args ctypes.SendTxArgs) (cmn.Hash, error) {
 	// new types.Transaction base on SendTxArgs
-	// tx := types.NewTransaction(
-	//        args.Nonce.Touint64(),
-	//        types.BytesToAddress(args.To.Bytes()),
-	//        args.Value.ToBigInt(),
-	//        args.Gas.Touint64(),
-	//        args.GasPrice.ToBigInt(),
-	//        args.Data.Bytes(),
-	// )
+	tx := types.NewTransaction(
+		args.Nonce.Touint64(),
+		types.BytesToAddress(args.To.Bytes()),
+		args.Value.ToBigInt(),
+		args.Gas.Touint64(),
+		args.GasPrice.ToBigInt(),
+		args.Data.Bytes(),
+	)
 
-	// sign transacation
-	// send transacation to swch, wait for transaction ID
-	// return transaction ID
+	// TODO(peerlink): sign transacation
 
-	return "Not Implement", nil
+	//	fmt.Println("begin to send tx to chan.")
+	go func() {
+		// send transacation to swch, wait for transaction ID
+		var swMsg sw.SwitchMsg
+		swMsg = tx
+		swch <- swMsg
+	}()
+
+	txId := tx.Hash()
+	//fmt.Println("Every thing is OK")
+
+	return cmn.BytesToHash(txId.Bytes()), nil
 }

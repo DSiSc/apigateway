@@ -1,4 +1,4 @@
-# !/bin/bash
+#!/bin/bash
 
 # Change directory to project root folder
 PROJ_FOLDER=$(cd "$(dirname "$0")/..";pwd)

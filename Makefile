@@ -87,7 +87,7 @@ get-tools:
 	@# go get -u github.com/axw/gocov/...
 	@# go get -u github.com/client9/misspell/cmd/misspell
 
-fetch-deps: #get-tools
+fetch-deps: get-tools
 	@echo "Run go get to fetch dependencies as described in dependencies.txt ..."
 	@bash scripts/ensure_deps.sh
 

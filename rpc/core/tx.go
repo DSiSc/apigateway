@@ -8,10 +8,10 @@ import (
 )
 
 var (
-	swch chan sw.SwitchMsg
+	swch chan<- sw.SwitchMsg
 )
 
-func SetSwCh(ch chan sw.SwitchMsg) {
+func SetSwCh(ch chan<- sw.SwitchMsg) {
 	swch = ch
 }
 

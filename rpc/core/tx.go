@@ -2,8 +2,8 @@ package core
 
 import (
 	cmn "github.com/DSiSc/apigateway/common"
+	"github.com/DSiSc/apigateway/core/types"
 	ctypes "github.com/DSiSc/apigateway/rpc/core/types"
-	"github.com/DSiSc/craft/types"
 	sw "github.com/DSiSc/gossipswitch"
 )
 
@@ -88,6 +88,7 @@ func SendTransaction(args ctypes.SendTxArgs) (cmn.Hash, error) {
 		args.Gas.Touint64(),
 		args.GasPrice.ToBigInt(),
 		args.Data.Bytes(),
+		types.BytesToAddress(args.From.Bytes()),
 	)
 
 	// TODO(peerlink): sign transacation
@@ -100,8 +101,8 @@ func SendTransaction(args ctypes.SendTxArgs) (cmn.Hash, error) {
 		swch <- swMsg
 	}()
 
-	txId := tx.Hash()
+	txId := types.TxHash(tx)
 	//fmt.Println("Every thing is OK")
 
-	return cmn.BytesToHash(txId.Bytes()), nil
+	return cmn.BytesToHash(types.HashBytes(txId)), nil
 }

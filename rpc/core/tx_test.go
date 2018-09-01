@@ -14,6 +14,7 @@ import (
 	"testing"
 
 	cmn "github.com/DSiSc/apigateway/common"
+	ctypes "github.com/DSiSc/apigateway/core/types"
 	rpctypes "github.com/DSiSc/apigateway/rpc/lib/types"
 	crafttypes "github.com/DSiSc/craft/types"
 	sw "github.com/DSiSc/gossipswitch"
@@ -57,17 +58,18 @@ func TestSendTransaction(t *testing.T) {
 	// -------------------------
 	// Mock:  mockTransaction
 	nonce, _ := strconv.ParseUint(request.nonce[2:], 16, 32)
-	to := crafttypes.BytesToAddress(getBytes(request.to))
+	to := ctypes.BytesToAddress(getBytes(request.to))
+	from := ctypes.BytesToAddress(getBytes(request.from))
 	gas, _ := strconv.ParseUint(request.gas[2:], 16, 32)
 	value := new(big.Int).SetBytes(getBytes(request.value))
 	gasPrice := new(big.Int).SetBytes(getBytes(request.gasPrice))
 	data := getBytes(request.data)
 
-	mockTransaction := crafttypes.NewTransaction(nonce, to, value, gas, gasPrice, data)
+	mockTransaction := ctypes.NewTransaction(nonce, to, value, gas, gasPrice, data, from)
 	// NOTE(peerlink): tx.hash changed when call tx.Hash()
 	//mockTxHash := cmn.BytesToHash(mockTransaction.Hash().Bytes())
-	mockTransaction.Hash()
-
+	// mockTransaction.Hash()
+	ctypes.TxHash(mockTransaction)
 	// -------------------------
 	// set mock swch, before node start http server.
 	mockSwCh := make(chan sw.SwitchMsg)

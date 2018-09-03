@@ -19,6 +19,8 @@ import (
 	"fmt"
 	"math/big"
 	"reflect"
+
+	inl "github.com/DSiSc/apigateway/common/internal"
 )
 
 // ------------------------
@@ -84,7 +86,7 @@ func (b Big) MarshalText() ([]byte, error) {
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (b *Big) UnmarshalJSON(input []byte) error {
-	if !isString(input) {
+	if !inl.IsString(input) {
 		return errNonString(bigT)
 	}
 	return wrapTypeError(b.UnmarshalText(input[1:len(input)-1]), bigT)
@@ -185,9 +187,4 @@ func decodeNibble(in byte) uint64 {
 	default:
 		return badNibble
 	}
-}
-
-func isString(input []byte) bool {
-	return len(input) >= 2 && input[0] == '"' && input[len(input)-1] == '"'
-
 }

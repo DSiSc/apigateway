@@ -19,6 +19,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"strconv"
 
 	"github.com/pkg/errors"
 )
@@ -103,6 +104,22 @@ func (h *Hex) DecodeString(data string) ([]byte, error) {
 	}
 
 	return dstdata, nil
+}
+
+// EncodeUint64 uint64 to []byte
+func (h *Hex) EncodeUint64(data uint64) []byte {
+
+	var buf = make([]byte, 2, 10)
+	copy(buf, h.prefix)
+	return strconv.AppendUint(buf, data, 16)
+}
+
+// EncodeUint uint to []byte
+func (h *Hex) EncodeUint(data uint) []byte {
+
+	var buf = make([]byte, 2, 10)
+	copy(buf, h.prefix)
+	return strconv.AppendUint(buf, uint64(data), 16)
 }
 
 // EncodeLen get dst []byte len

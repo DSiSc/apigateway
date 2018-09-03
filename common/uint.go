@@ -14,6 +14,10 @@
 
 package common
 
+import (
+	inl "github.com/DSiSc/apigateway/common/internal"
+)
+
 // ------------------------
 // package Consts, Vars
 
@@ -21,7 +25,6 @@ package common
 // package Struct Uint
 
 // Uint marshals/unmarshals as a JSON string with 0x prefix.
-// The zero value marshals as "0x0".
 type Uint uint
 
 func NewUint(i uint) *Uint {
@@ -35,7 +38,7 @@ func (b Uint) MarshalText() ([]byte, error) {
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (b *Uint) UnmarshalJSON(input []byte) error {
-	if !isString(input) {
+	if !inl.IsString(input) {
 		return errNonString(uintT)
 	}
 	return wrapTypeError(b.UnmarshalText(input[1:len(input)-1]), uintT)
@@ -56,7 +59,7 @@ func (b *Uint) UnmarshalText(input []byte) error {
 
 // String returns the hex encoding of b.
 func (b Uint) String() string {
-	return Unit64Encode(uint64(b))
+	return string(Ghex.EncodeUint(b.Touint()))
 }
 
 // ToBytes return the []byte

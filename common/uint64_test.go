@@ -25,13 +25,6 @@ import (
 // ----------------------------
 // package Consts, Vars
 var (
-	encodeUint64Tests = []marshalTest{
-		{uint64(0), "0x0"},
-		{uint64(1), "0x1"},
-		{uint64(0xff), "0xff"},
-		{uint64(0x1122334455667788), "0x1122334455667788"},
-	}
-
 	unmarshalUint64Tests = []unmarshalTest{
 		// invalid encoding
 		{input: "", wantErr: errJSONEOF},
@@ -81,6 +74,14 @@ func BenchmarkUnmarshalUint64(b *testing.B) {
 }
 
 func TestMarshalUint64(t *testing.T) {
+
+	var encodeUint64Tests = []marshalTest{
+		{uint64(0), "0x0"},
+		{uint64(1), "0x1"},
+		{uint64(0xff), "0xff"},
+		{uint64(0x1122334455667788), "0x1122334455667788"},
+	}
+
 	for _, test := range encodeUint64Tests {
 		in := test.input.(uint64)
 		out, err := json.Marshal(Uint64(in))

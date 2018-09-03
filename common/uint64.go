@@ -15,7 +15,7 @@
 package common
 
 import (
-	"strconv"
+	inl "github.com/DSiSc/apigateway/common/internal"
 )
 
 // ------------------------
@@ -33,21 +33,14 @@ func NewUint64(i uint64) *Uint64 {
 	return (*Uint64)(&i)
 }
 
-// Unit64Encode encodes i as a hex string with 0x prefix.
-func Unit64Encode(i uint64) string {
-	enc := make([]byte, 2, 10)
-	copy(enc, "0x")
-	return string(strconv.AppendUint(enc, i, 16))
-}
-
 // MarshalText implements encoding.TextMarshaler.
 func (b Uint64) MarshalText() ([]byte, error) {
-	return []byte(Unit64Encode(uint64(b))), nil
+	return Ghex.EncodeUint64(b.Touint64()), nil
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (b *Uint64) UnmarshalJSON(input []byte) error {
-	if !isString(input) {
+	if !inl.IsString(input) {
 		return errNonString(uint64T)
 	}
 	return wrapTypeError(b.UnmarshalText(input[1:len(input)-1]), uint64T)
@@ -77,7 +70,7 @@ func (b *Uint64) UnmarshalText(input []byte) error {
 
 // String returns the hex encoding of b.
 func (b Uint64) String() string {
-	return Unit64Encode(uint64(b))
+	return string(Ghex.EncodeUint64(b.Touint64()))
 }
 
 // ToBytes return []byte

@@ -1,7 +1,6 @@
 package core
 
 import (
-	//	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -19,7 +18,6 @@ import (
 	crafttypes "github.com/DSiSc/craft/types"
 	sw "github.com/DSiSc/gossipswitch"
 	"github.com/stretchr/testify/assert"
-	//	"github.com/stretchr/testify/require"
 )
 
 // ------------------------
@@ -67,9 +65,8 @@ func TestSendTransaction(t *testing.T) {
 
 	mockTransaction := ctypes.NewTransaction(nonce, to, value, gas, gasPrice, data, from)
 	// NOTE(peerlink): tx.hash changed when call tx.Hash()
-	//mockTxHash := cmn.BytesToHash(mockTransaction.Hash().Bytes())
-	// mockTransaction.Hash()
 	ctypes.TxHash(mockTransaction)
+
 	// -------------------------
 	// set mock swch, before node start http server.
 	mockSwCh := make(chan sw.SwitchMsg)

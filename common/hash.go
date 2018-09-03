@@ -19,8 +19,7 @@ import (
 	"math/big"
 	"math/rand"
 	"reflect"
-
-	"github.com/ethereum/go-ethereum/common/hexutil"
+	"strconv"
 )
 
 // -------------------------
@@ -28,10 +27,6 @@ import (
 // Lengths of hashes and addresses in bytes.
 const (
 	HashLength = 32
-)
-
-var (
-	hashT = reflect.TypeOf(Hash{})
 )
 
 // ------------------
@@ -47,11 +42,15 @@ func BytesToHash(b []byte) Hash {
 
 // BigToHash sets byte representation of b to hash.
 // If b is larger than len(h), b will be cropped from the left.
-func BigToHash(b *big.Int) Hash { return BytesToHash(b.Bytes()) }
+func BigToHash(b *big.Int) Hash {
+	return BytesToHash(b.Bytes())
+}
 
 // HexToHash sets byte representation of s to hash.
 // If b is larger than len(h), b will be cropped from the left.
-func HexToHash(s string) Hash { return BytesToHash(HexDecodeWithoutErr(s)) }
+func HexToHash(s string) Hash {
+	return BytesToHash(Ghex.MustDecodeString(s))
+}
 
 // ----------------------
 // package Struct Hash
@@ -59,46 +58,29 @@ func HexToHash(s string) Hash { return BytesToHash(HexDecodeWithoutErr(s)) }
 // Hash represents the 32 byte Keccak256 hash of arbitrary data.
 type Hash [HashLength]byte
 
-// Bytes gets the byte representation of the underlying hash.
-func (h Hash) Bytes() []byte { return h[:] }
-
-// Big converts a hash to a big integer.
-func (h Hash) Big() *big.Int { return new(big.Int).SetBytes(h[:]) }
-
-// Hex converts a hash to a hex string.
-func (h Hash) Hex() string { return HexEncode(h[:]) }
-
-// TerminalString implements log.TerminalStringer, formatting a string for console
-// output during logging.
-func (h Hash) TerminalString() string {
-	return fmt.Sprintf("%x…%x", h[:3], h[29:])
-}
-
-// String implements the stringer interface and is used also by the logger when
-// doing full logging into a file.
-func (h Hash) String() string {
-	return h.Hex()
-}
-
-// Format implements fmt.Formatter, forcing the byte slice to be formatted as is,
-// without going through the stringer interface used for logging.
-func (h Hash) Format(s fmt.State, c rune) {
-	fmt.Fprintf(s, "%"+string(c), h[:])
-}
-
-// UnmarshalText parses a hash in hex syntax.
-func (h *Hash) UnmarshalText(input []byte) error {
-	return hexutil.UnmarshalFixedText("Hash", input, h[:])
+func (h Hash) MarshalJSON() ([]byte, error) {
+	js := strconv.Quote(Ghex.EncodeToString(h[:]))
+	return []byte(js), nil
 }
 
 // UnmarshalJSON parses a hash in hex syntax.
 func (h *Hash) UnmarshalJSON(input []byte) error {
-	return hexutil.UnmarshalFixedJSON(hashT, input, h[:])
-}
 
-// MarshalText returns the hex representation of h.
-func (h Hash) MarshalText() ([]byte, error) {
-	return hexutil.Bytes(h[:]).MarshalText()
+	unQuote, err := strconv.Unquote(string(input))
+	if err != nil {
+		return err
+
+	}
+
+	srcBytes := []byte(unQuote)
+	dstBytes := make([]byte, Ghex.DecodeLen(len(srcBytes)))
+	_, errDecode := Ghex.Decode(dstBytes, srcBytes)
+	if errDecode != nil {
+		return errDecode
+	}
+
+	h.SetBytes(dstBytes)
+	return nil
 }
 
 // SetBytes sets the hash to the value of b.
@@ -118,4 +100,33 @@ func (h Hash) Generate(rand *rand.Rand, size int) reflect.Value {
 		h[i] = byte(rand.Uint32())
 	}
 	return reflect.ValueOf(h)
+}
+
+// Bytes gets the byte representation of the underlying hash.
+func (h Hash) Bytes() []byte { return h[:] }
+
+// Big converts a hash to a big integer.
+func (h Hash) Big() *big.Int { return new(big.Int).SetBytes(h[:]) }
+
+// Hex converts a hash to a hex string.
+func (h Hash) Hex() string {
+	return Ghex.EncodeToString(h[:])
+}
+
+// TerminalString implements log.TerminalStringer, formatting a string for console
+// output during logging.
+func (h Hash) TerminalString() string {
+	return fmt.Sprintf("%x…%x", h[:3], h[29:])
+}
+
+// String implements the stringer interface and is used also by the logger when
+// doing full logging into a file.
+func (h Hash) String() string {
+	return h.Hex()
+}
+
+// Format implements fmt.Formatter, forcing the byte slice to be formatted as is,
+// without going through the stringer interface used for logging.
+func (h Hash) Format(s fmt.State, c rune) {
+	fmt.Fprintf(s, "%"+string(c), h[:])
 }

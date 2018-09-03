@@ -15,7 +15,7 @@ import (
 func TestParseJSONMap(t *testing.T) {
 	assert := assert.New(t)
 
-	input := []byte(`{"value":"1234","height":22}`)
+	input := []byte(`{"value":"0x1234","height":22}`)
 
 	// naive is float,string
 	var p1 map[string]interface{}
@@ -27,7 +27,7 @@ func TestParseJSONMap(t *testing.T) {
 		}
 		v, ok := p1["value"].(string)
 		if assert.True(ok, "%#v", p1["value"]) {
-			assert.EqualValues("1234", v)
+			assert.EqualValues("0x1234", v)
 		}
 	}
 
@@ -45,7 +45,7 @@ func TestParseJSONMap(t *testing.T) {
 		}
 		v, ok := p2["value"].(string)
 		if assert.True(ok, "%#v", p2["value"]) {
-			assert.EqualValues("1234", v)
+			assert.EqualValues("0x1234", v)
 		}
 	}
 
@@ -104,7 +104,7 @@ func TestParseJSONMap(t *testing.T) {
 func TestParseJSONArray(t *testing.T) {
 	assert := assert.New(t)
 
-	input := []byte(`["1234",22]`)
+	input := []byte(`["0x1234",22]`)
 
 	// naive is float,string
 	var p1 []interface{}
@@ -112,7 +112,7 @@ func TestParseJSONArray(t *testing.T) {
 	if assert.Nil(err) {
 		v, ok := p1[0].(string)
 		if assert.True(ok, "%#v", p1[0]) {
-			assert.EqualValues("1234", v)
+			assert.EqualValues("0x1234", v)
 		}
 		h, ok := p1[1].(float64)
 		if assert.True(ok, "%#v", p1[1]) {

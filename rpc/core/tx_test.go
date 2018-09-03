@@ -145,6 +145,6 @@ func TestSendTransaction(t *testing.T) {
 }
 
 func getBytes(input string) []byte {
-	bytes, _ := cmn.HexDecode(input)
+	bytes, _ := cmn.Ghex.DecodeString(input)
 	return bytes
 }

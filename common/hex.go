@@ -16,99 +16,179 @@
 package common
 
 import (
+	"bytes"
 	"encoding/hex"
-	"strconv"
-	"strings"
+	"fmt"
+
+	"github.com/pkg/errors"
 )
 
 // ------------------------
 // package Const, Vars
 const (
-	UINTBITS = 32 << (uint64(^uint(0)) >> 63)
-	PREFIX   = "0x"
+	PREFIX = "0x"
 )
 
-// Errors
+var Ghex = New(PREFIX)
+
+// errors
 var (
-	ErrEmptyString   = NewError("empty hex string")
-	ErrSyntax        = NewError("invalid hex string")
-	ErrMissingPrefix = NewError("hex string without 0x prefix")
-	ErrOddLength     = NewError("hex string of odd length")
-	ErrEmptyNumber   = NewError("hex string \"0x\"")
-	ErrLeadingZero   = NewError("hex number with leading zero digits")
+	// E: Empty Data
+	ErrEmptyData = errors.New("empty hex data")
+	// E: without prefix
+	ErrMissingPrefix = errors.Errorf("hex string without %s prefix", PREFIX)
+	// E: odd length hex string
+	ErrOddLength = errors.New("hex string of odd length")
 )
 
-// -----------------------
-// package Functions
-
-func HexEncode(srcBytes []byte) string {
-
-	dstBytes := make([]byte, hex.EncodedLen(len(srcBytes)))
-
-	hex.Encode(dstBytes, srcBytes)
-
-	return PREFIX + string(dstBytes)
+// Hex
+// Encode and Decode hex string with prefix 0x
+type Hex struct {
+	prefix []byte
 }
 
-func HexDecode(srcStr string) ([]byte, error) {
+func New(prefix string) *Hex {
+	return &Hex{
+		prefix: []byte(prefix),
+	}
+}
 
-	if len(srcStr) == 0 {
-		return nil, ErrEmptyString
+// DecodeLen decode dst len without prefix
+func (h *Hex) DecodeLen(n int) int {
+	if n <= len(h.prefix) {
+		return hex.DecodedLen(len(h.prefix))
+	}
+	return hex.DecodedLen(n - len(h.prefix))
+}
+
+// Decode hex []byte to struct []byte
+func (h *Hex) Decode(dst, src []byte) (int, error) {
+
+	// verify data
+	b, err := h.verify(src)
+	if !b {
+		return 0, err
 	}
 
-	if !HexHasPrefix(srcStr) {
-		return nil, ErrMissingPrefix
-	}
+	// trim prefix
+	nonePrefixdata := h.trimPrefix(src)
 
-	srcBytesWithoutPrefix := srcStr[len(PREFIX):]
-	dstBytes, err := hex.DecodeString(srcBytesWithoutPrefix)
+	// decode data to string
+	n, err := hex.Decode(dst, nonePrefixdata)
 	if err != nil {
-		err = explainError(err)
-		return nil, err
+		return n, wrapError(err)
 	}
 
-	return dstBytes, nil
-
+	return n, nil
 }
 
-func HexDecodeWithoutErr(srcStr string) []byte {
+// DecodeString decode hex string to []byte
+func (h *Hex) DecodeString(data string) ([]byte, error) {
 
-	dstBytes, _ := HexDecode(srcStr)
-	return dstBytes
-}
+	bdata := []byte(data)
 
-// Validate validates whether each byte is valid hexadecimal string.
-func HexValidate(str string) bool {
+	// verify data
+	b, err := h.verify(bdata)
+	if !b {
+		return bdata, err
+	}
 
-	_, err := hex.DecodeString(str)
+	// trim data prefix
+	nonePrefixdata := h.trimPrefix(bdata)
+
+	// decode data to string
+	dstdata, err := hex.DecodeString(string(nonePrefixdata))
 	if err != nil {
-		return false
+		return bdata, wrapError(err)
 	}
-	return true
+
+	return dstdata, nil
 }
 
-func HexHasPrefix(str string) bool {
-	// NOTE(peerlink): suport prefix: "0x", "0X"
-	return strings.HasPrefix(str, PREFIX) || strings.HasPrefix(str, strings.ToUpper(PREFIX))
+// EncodeLen get dst []byte len
+func (h *Hex) EncodeLen(n int) int {
+
+	// EncodeLen + len(prefix)
+	return hex.EncodedLen(n) + len(h.prefix)
 }
 
-// -------------------
-// pakcage Function inner
+func (h *Hex) Encode(dst, src []byte) (int, error) {
 
-func explainError(err error) error {
-	if err, ok := err.(*strconv.NumError); ok {
-		switch err.Err {
-		case strconv.ErrRange:
-			return ErrUint64Range
-		case strconv.ErrSyntax:
-			return ErrSyntax
-		}
+	if len(dst) == 0 || len(dst) != h.EncodeLen(len(src)) {
+		return 0, errors.Errorf("encode dst length with %d, want %d", len(dst), h.EncodeLen(len(src)))
 	}
-	if _, ok := err.(hex.InvalidByteError); ok {
-		return ErrSyntax
+
+	// encode [len(prefix):]
+	n := hex.Encode(dst[len(h.prefix):], src)
+	copy(dst, []byte(h.prefix))
+
+	return n, nil
+}
+
+// EncodeToString encode []byte to string
+func (h *Hex) EncodeToString(data []byte) string {
+	dst := make([]byte, h.EncodeLen(len(data)))
+	h.Encode(dst, data)
+	return string(dst)
+}
+
+func (h *Hex) String() string {
+	return fmt.Sprintf("Hex with prefix %s", string(h.prefix))
+}
+
+// MustDecode decode hex string to []byte or panic error
+func (h *Hex) MustDecodeString(data string) []byte {
+	bdata, err := h.DecodeString(data)
+	if err != nil {
+		panic(err)
+	}
+	return bdata
+}
+
+// HasPrefix check data has prefix
+func (h *Hex) HasPrefix(data []byte) bool {
+	return bytes.HasPrefix(data, h.prefix) || bytes.HasPrefix(data, bytes.ToUpper(h.prefix))
+}
+
+// TrimPrefix trim 0x prefix, data should with 0x prefix
+func (h *Hex) trimPrefix(data []byte) []byte {
+	return data[len(h.prefix):]
+}
+
+// attachPrefix attach prefix 0x
+func (h *Hex) attachPrefix(data string) string {
+	return string(h.prefix) + data
+}
+
+// Verify check data
+func (h *Hex) verify(data []byte) (bool, error) {
+
+	// "" ErrEmptyData
+	if len(data) == 0 {
+		return false, ErrEmptyData
+	}
+
+	// "0" ErrMissingPrefix
+	if !h.HasPrefix(data) {
+		return false, ErrMissingPrefix
+	}
+
+	return true, nil
+}
+
+// ----------------------
+// package func inner
+func wrapError(err error) error {
+
+	wrapErr := err
+	if err, ok := err.(hex.InvalidByteError); ok {
+		wrapErr = errors.Errorf("invalid byte: %#U", rune(err))
+
 	}
 	if err == hex.ErrLength {
-		return ErrOddLength
+		wrapErr = ErrOddLength
+
 	}
-	return err
+
+	return wrapErr
 }

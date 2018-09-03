@@ -1,24 +1,24 @@
-// Copyright 2014 The go-ethereum Authors
-// This file is part of the go-ethereum library.
+// Copyright(c) 2018 DSiSc Group All Rights Reserved.
 //
-// The go-ethereum library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 //
-// The go-ethereum library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
+//     http://www.apache.org/licenses/LICENSE-2.0
 //
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 package common
 
 import (
 	"bytes"
 	"testing"
+
+	"github.com/pkg/errors"
 )
 
 // -------------------------------------
@@ -30,7 +30,7 @@ import (
 // ----------------------------------
 // Function Test*
 
-func TestEncode(t *testing.T) {
+func TestEncodeToString(t *testing.T) {
 	var encodeBytesTests = []struct {
 		input interface{}
 		want  string
@@ -40,14 +40,14 @@ func TestEncode(t *testing.T) {
 		{[]byte{0, 0, 1, 2}, "0x00000102"},
 	}
 	for _, test := range encodeBytesTests {
-		enc := HexEncode(test.input.([]byte))
+		enc := Ghex.EncodeToString(test.input.([]byte))
 		if enc != test.want {
 			t.Errorf("input %x: wrong encoding %s", test.input, enc)
 		}
 	}
 }
 
-func TestDecode(t *testing.T) {
+func TestDecodeString(t *testing.T) {
 	var decodeBytesTests = []struct {
 		input        string
 		want         interface{}
@@ -56,13 +56,13 @@ func TestDecode(t *testing.T) {
 	}{
 
 		// invalid
-		{input: ``, wantErr: ErrEmptyString},
+		{input: ``, wantErr: ErrEmptyData},
 		{input: `0`, wantErr: ErrMissingPrefix},
 		{input: `0x0`, wantErr: ErrOddLength},
 		{input: `0x023`, wantErr: ErrOddLength},
-		{input: `0xxx`, wantErr: ErrSyntax},
-		{input: `0x0X`, wantErr: ErrSyntax},
-		{input: `0x01zz01`, wantErr: ErrSyntax},
+		{input: `0xxx`, wantErr: errors.Errorf("invalid byte: U+0078 'x'")},
+		{input: `0x0X`, wantErr: errors.Errorf("invalid byte: U+0058 'X'")},
+		{input: `0x01zz01`, wantErr: errors.Errorf("invalid byte: U+007A 'z'")},
 		// valid
 		{input: `0x`, want: []byte{}},
 		{input: `0X`, want: []byte{}},
@@ -75,7 +75,7 @@ func TestDecode(t *testing.T) {
 		},
 	}
 	for _, test := range decodeBytesTests {
-		dec, err := HexDecode(test.input)
+		dec, err := Ghex.DecodeString(test.input)
 		if !checkError(t, test.input, err, test.wantErr) {
 			continue
 		}
@@ -87,44 +87,69 @@ func TestDecode(t *testing.T) {
 
 }
 
-func TestHasPrefix(t *testing.T) {
+func TestDecode(t *testing.T) {
 
-	var hasBoolTests = []struct {
-		input string
-		want  bool
+	decodeTests := []struct {
+		input   []byte
+		want    []byte
+		wantErr error
 	}{
-		{input: ``, want: false},
-		{input: `0`, want: false},
-		{input: `x`, want: false},
-		{input: `0x`, want: true},
-		{input: `0X`, want: true},
+		//valid
+		{input: []byte(`0x0001`), want: []byte{0, 1}, wantErr: nil},
+		{input: []byte(`0x0101`), want: []byte{1, 1}, wantErr: nil},
+		//invalid
+		{input: []byte(`00`), want: nil, wantErr: ErrMissingPrefix},
+		{input: []byte(`0x0`), want: nil, wantErr: ErrOddLength},
+		{input: []byte(``), want: nil, wantErr: ErrEmptyData},
+		{input: []byte(`0xxx`), want: nil, wantErr: errors.Errorf("invalid byte: U+0078 'x'")},
 	}
 
-	for _, test := range hasBoolTests {
-		dec := HexHasPrefix(test.input)
-		if test.want != dec {
-			t.Errorf("input %s: wrong result %t", test.input, dec)
+	for _, tcase := range decodeTests {
+
+		dst := make([]byte, Ghex.DecodeLen(len(tcase.input)))
+		_, err := Ghex.Decode(dst, tcase.input)
+		if err != nil {
+			if err.Error() != tcase.wantErr.Error() {
+				t.Errorf("Error mismath: got %s, want %s", err.Error(), tcase.wantErr.Error())
+			}
+		} else {
+			if !bytes.Equal(dst, tcase.want) {
+				t.Errorf("Decode bytes mismath: got %v, want %v", dst, tcase.want)
+
+			}
 		}
 	}
 }
 
-func TestValidate(t *testing.T) {
-	tests := []struct {
-		input string
-		ok    bool
+func TestEncode(t *testing.T) {
+
+	decodeTests := []struct {
+		input   []byte
+		want    []byte
+		wantErr error
+		length  int
 	}{
-		{"", true},
-		{"0", false},
-		{"00", true},
-		{"a9e67e", true},
-		{"A9E67E", true},
-		{"0xa9e67e", false},
-		{"a9e67e001", false},
-		{"0xHELLO_MY_NAME_IS_STEVEN_@#$^&*", false},
+		//valid
+		{input: []byte{0, 1}, want: []byte(`0x0001`), wantErr: nil, length: 6},
+		{input: []byte{1, 1}, want: []byte(`0x0101`), wantErr: nil, length: 6},
+		//invalid
+		{input: []byte{1, 1}, want: []byte(`0x0101`), wantErr: errors.Errorf("encode dst length with 4, want 6"), length: 4},
+		{input: []byte{1, 1}, want: []byte(`0x0101`), wantErr: errors.Errorf("encode dst length with 7, want 6"), length: 7},
 	}
-	for _, test := range tests {
-		if ok := HexValidate(test.input); ok != test.ok {
-			t.Errorf("isHex(%q) = %v, want %v", test.input, ok, test.ok)
+
+	for _, tcase := range decodeTests {
+
+		dst := make([]byte, tcase.length)
+		n, err := Ghex.Encode(dst, tcase.input)
+		if err != nil && n == 0 {
+			if err.Error() != tcase.wantErr.Error() {
+				t.Errorf("Error mismath: got %s, want %s", err.Error(), tcase.wantErr.Error())
+			}
+		} else {
+			if !bytes.Equal(dst, tcase.want) {
+				t.Errorf("Encode bytes mismath: got %v, want %v", dst, tcase.want)
+			}
+
 		}
 	}
 }
@@ -135,7 +160,7 @@ func TestValidate(t *testing.T) {
 func BenchmarkEncode(b *testing.B) {
 	input := []byte{0, 0, 1, 2}
 	for i := 0; i < b.N; i++ {
-		HexEncode(input)
+		Ghex.EncodeToString(input)
 	}
 }
 

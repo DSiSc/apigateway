@@ -40,6 +40,9 @@ var (
 	ErrBig256Range = NewError("hex number > 256 bits")
 	ErrUint64Range = NewError("hex number > 64 bits")
 	ErrUintRange   = NewError(fmt.Sprintf("hex number > %d bits", uintBits))
+	ErrSyntax      = NewError("invalid hex string")
+	ErrLeadingZero = NewError("hex number with leading zero digits")
+	ErrEmptyNumber = NewError("hex string \"0x\"")
 )
 
 // ------------------------
@@ -82,7 +85,7 @@ func (b Big) MarshalText() ([]byte, error) {
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (b *Big) UnmarshalJSON(input []byte) error {
-	if !IsString(input) {
+	if !isString(input) {
 		return errNonString(bigT)
 	}
 	return wrapTypeError(b.UnmarshalText(input[1:len(input)-1]), bigT)
@@ -166,7 +169,7 @@ func (b Uint64) MarshalText() ([]byte, error) {
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (b *Uint64) UnmarshalJSON(input []byte) error {
-	if !IsString(input) {
+	if !isString(input) {
 		return errNonString(uint64T)
 	}
 	return wrapTypeError(b.UnmarshalText(input[1:len(input)-1]), uint64T)
@@ -227,7 +230,7 @@ func (b Uint) MarshalText() ([]byte, error) {
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (b *Uint) UnmarshalJSON(input []byte) error {
-	if !IsString(input) {
+	if !isString(input) {
 		return errNonString(uintT)
 	}
 	return wrapTypeError(b.UnmarshalText(input[1:len(input)-1]), uintT)
@@ -268,7 +271,8 @@ func checkNumberText(input []byte) (raw []byte, err error) {
 	if len(input) == 0 {
 		return nil, nil // empty strings are allowed
 	}
-	if !HexHasPrefix(string(input)) {
+	if !Ghex.HasPrefix(input) {
+		//if !HexHasPrefix(string(input)) {
 		return nil, ErrMissingPrefix
 	}
 	input = input[2:]
@@ -303,4 +307,9 @@ func decodeNibble(in byte) uint64 {
 	default:
 		return badNibble
 	}
+}
+
+func isString(input []byte) bool {
+	return len(input) >= 2 && input[0] == '"' && input[len(input)-1] == '"'
+
 }

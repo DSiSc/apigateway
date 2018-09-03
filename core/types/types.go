@@ -20,13 +20,13 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/big"
-	"reflect"
+	"strconv"
 
 	"crypto/sha256"
 	"encoding/json"
+
 	cmn "github.com/DSiSc/apigateway/common"
 	"github.com/DSiSc/craft/types"
-	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
 )
 
@@ -35,11 +35,9 @@ const (
 	AddressLength = 20
 )
 
-var (
-	addressT = reflect.TypeOf(Address{})
-)
-
-/////////// Address
+//var (
+//	addressT = reflect.TypeOf(Address{})
+//)
 
 // Address represents the 20 byte address of an Ethereum account.
 type Address [AddressLength]byte
@@ -54,19 +52,49 @@ func BytesToAddress(b []byte) Address {
 
 // BigToAddress returns Address with byte values of b.
 // If b is larger than len(h), b will be cropped from the left.
-func BigToAddress(b *big.Int) Address { return BytesToAddress(b.Bytes()) }
+func BigToAddress(b *big.Int) Address {
+	return BytesToAddress(b.Bytes())
+}
 
 // HexToAddress returns Address with byte values of s.
 // If s is larger than len(h), s will be cropped from the left.
-func HexToAddress(s string) Address { return BytesToAddress(cmn.HexDecodeWithoutErr(s)) }
+func HexToAddress(s string) Address {
+	return BytesToAddress(cmn.Ghex.MustDecodeString(s))
+}
 
-// IsHexAddress verifies whether a string can represent a valid hex-encoded
-// Ethereum address or not.
-func IsHexAddress(s string) bool {
-	if cmn.HexHasPrefix(s) {
-		s = s[2:]
+// SetBytes sets the address to the value of b.
+// If b is larger than len(a) it will panic.
+func (a *Address) SetBytes(b []byte) {
+	if len(b) > len(a) {
+		b = b[len(b)-AddressLength:]
 	}
-	return len(s) == 2*AddressLength && cmn.HexValidate(s)
+	copy(a[AddressLength-len(b):], b)
+}
+
+// MarshalText returns the hex representation of a.
+func (a Address) MarshalJSON() ([]byte, error) {
+	js := strconv.Quote(cmn.Ghex.EncodeToString(a[:]))
+	return []byte(js), nil
+}
+
+// UnmarshalJSON parses a hash in hex syntax.
+func (a *Address) UnmarshalJSON(input []byte) error {
+
+	unQuote, err := strconv.Unquote(string(input))
+	if err != nil {
+		return err
+
+	}
+
+	srcBytes := []byte(unQuote)
+	dstBytes := make([]byte, cmn.Ghex.DecodeLen(len(srcBytes)))
+	_, errDecode := cmn.Ghex.Decode(dstBytes, srcBytes)
+	if errDecode != nil {
+		return errDecode
+	}
+
+	a.SetBytes(dstBytes)
+	return nil
 }
 
 // Bytes gets the string representation of the underlying address.
@@ -109,30 +137,6 @@ func (a Address) String() string {
 // without going through the stringer interface used for logging.
 func (a Address) Format(s fmt.State, c rune) {
 	fmt.Fprintf(s, "%"+string(c), a[:])
-}
-
-// SetBytes sets the address to the value of b.
-// If b is larger than len(a) it will panic.
-func (a *Address) SetBytes(b []byte) {
-	if len(b) > len(a) {
-		b = b[len(b)-AddressLength:]
-	}
-	copy(a[AddressLength-len(b):], b)
-}
-
-// MarshalText returns the hex representation of a.
-func (a Address) MarshalText() ([]byte, error) {
-	return hexutil.Bytes(a[:]).MarshalText()
-}
-
-// UnmarshalText parses a hash in hex syntax.
-func (a *Address) UnmarshalText(input []byte) error {
-	return hexutil.UnmarshalFixedText("Address", input, a[:])
-}
-
-// UnmarshalJSON parses a hash in hex syntax.
-func (a *Address) UnmarshalJSON(input []byte) error {
-	return hexutil.UnmarshalFixedJSON(addressT, input, a[:])
 }
 
 func Sum(bz []byte) []byte {

@@ -15,16 +15,21 @@
 package common
 
 import (
-	"encoding/hex"
 	"fmt"
-	"strings"
+	"strconv"
 )
 
 // ---------------------------
 // package Struct Bytes
 
-// The main purpose of HexBytes is to enable HEX-encoding for json/encoding.
 type Bytes []byte
+
+// New new Bytes
+func NewBytes(data []byte) *Bytes {
+	var bz Bytes
+	bz = append(bz, data...)
+	return &bz
+}
 
 // Marshal needed for protobuf compatibility
 func (bz Bytes) Marshal() ([]byte, error) {
@@ -37,34 +42,31 @@ func (bz *Bytes) Unmarshal(data []byte) error {
 	return nil
 }
 
-// This is the point of Bytes.
+// MarshalJSON implement encoding/json Marshaler interface.
 func (bz Bytes) MarshalJSON() ([]byte, error) {
-	s := strings.ToUpper(hex.EncodeToString(bz))
-	jbz := make([]byte, len(s)+2)
-	jbz[0] = '"'
-	copy(jbz[1:], []byte(s))
-	jbz[len(jbz)-1] = '"'
-	return jbz, nil
+	js := strconv.Quote(Ghex.EncodeToString(bz))
+	return []byte(js), nil
 }
 
 // This is the point of Bytes.
 func (bz *Bytes) UnmarshalJSON(data []byte) error {
-	if len(data) < 2 || data[0] != '"' || data[len(data)-1] != '"' {
-		return fmt.Errorf("Invalid hex string: %s", data)
-	}
 
-	bdata := string(data[1 : len(data)-1])
-	// FIXME(peerlink): data start with "0x" or "0X"
-	if HexHasPrefix(bdata) {
-		bdata = bdata[2:]
-	}
-
-	bz2, err := hex.DecodeString(bdata)
+	unQuote, err := strconv.Unquote(string(data))
 	if err != nil {
 		return err
 	}
-	*bz = bz2
+
+	bzDecode, err := Ghex.DecodeString(unQuote)
+	if err != nil {
+		return err
+	}
+
+	*bz = bzDecode
 	return nil
+}
+
+func (bz *Bytes) UnmarshalText(data []byte) error {
+	return bz.UnmarshalJSON(data)
 }
 
 // Allow it to fulfill various interfaces in light-client, etc...
@@ -73,7 +75,7 @@ func (bz Bytes) Bytes() []byte {
 }
 
 func (bz Bytes) String() string {
-	return strings.ToUpper(hex.EncodeToString(bz))
+	return Ghex.EncodeToString(bz)
 }
 
 func (bz Bytes) Format(s fmt.State, verb rune) {
@@ -83,11 +85,4 @@ func (bz Bytes) Format(s fmt.State, verb rune) {
 	default:
 		s.Write([]byte(fmt.Sprintf("%X", []byte(bz))))
 	}
-}
-
-// -------------------------
-// package Functions
-
-func IsString(input []byte) bool {
-	return len(input) >= 2 && input[0] == '"' && input[len(input)-1] == '"'
 }

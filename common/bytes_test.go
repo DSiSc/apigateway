@@ -11,6 +11,15 @@ import (
 // -------------------------
 // package Test*
 
+// Test New
+func TestNew(t *testing.T) {
+	data := []byte("hello world")
+
+	bz := NewBytes(data)
+
+	assert.Equal(t, data, bz.Bytes())
+}
+
 // This is a trivial test for protobuf compatibility.
 func TestMarshal(t *testing.T) {
 	bz := []byte("hello world")
@@ -26,7 +35,7 @@ func TestMarshal(t *testing.T) {
 }
 
 // Test that the hex encoding works.
-func TestJSONMarshal(t *testing.T) {
+func TestMarshalJSON(t *testing.T) {
 
 	type TestStruct struct {
 		B1 []byte
@@ -37,13 +46,10 @@ func TestJSONMarshal(t *testing.T) {
 		input    []byte
 		expected string
 	}{
-		{[]byte(``), `{"B1":"","B2":""}`},
-		{[]byte(`a`), `{"B1":"YQ==","B2":"61"}`},
-		{[]byte(`abc`), `{"B1":"YWJj","B2":"616263"}`},
-
-		{[]byte(`0x`), `{"B1":"MHg=","B2":"3078"}`},
-		{[]byte(`0xa`), `{"B1":"MHhh","B2":"307861"}`},
-		{[]byte(`0xabc`), `{"B1":"MHhhYmM=","B2":"3078616263"}`},
+		{[]byte(``), `{"B1":"","B2":"0x"}`},
+		{[]byte(`a`), `{"B1":"YQ==","B2":"0x61"}`},
+		{[]byte(`abc`), `{"B1":"YWJj","B2":"0x616263"}`},
+		{[]byte{1}, `{"B1":"AQ==","B2":"0x01"}`},
 	}
 
 	for i, tc := range cases {
@@ -55,18 +61,38 @@ func TestJSONMarshal(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			assert.Equal(t, string(jsonBytes), tc.expected)
+			assert.Equal(t, tc.expected, string(jsonBytes))
+		})
+	}
+}
 
-			// TODO do fuzz testing to ensure that unmarshal fails
+// Test that the hex encoding works.
+func TestUnmarshalJSON(t *testing.T) {
 
-			// Test that unmarshaling works correctly.
-			ts2 := TestStruct{}
-			err = json.Unmarshal(jsonBytes, &ts2)
+	type TestStruct struct {
+		B1 []byte
+		B2 Bytes
+	}
+
+	cases := []struct {
+		input    string
+		expected []byte
+	}{
+		{`{"B1":"","B2":"0x"}`, []byte(``)},
+		{`{"B1":"YQ==","B2":"0x61"}`, []byte(`a`)},
+		{`{"B1":"YWJj","B2":"0x616263"}`, []byte(`abc`)},
+		{`{"B1":"AQ==","B2":"0x01"}`, []byte{1}},
+	}
+
+	for i, tc := range cases {
+		t.Run(fmt.Sprintf("Case %d", i), func(t *testing.T) {
+			ts := TestStruct{}
+			err := json.Unmarshal([]byte(tc.input), &ts)
 			if err != nil {
 				t.Fatal(err)
 			}
-			assert.Equal(t, ts2.B1, tc.input)
-			assert.Equal(t, ts2.B2, Bytes(tc.input))
+			//assert.Equal(t, ts.B1, tc.expected)
+			assert.Equal(t, ts.B2, Bytes(tc.expected))
 		})
 	}
 }

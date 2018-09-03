@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"math/big"
 	"reflect"
-	"strconv"
 )
 
 // ------------------------
@@ -141,127 +140,6 @@ func (b Big) ToBytes() []byte {
 // ToBigInt return big.Int
 func (b Big) ToBigInt() *big.Int {
 	return (*big.Int)(&b)
-}
-
-// -------------------------
-// package Struct Unit64
-
-// Uint64 marshals/unmarshals as a JSON string with 0x prefix.
-// The zero value marshals as "0x0".
-type Uint64 uint64
-
-// NewUint64 create Uint64 from uint64
-func NewUint64(i uint64) *Uint64 {
-	return (*Uint64)(&i)
-}
-
-// Unit64Encode encodes i as a hex string with 0x prefix.
-func Unit64Encode(i uint64) string {
-	enc := make([]byte, 2, 10)
-	copy(enc, "0x")
-	return string(strconv.AppendUint(enc, i, 16))
-}
-
-// MarshalText implements encoding.TextMarshaler.
-func (b Uint64) MarshalText() ([]byte, error) {
-	return []byte(Unit64Encode(uint64(b))), nil
-}
-
-// UnmarshalJSON implements json.Unmarshaler.
-func (b *Uint64) UnmarshalJSON(input []byte) error {
-	if !isString(input) {
-		return errNonString(uint64T)
-	}
-	return wrapTypeError(b.UnmarshalText(input[1:len(input)-1]), uint64T)
-}
-
-// UnmarshalText implements encoding.TextUnmarshaler
-func (b *Uint64) UnmarshalText(input []byte) error {
-	raw, err := checkNumberText(input)
-	if err != nil {
-		return err
-	}
-	if len(raw) > 16 {
-		return ErrUint64Range
-	}
-	var dec uint64
-	for _, byte := range raw {
-		nib := decodeNibble(byte)
-		if nib == badNibble {
-			return ErrSyntax
-		}
-		dec *= 16
-		dec += nib
-	}
-	*b = Uint64(dec)
-	return nil
-}
-
-// String returns the hex encoding of b.
-func (b Uint64) String() string {
-	return Unit64Encode(uint64(b))
-}
-
-// ToBytes return []byte
-func (b Uint64) ToBytes() []byte {
-	return []byte(b.String())
-}
-
-// Touint64 return uint64
-func (b Uint64) Touint64() uint64 {
-	return (uint64)(b)
-}
-
-// ------------------------
-// package Struct Uint
-
-// Uint marshals/unmarshals as a JSON string with 0x prefix.
-// The zero value marshals as "0x0".
-type Uint uint
-
-func NewUint(i uint) *Uint {
-	return (*Uint)(&i)
-}
-
-// MarshalText implements encoding.TextMarshaler.
-func (b Uint) MarshalText() ([]byte, error) {
-	return Uint64(b).MarshalText()
-}
-
-// UnmarshalJSON implements json.Unmarshaler.
-func (b *Uint) UnmarshalJSON(input []byte) error {
-	if !isString(input) {
-		return errNonString(uintT)
-	}
-	return wrapTypeError(b.UnmarshalText(input[1:len(input)-1]), uintT)
-}
-
-// UnmarshalText implements encoding.TextUnmarshaler.
-func (b *Uint) UnmarshalText(input []byte) error {
-	var u64 Uint64
-	err := u64.UnmarshalText(input)
-	if u64 > Uint64(^uint(0)) || err == ErrUint64Range {
-		return ErrUintRange
-	} else if err != nil {
-		return err
-	}
-	*b = Uint(u64)
-	return nil
-}
-
-// String returns the hex encoding of b.
-func (b Uint) String() string {
-	return Unit64Encode(uint64(b))
-}
-
-// ToBytes return the []byte
-func (b Uint) ToBytes() []byte {
-	return []byte(b.String())
-}
-
-// Touint return the uint
-func (b Uint) Touint() uint {
-	return (uint)(b)
 }
 
 // ---------------------------------

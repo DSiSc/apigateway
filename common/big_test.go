@@ -15,11 +15,13 @@
 package common
 
 import (
+	"encoding/hex"
 	"encoding/json"
-    "encoding/hex"
 	"errors"
 	"math/big"
 	"testing"
+
+	inl "github.com/DSiSc/apigateway/common/internal"
 )
 
 // ---------------------------
@@ -106,7 +108,7 @@ func TestUnmarshalBig(t *testing.T) {
 	for _, test := range unmarshalBigTests {
 		var v Big
 		err := json.Unmarshal([]byte(test.input), &v)
-		if !checkError(t, test.input, err, test.wantErr) {
+		if !inl.CheckError(t, test.input, err, test.wantErr) {
 			continue
 		}
 		if test.want != nil && test.want.(*big.Int).Cmp((*big.Int)(&v)) != 0 {

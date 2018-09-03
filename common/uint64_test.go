@@ -16,7 +16,10 @@ package common
 
 import (
 	"encoding/json"
+	"strconv"
 	"testing"
+
+	inl "github.com/DSiSc/apigateway/common/internal"
 )
 
 // ---------------------------
@@ -24,12 +27,15 @@ import (
 
 // ----------------------------
 // package Consts, Vars
-var (
-	unmarshalUint64Tests = []unmarshalTest{
+
+// --------------------------
+// package Test* json encoding
+func TestUnmarshalUint64(t *testing.T) {
+	var unmarshalUint64Tests = []unmarshalTest{
 		// invalid encoding
 		{input: "", wantErr: errJSONEOF},
-		{input: "null", wantErr: errNonString(uint64T)},
-		{input: "10", wantErr: errNonString(uint64T)},
+		{input: "null", wantErr: strconv.ErrSyntax},
+		{input: "10", wantErr: strconv.ErrSyntax},
 		{input: `"0"`, wantErr: wrapTypeError(ErrMissingPrefix, uint64T)},
 		{input: `"0x"`, wantErr: wrapTypeError(ErrEmptyNumber, uint64T)},
 		{input: `"0x01"`, wantErr: wrapTypeError(ErrLeadingZero, uint64T)},
@@ -47,15 +53,10 @@ var (
 		{input: `"0xbbb"`, want: uint64(0xbbb)},
 		{input: `"0xffffffffffffffff"`, want: uint64(0xffffffffffffffff)},
 	}
-)
-
-// --------------------------
-// package Test* json encoding
-func TestUnmarshalUint64(t *testing.T) {
 	for _, test := range unmarshalUint64Tests {
 		var v Uint64
 		err := json.Unmarshal([]byte(test.input), &v)
-		if !checkError(t, test.input, err, test.wantErr) {
+		if !inl.CheckError(t, test.input, err, test.wantErr) {
 			continue
 		}
 		if uint64(v) != test.want.(uint64) {

@@ -15,7 +15,9 @@
 package common
 
 import (
-	inl "github.com/DSiSc/apigateway/common/internal"
+	//inl "github.com/DSiSc/apigateway/common/internal"
+
+	"strconv"
 )
 
 // ------------------------
@@ -40,10 +42,15 @@ func (b Uint64) MarshalText() ([]byte, error) {
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (b *Uint64) UnmarshalJSON(input []byte) error {
-	if !inl.IsString(input) {
-		return errNonString(uint64T)
+	s, err := strconv.Unquote(string(input))
+	if err != nil {
+		return err
 	}
-	return wrapTypeError(b.UnmarshalText(input[1:len(input)-1]), uint64T)
+
+	//	if !inl.IsString(input) {
+	//return errNonString(uint64T)
+	//}
+	return wrapTypeError(b.UnmarshalText([]byte(s)), uint64T)
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler

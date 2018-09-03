@@ -14,6 +14,10 @@
 
 package common
 
+
+import (
+   "testing"
+)
 // ------------------------
 // package Consts, Vars
 
@@ -23,4 +27,20 @@ package common
 func IsString(input []byte) bool {
 	return len(input) >= 2 && input[0] == '"' && input[len(input)-1] == '"'
 
+}
+
+func CheckError(t *testing.T, input string, got, want error) bool {
+	if got == nil {
+		if want != nil {
+			t.Errorf("input %s: got no error, want %q", input, want)
+			return false
+		}
+		return true
+	}
+	if want == nil {
+		t.Errorf("input %s: unexpected error %q", input, got)
+	} else if got.Error() != want.Error() {
+		t.Errorf("input %s: got error %q, want %q", input, got, want)
+	}
+	return false
 }

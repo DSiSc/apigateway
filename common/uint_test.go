@@ -17,6 +17,8 @@ package common
 import (
 	"encoding/json"
 	"testing"
+
+	inl "github.com/DSiSc/apigateway/common/internal"
 )
 
 // ---------------------------
@@ -25,7 +27,6 @@ import (
 // ----------------------------
 // package Consts, Vars
 var (
-
 	encodeUintTests = []marshalTest{
 		{uint(0), "0x0"},
 		{uint(1), "0x1"},
@@ -85,10 +86,10 @@ func TestUnmarshalUint(t *testing.T) {
 		var v Uint
 		err := json.Unmarshal([]byte(test.input), &v)
 		if uintBits == 32 && test.wantErr32bit != nil {
-			checkError(t, test.input, err, test.wantErr32bit)
+			inl.CheckError(t, test.input, err, test.wantErr32bit)
 			continue
 		}
-		if !checkError(t, test.input, err, test.wantErr) {
+		if !inl.CheckError(t, test.input, err, test.wantErr) {
 			continue
 		}
 		if uint(v) != test.want.(uint) {

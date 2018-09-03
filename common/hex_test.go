@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"testing"
 
+	inl "github.com/DSiSc/apigateway/common/internal"
 	"github.com/pkg/errors"
 )
 
@@ -76,7 +77,7 @@ func TestDecodeString(t *testing.T) {
 	}
 	for _, test := range decodeBytesTests {
 		dec, err := Ghex.DecodeString(test.input)
-		if !checkError(t, test.input, err, test.wantErr) {
+		if !inl.CheckError(t, test.input, err, test.wantErr) {
 			continue
 		}
 		if !bytes.Equal(test.want.([]byte), dec) {
@@ -166,19 +167,3 @@ func BenchmarkEncode(b *testing.B) {
 
 // ---------------------------------
 // Function inner
-
-func checkError(t *testing.T, input string, got, want error) bool {
-	if got == nil {
-		if want != nil {
-			t.Errorf("input %s: got no error, want %q", input, want)
-			return false
-		}
-		return true
-	}
-	if want == nil {
-		t.Errorf("input %s: unexpected error %q", input, got)
-	} else if got.Error() != want.Error() {
-		t.Errorf("input %s: got error %q, want %q", input, got, want)
-	}
-	return false
-}

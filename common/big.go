@@ -81,7 +81,7 @@ func NewBig(bigint *big.Int) *Big {
 
 // MarshalText implements encoding.TextMarshaler
 func (b Big) MarshalText() ([]byte, error) {
-	return []byte(b.String()), nil
+	return Ghex.EncodeBig(b.ToBigInt()), nil
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
@@ -126,12 +126,7 @@ func (b *Big) UnmarshalText(input []byte) error {
 
 // String returns the hex encoding of b.
 func (b Big) String() string {
-
-	nbits := b.ToBigInt().BitLen()
-	if nbits == 0 {
-		return "0x0"
-	}
-	return fmt.Sprintf("%#x", b.ToBigInt())
+	return string(Ghex.EncodeBig(b.ToBigInt()))
 }
 
 // ToBytes return []byte

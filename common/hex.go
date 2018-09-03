@@ -19,6 +19,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"math/big"
 	"strconv"
 
 	"github.com/pkg/errors"
@@ -116,10 +117,17 @@ func (h *Hex) EncodeUint64(data uint64) []byte {
 
 // EncodeUint uint to []byte
 func (h *Hex) EncodeUint(data uint) []byte {
+	return h.EncodeUint64(uint64(data))
+}
 
-	var buf = make([]byte, 2, 10)
-	copy(buf, h.prefix)
-	return strconv.AppendUint(buf, uint64(data), 16)
+// EncodeBig big.Int to []byte
+func (h *Hex) EncodeBig(data *big.Int) []byte {
+	nbits := data.BitLen()
+	if nbits == 0 {
+		return []byte(h.attachPrefix("0"))
+	}
+
+	return []byte(fmt.Sprintf("%#x", data))
 }
 
 // EncodeLen get dst []byte len

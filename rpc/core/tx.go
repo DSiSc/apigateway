@@ -4,7 +4,7 @@ import (
 	cmn "github.com/DSiSc/apigateway/common"
 	"github.com/DSiSc/apigateway/core/types"
 	ctypes "github.com/DSiSc/apigateway/rpc/core/types"
-	sw "github.com/DSiSc/gossipswitch"
+	sw "github.com/DSiSc/gossipswitch/common"
 )
 
 var (

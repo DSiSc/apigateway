@@ -4,14 +4,13 @@ import (
 	cmn "github.com/DSiSc/apigateway/common"
 	"github.com/DSiSc/apigateway/core/types"
 	ctypes "github.com/DSiSc/apigateway/rpc/core/types"
-	sw "github.com/DSiSc/gossipswitch/common"
 )
 
 var (
-	swch chan<- sw.SwitchMsg
+	swch chan<- interface{}
 )
 
-func SetSwCh(ch chan<- sw.SwitchMsg) {
+func SetSwCh(ch chan<- interface{}) {
 	swch = ch
 }
 
@@ -96,7 +95,7 @@ func SendTransaction(args ctypes.SendTxArgs) (cmn.Hash, error) {
 	//	fmt.Println("begin to send tx to chan.")
 	go func() {
 		// send transacation to swch, wait for transaction ID
-		var swMsg sw.SwitchMsg
+		var swMsg interface{}
 		swMsg = tx
 		swch <- swMsg
 	}()

@@ -16,7 +16,7 @@ import (
 	ctypes "github.com/DSiSc/apigateway/core/types"
 	rpctypes "github.com/DSiSc/apigateway/rpc/lib/types"
 	crafttypes "github.com/DSiSc/craft/types"
-	sw "github.com/DSiSc/gossipswitch"
+	sw "github.com/DSiSc/gossipswitch/common"
 	"github.com/stretchr/testify/assert"
 )
 

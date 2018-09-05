@@ -16,6 +16,7 @@ import (
 	ctypes "github.com/DSiSc/apigateway/core/types"
 	rpctypes "github.com/DSiSc/apigateway/rpc/lib/types"
 	crafttypes "github.com/DSiSc/craft/types"
+	wtypes "github.com/DSiSc/wallet/core/types"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -63,8 +64,14 @@ func TestSendTransaction(t *testing.T) {
 	data := getBytes(request.data)
 
 	mockTransaction := ctypes.NewTransaction(nonce, to, value, gas, gasPrice, data, from)
+
+	// SignTx
+	key, _ := defaultKey()
+	mockTransaction, _ = wtypes.SignTx(mockTransaction, new(wtypes.FrontierSigner), key)
+
 	// NOTE(peerlink): tx.hash changed when call tx.Hash()
-	ctypes.TxHash(mockTransaction)
+	txId := ctypes.TxHash(mockTransaction)
+	mockTxHash := ctypes.HashBytes(txId)
 
 	// -------------------------
 	// set mock swch, before node start http server.
@@ -101,17 +108,6 @@ func TestSendTransaction(t *testing.T) {
 		rec := httptest.NewRecorder()
 		mux.ServeHTTP(rec, req)
 
-		// Test read from swch for SwitchMsg
-		var swMsg interface{}
-		swMsg = <-mockSwCh
-
-		// assert: Type, Content.
-		assert.Equal(t, reflect.TypeOf(mockTransaction), reflect.TypeOf(swMsg), "swMsg type should be types.Transaction")
-
-		// exceptData := new(big.Int).SetBytes(cmn.HexDecode("0x9184e72a000"))
-		actualTransaction := swMsg.(*crafttypes.Transaction)
-		assert.Equal(t, mockTransaction, actualTransaction, "transaction price should equal request input")
-
 		// --------------
 		// Test Response
 		res := rec.Result()
@@ -123,15 +119,29 @@ func TestSendTransaction(t *testing.T) {
 			continue
 		}
 
+		// --------------------
+		// Test read from swch for SwitchMsg
+		var swMsg interface{}
+		swMsg = <-mockSwCh
+
+		// assert: Type, Content.
+		assert.Equal(t, reflect.TypeOf(mockTransaction), reflect.TypeOf(swMsg), "swMsg type should be types.Transaction")
+
+		// exceptData := new(big.Int).SetBytes(cmn.HexDecode("0x9184e72a000"))
+		actualTransaction := swMsg.(*crafttypes.Transaction)
+		assert.Equal(t, mockTransaction, actualTransaction, "transaction price should equal request input")
+
+		// ----------------
+		// Test reponse
 		recv := new(rpctypes.RPCResponse)
 		json.Unmarshal(blob, recv)
 
 		if tt.wantErr == "" {
 			assert.Nil(t, recv.Error, "#%d: not expecting an error", i)
 			// FIXME(peerlink): check return Hash and mockTransaction.Hash()
-			//var result cmn.Hash
-			//json.Unmarshal(recv.Result, &result)
-			//assert.Equal(t, mockTxHash.Bytes(), result.Bytes(), "Hash should equals")
+			var result cmn.Hash
+			json.Unmarshal(recv.Result, &result)
+			assert.Equal(t, mockTxHash, result.Bytes(), "Hash should equals")
 		} else {
 			assert.True(t, recv.Error.Code < 0, "#%d: not expecting a positive JSONRPC code", i)
 			// The wanted error is either in the message or the data

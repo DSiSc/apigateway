@@ -29,9 +29,9 @@ var colorFn = func(keyvals ...interface{}) term.FgBgColor {
 	return term.FgBgColor{}
 }
 
-func StartRPC(listenAddr string) ([]net.Listener, error) {
+var logger = log.NewTMLoggerWithColorFn(log.NewSyncWriter(os.Stdout), colorFn)
 
-	logger := log.NewTMLoggerWithColorFn(log.NewSyncWriter(os.Stdout), colorFn)
+func StartRPC(listenAddr string) ([]net.Listener, error) {
 
 	listenAddrs := cmn.SplitAndTrim(listenAddr, ",", " ")
 	coreCodec := amino.NewCodec()
@@ -63,4 +63,17 @@ func StartRPC(listenAddr string) ([]net.Listener, error) {
 		listeners[i] = listener
 	}
 	return listeners, nil
+}
+
+// StopRPC stop RPC server
+func StopRPC(rpcListeners []net.Listener) error {
+
+	for _, l := range rpcListeners {
+		logger.Info("Closing rpc listener", "listener", l)
+		if err := l.Close(); err != nil {
+			logger.Error("Error closing listener", "listener", l, "err", err)
+			return err
+		}
+	}
+	return nil
 }

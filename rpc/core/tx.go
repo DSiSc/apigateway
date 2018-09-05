@@ -1,9 +1,15 @@
 package core
 
 import (
+	"crypto/ecdsa"
+
 	cmn "github.com/DSiSc/apigateway/common"
 	"github.com/DSiSc/apigateway/core/types"
 	ctypes "github.com/DSiSc/apigateway/rpc/core/types"
+	"github.com/DSiSc/wallet/common"
+	wtypes "github.com/DSiSc/wallet/core/types"
+
+	"github.com/DSiSc/wallet/crypto"
 )
 
 var (
@@ -90,7 +96,12 @@ func SendTransaction(args ctypes.SendTxArgs) (cmn.Hash, error) {
 		types.BytesToAddress(args.From.Bytes()),
 	)
 
-	// TODO(peerlink): sign transacation
+	key, _ := defaultKey()
+	signer := new(wtypes.FrontierSigner)
+	tx, err := wtypes.SignTx(tx, signer, key)
+	if err != nil {
+		return cmn.BytesToHash([]byte("ok")), err
+	}
 
 	//	fmt.Println("begin to send tx to chan.")
 	go func() {
@@ -104,4 +115,13 @@ func SendTransaction(args ctypes.SendTxArgs) (cmn.Hash, error) {
 	//fmt.Println("Every thing is OK")
 
 	return cmn.BytesToHash(types.HashBytes(txId)), nil
+}
+
+// --------------------------
+// package Function inner
+func defaultKey() (*ecdsa.PrivateKey, common.Address) {
+	key, _ := crypto.HexToECDSA("45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8")
+	addr := crypto.PubkeyToAddress(key.PublicKey)
+	return key, addr
+
 }

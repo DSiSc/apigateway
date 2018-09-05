@@ -11,7 +11,7 @@ var (
 	tcpAddr = "tcp://0.0.0.0:47768"
 )
 
-func TestStartRPC(t *testing.T) {
+func TestStartAndStopRPC(t *testing.T) {
 
 	cases := []struct {
 		input   string
@@ -29,5 +29,9 @@ func TestStartRPC(t *testing.T) {
 		actualListenr, err := StartRPC(tcase.input)
 		require.Nil(t, err)
 		assert.Equal(t, tcase.want, actualListenr[0].Addr().String(), "Listener should be same")
+
+		// Test stopRPC
+		errStop := StopRPC(actualListenr)
+		require.Nil(t, errStop)
 	}
 }

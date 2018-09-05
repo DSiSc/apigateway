@@ -96,14 +96,15 @@ func SendTransaction(args ctypes.SendTxArgs) (cmn.Hash, error) {
 		types.BytesToAddress(args.From.Bytes()),
 	)
 
+	// SignTx
 	key, _ := defaultKey()
 	signer := new(wtypes.FrontierSigner)
 	tx, err := wtypes.SignTx(tx, signer, key)
 	if err != nil {
-		return cmn.BytesToHash([]byte("ok")), err
+		return cmn.BytesToHash([]byte("Fail to signTx")), err
 	}
 
-	//	fmt.Println("begin to send tx to chan.")
+	// Send Tx to gossipswith
 	go func() {
 		// send transacation to swch, wait for transaction ID
 		var swMsg interface{}
@@ -112,7 +113,6 @@ func SendTransaction(args ctypes.SendTxArgs) (cmn.Hash, error) {
 	}()
 
 	txId := types.TxHash(tx)
-	//fmt.Println("Every thing is OK")
 
 	return cmn.BytesToHash(types.HashBytes(txId)), nil
 }

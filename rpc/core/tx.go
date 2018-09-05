@@ -6,13 +6,10 @@ import (
 	cmn "github.com/DSiSc/apigateway/common"
 	"github.com/DSiSc/apigateway/core/types"
 	ctypes "github.com/DSiSc/apigateway/rpc/core/types"
-<<<<<<< HEAD
-=======
 	"github.com/DSiSc/wallet/common"
 	wtypes "github.com/DSiSc/wallet/core/types"
 
 	"github.com/DSiSc/wallet/crypto"
->>>>>>> release
 )
 
 var (

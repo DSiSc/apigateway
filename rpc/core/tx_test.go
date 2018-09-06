@@ -66,7 +66,7 @@ func TestSendTransaction(t *testing.T) {
 	mockTransaction := ctypes.NewTransaction(nonce, to, value, gas, gasPrice, data, from)
 
 	// SignTx
-	key, _ := defaultKey()
+	key, _ := wtypes.DefaultTestKey()
 	mockTransaction, _ = wtypes.SignTx(mockTransaction, new(wtypes.FrontierSigner), key)
 
 	// NOTE(peerlink): tx.hash changed when call tx.Hash()

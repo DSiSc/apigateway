@@ -1,15 +1,10 @@
 package core
 
 import (
-	"crypto/ecdsa"
-
 	cmn "github.com/DSiSc/apigateway/common"
 	"github.com/DSiSc/apigateway/core/types"
 	ctypes "github.com/DSiSc/apigateway/rpc/core/types"
-	"github.com/DSiSc/wallet/common"
 	wtypes "github.com/DSiSc/wallet/core/types"
-
-	"github.com/DSiSc/wallet/crypto"
 )
 
 var (
@@ -97,7 +92,7 @@ func SendTransaction(args ctypes.SendTxArgs) (cmn.Hash, error) {
 	)
 
 	// SignTx
-	key, _ := defaultKey()
+	key, _ := wtypes.DefaultTestKey()
 	signer := new(wtypes.FrontierSigner)
 	tx, err := wtypes.SignTx(tx, signer, key)
 	if err != nil {
@@ -115,13 +110,4 @@ func SendTransaction(args ctypes.SendTxArgs) (cmn.Hash, error) {
 	txId := types.TxHash(tx)
 
 	return cmn.BytesToHash(types.HashBytes(txId)), nil
-}
-
-// --------------------------
-// package Function inner
-func defaultKey() (*ecdsa.PrivateKey, common.Address) {
-	key, _ := crypto.HexToECDSA("45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8")
-	addr := crypto.PubkeyToAddress(key.PublicKey)
-	return key, addr
-
 }

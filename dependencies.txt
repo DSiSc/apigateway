@@ -2,6 +2,6 @@
 # The following lines listed by git repositories(each line for one git repo) 
 # alone with compatible version(branch/tag/commit-id).
 
-github.com/DSiSc/gossipswitch:master
-github.com/DSiSc/craft:master
-github.com/DSiSc/wallet:master
+github.com/DSiSc/gossipswitch:v0.1
+github.com/DSiSc/craft:v0.1
+github.com/DSiSc/wallet:v0.1

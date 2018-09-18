@@ -12,7 +12,7 @@ type SendTxArgs struct {
 	Gas      *common.Uint64 `json:"gas"`
 	GasPrice *common.Big    `json:"gasPrice"`
 	Value    *common.Big    `json:"value"`
-	Nonce    *common.Uint64 `json:"nonce"`
+	Nonce    *common.Uint64 `json:"nonce,omitempty"`
 	// We accept "data" and "input" for backwards-compatibility reasons. "input" is the
 	// newer name and should be preferred by clients.
 	Data  *common.Bytes `json:"data"`

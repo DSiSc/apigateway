@@ -80,6 +80,10 @@ func SetSwCh(ch chan<- interface{}) {
 // - `hash`: `[]byte` - hash of the transaction
 // - `error`: `error` - error detail info
 func SendTransaction(args ctypes.SendTxArgs) (cmn.Hash, error) {
+	// give an initValue when nonce is nil
+	if args.Nonce == nil {
+		args.Nonce = cmn.NewUint64(16)
+	}
 	// new types.Transaction base on SendTxArgs
 	tx := types.NewTransaction(
 		args.Nonce.Touint64(),

@@ -98,6 +98,18 @@ func TestSendTransaction(t *testing.T) {
               }]}`, request.from, request.to, request.gas, request.gasPrice,
 				request.value, request.nonce, request.data),
 			""},
+		{
+
+			fmt.Sprintf(`{"jsonrpc": "2.0", "method": "eth_sendTransaction", "id": "0", "params": [{
+              "from": "%s",
+              "to": "%s",
+              "gas": "%s",
+              "gasPrice": "%s",
+              "value": "%s",
+              "data": "%s"
+              }]}`, request.from, request.to, request.gas, request.gasPrice,
+				request.value, request.data),
+			""},
 	}
 
 	// ------------------------

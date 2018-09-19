@@ -55,7 +55,9 @@ func CopyBytes(b []byte) (copiedBytes []byte) {
 
 func TypeConvert(a *Address) *types.Address {
 	var address types.Address
-	copy(address[:], a[:])
+	if a != nil {
+		copy(address[:], a[:])
+	}
 	return &address
 }
 
@@ -86,6 +88,6 @@ func newTransaction(nonce uint64, to *Address, amount *big.Int, gasLimit uint64,
 	return &types.Transaction{Data: d}
 }
 
-func NewTransaction(nonce uint64, to Address, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte, from Address) *types.Transaction {
-	return newTransaction(nonce, &to, amount, gasLimit, gasPrice, data, &from)
+func NewTransaction(nonce uint64, to *Address, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte, from Address) *types.Transaction {
+	return newTransaction(nonce, to, amount, gasLimit, gasPrice, data, &from)
 }

@@ -5,6 +5,7 @@ import (
 	"github.com/DSiSc/apigateway/core/types"
 	ctypes "github.com/DSiSc/apigateway/rpc/core/types"
 	wtypes "github.com/DSiSc/wallet/core/types"
+	"math/big"
 )
 
 var (
@@ -56,8 +57,8 @@ func SetSwCh(ch chan<- interface{}) {
 // |-----------+-------------+-------------------+----------+------------------------------------------------------------------------------------------------------|
 // | from      | DATA        | nil               | true     | The address the transaction is send from.                                                            |
 // | to        | DATA        | nil               | Option   | The address the transaction is directed to.Option when creating new contract.                        |
-// | gas       | QUANTITY    | 90000             | Option   | Integer of the gas provided for the transaction execution. It will return unused gas.                |
-// | gasPrice  | QUANTITY    | To-Be-Determined  | Option   | Integer of the gasPrice used for each paid gas.                                                      |
+// | gas       | QUANTITY    | 90000             | true   | Integer of the gas provided for the transaction execution. It will return unused gas.                |
+// | gasPrice  | QUANTITY    | To-Be-Determined  | true   | Integer of the gasPrice used for each paid gas.                                                      |
 // | value     | QUANTITY    | nil               | Option   | Integer of the value sent with this transaction.                                                     |
 // | data      | DATA        | nil               | true     | The compiled code of a contract OR the hash of the invoked method signature and encoded parameters.  |
 // | nonce     | QUANTITY    | nil               | Option   | Integer of a nonce. This allows to overwrite your own pending transactions that use the same nonce.  |
@@ -84,11 +85,17 @@ func SendTransaction(args ctypes.SendTxArgs) (cmn.Hash, error) {
 	if args.Nonce == nil {
 		args.Nonce = cmn.NewUint64(16)
 	}
+	var value *big.Int
+	if args.Value != nil {
+		value = args.Value.ToBigInt()
+	} else {
+		value = nil
+	}
 	// new types.Transaction base on SendTxArgs
 	tx := types.NewTransaction(
 		args.Nonce.Touint64(),
-		types.BytesToAddress(args.To.Bytes()),
-		args.Value.ToBigInt(),
+		args.To,
+		value,
 		args.Gas.Touint64(),
 		args.GasPrice.ToBigInt(),
 		args.Data.Bytes(),

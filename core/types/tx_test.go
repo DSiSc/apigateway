@@ -31,12 +31,20 @@ func TestNewTransaction(t *testing.T) {
 	}
 	emptyTx = NewTransaction(
 		0,
-		b,
+		&b,
 		big.NewInt(0), 0, big.NewInt(0),
 		nil,
 		b,
 	)
+	notoTx := NewTransaction(
+		0,
+		nil,
+		nil, 0, big.NewInt(0),
+		nil,
+		b,
+	)
 	assert.NotNil(emptyTx)
+	assert.NotNil(notoTx)
 }
 
 func TestTxHash(t *testing.T) {

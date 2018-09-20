@@ -18,12 +18,12 @@ import (
 
 type RPCRequest struct {
 	JSONRPC string          `json:"jsonrpc"`
-	ID      string          `json:"id"`
+	ID      interface{}          `json:"id"`
 	Method  string          `json:"method"`
 	Params  json.RawMessage `json:"params"` // must be map[string]interface{} or []interface{}
 }
 
-func NewRPCRequest(id string, method string, params json.RawMessage) RPCRequest {
+func NewRPCRequest(id interface{}, method string, params json.RawMessage) RPCRequest {
 	return RPCRequest{
 		JSONRPC: "2.0",
 		ID:      id,
@@ -36,7 +36,7 @@ func (req RPCRequest) String() string {
 	return fmt.Sprintf("[%s %s]", req.ID, req.Method)
 }
 
-func MapToRequest(cdc *amino.Codec, id string, method string, params map[string]interface{}) (RPCRequest, error) {
+func MapToRequest(cdc *amino.Codec, id interface{}, method string, params map[string]interface{}) (RPCRequest, error) {
 	var params_ = make(map[string]json.RawMessage, len(params))
 	for name, value := range params {
 		valueJSON, err := cdc.MarshalJSON(value)
@@ -53,7 +53,7 @@ func MapToRequest(cdc *amino.Codec, id string, method string, params map[string]
 	return request, nil
 }
 
-func ArrayToRequest(cdc *amino.Codec, id string, method string, params []interface{}) (RPCRequest, error) {
+func ArrayToRequest(cdc *amino.Codec, id interface{}, method string, params []interface{}) (RPCRequest, error) {
 	var params_ = make([]json.RawMessage, len(params))
 	for i, value := range params {
 		valueJSON, err := cdc.MarshalJSON(value)
@@ -89,14 +89,13 @@ func (err RPCError) Error() string {
 
 type RPCResponse struct {
 	JSONRPC string          `json:"jsonrpc"`
-	ID      string          `json:"id"`
+	ID      interface{}          `json:"id"`
 	Result  json.RawMessage `json:"result,omitempty"`
 	Error   *RPCError       `json:"error,omitempty"`
 }
 
-func NewRPCSuccessResponse(cdc *amino.Codec, id string, res interface{}) RPCResponse {
+func NewRPCSuccessResponse(cdc *amino.Codec, id interface{}, res interface{}) RPCResponse {
 	var rawMsg json.RawMessage
-
 	if res != nil {
 		var js []byte
 		js, err := cdc.MarshalJSON(res)
@@ -109,7 +108,7 @@ func NewRPCSuccessResponse(cdc *amino.Codec, id string, res interface{}) RPCResp
 	return RPCResponse{JSONRPC: "2.0", ID: id, Result: rawMsg}
 }
 
-func NewRPCErrorResponse(id string, code int, msg string, data string) RPCResponse {
+func NewRPCErrorResponse(id interface{}, code int, msg string, data string) RPCResponse {
 	return RPCResponse{
 		JSONRPC: "2.0",
 		ID:      id,
@@ -124,27 +123,27 @@ func (resp RPCResponse) String() string {
 	return fmt.Sprintf("[%s %s]", resp.ID, resp.Error)
 }
 
-func RPCParseError(id string, err error) RPCResponse {
+func RPCParseError(id interface{}, err error) RPCResponse {
 	return NewRPCErrorResponse(id, -32700, "Parse error. Invalid JSON", err.Error())
 }
 
-func RPCInvalidRequestError(id string, err error) RPCResponse {
+func RPCInvalidRequestError(id interface{}, err error) RPCResponse {
 	return NewRPCErrorResponse(id, -32600, "Invalid Request", err.Error())
 }
 
-func RPCMethodNotFoundError(id string) RPCResponse {
+func RPCMethodNotFoundError(id interface{}) RPCResponse {
 	return NewRPCErrorResponse(id, -32601, "Method not found", "")
 }
 
-func RPCInvalidParamsError(id string, err error) RPCResponse {
+func RPCInvalidParamsError(id interface{}, err error) RPCResponse {
 	return NewRPCErrorResponse(id, -32602, "Invalid params", err.Error())
 }
 
-func RPCInternalError(id string, err error) RPCResponse {
+func RPCInternalError(id interface{}, err error) RPCResponse {
 	return NewRPCErrorResponse(id, -32603, "Internal error", err.Error())
 }
 
-func RPCServerError(id string, err error) RPCResponse {
+func RPCServerError(id interface{}, err error) RPCResponse {
 	return NewRPCErrorResponse(id, -32000, "Server error", err.Error())
 }
 

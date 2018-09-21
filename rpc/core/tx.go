@@ -85,11 +85,19 @@ func SendTransaction(args ctypes.SendTxArgs) (cmn.Hash, error) {
 	if args.Nonce == nil {
 		args.Nonce = cmn.NewUint64(16)
 	}
+	// value can be nil
 	var value *big.Int
 	if args.Value != nil {
 		value = args.Value.ToBigInt()
 	} else {
 		value = nil
+	}
+	// data can be nil
+	var data []byte
+	if args.Data != nil {
+		data = args.Data.Bytes()
+	} else {
+		data = nil
 	}
 	// new types.Transaction base on SendTxArgs
 	tx := types.NewTransaction(
@@ -98,7 +106,7 @@ func SendTransaction(args ctypes.SendTxArgs) (cmn.Hash, error) {
 		value,
 		args.Gas.Touint64(),
 		args.GasPrice.ToBigInt(),
-		args.Data.Bytes(),
+		data,
 		types.BytesToAddress(args.From.Bytes()),
 	)
 

@@ -169,6 +169,103 @@ func TestSendTransaction(t *testing.T) {
 	}
 }
 
+func TestSendTransactionWithoutData(t *testing.T) {
+
+	// -------------------------
+	// Mock:  mockTransaction
+	nonce, _ := strconv.ParseUint(request.nonce[2:], 16, 32)
+	to := ctypes.BytesToAddress(getBytes(request.to))
+	from := ctypes.BytesToAddress(getBytes(request.from))
+	gas, _ := strconv.ParseUint(request.gas[2:], 16, 32)
+	value := new(big.Int).SetBytes(getBytes(request.value))
+	gasPrice := new(big.Int).SetBytes(getBytes(request.gasPrice))
+
+	mockTransaction := ctypes.NewTransaction(nonce, &to, value, gas, gasPrice, nil, from)
+
+	// SignTx
+	key, _ := wtypes.DefaultTestKey()
+	mockTransaction, _ = wtypes.SignTx(mockTransaction, new(wtypes.FrontierSigner), key)
+
+	// NOTE(peerlink): tx.hash changed when call tx.Hash()
+	txId := ctypes.TxHash(mockTransaction)
+	mockTxHash := ctypes.HashBytes(txId)
+
+	// -------------------------
+	// set mock swch, before node start http server.
+	mockSwCh := make(chan interface{})
+	defer close(mockSwCh)
+	SetSwCh(mockSwCh)
+
+	// ---------------------------
+	// tests case
+	tests := []struct {
+		payload string
+		wantErr string
+	}{
+		{
+
+			fmt.Sprintf(`{"jsonrpc": "2.0", "method": "eth_sendTransaction", "id": "0", "params": [{
+              "from": "%s",
+              "to": "%s",
+              "gas": "%s",
+              "gasPrice": "%s",
+              "value": "%s",
+			  "nonce": "%s"
+              }]}`, request.from, request.to, request.gas, request.gasPrice,
+				request.value, request.nonce),
+			""},
+	}
+
+	// ------------------------
+	// httptest API
+	mux := testMux()
+	for i, tt := range tests {
+		req, _ := http.NewRequest("POST", "http://localhost/", strings.NewReader(tt.payload))
+		rec := httptest.NewRecorder()
+		mux.ServeHTTP(rec, req)
+
+		// --------------
+		// Test Response
+		res := rec.Result()
+		// Always expecting back a JSONRPCResponse
+		assert.True(t, statusOK(res.StatusCode), "#%d: should always return 2XX", i)
+		blob, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			t.Errorf("#%d: err reading body: %v", i, err)
+			continue
+		}
+
+		// --------------------
+		// Test read from swch for SwitchMsg
+		var swMsg interface{}
+		swMsg = <-mockSwCh
+
+		// assert: Type, Content.
+		assert.Equal(t, reflect.TypeOf(mockTransaction), reflect.TypeOf(swMsg), "swMsg type should be types.Transaction")
+
+		// exceptData := new(big.Int).SetBytes(cmn.HexDecode("0x9184e72a000"))
+		actualTransaction := swMsg.(*crafttypes.Transaction)
+		assert.Equal(t, mockTransaction, actualTransaction, "transaction price should equal request input")
+
+		// ----------------
+		// Test reponse
+		recv := new(rpctypes.RPCResponse)
+		json.Unmarshal(blob, recv)
+
+		if tt.wantErr == "" {
+			assert.Nil(t, recv.Error, "#%d: not expecting an error", i)
+			// FIXME(peerlink): check return Hash and mockTransaction.Hash()
+			var result cmn.Hash
+			json.Unmarshal(recv.Result, &result)
+			assert.Equal(t, mockTxHash, result.Bytes(), "Hash should equals")
+		} else {
+			assert.True(t, recv.Error.Code < 0, "#%d: not expecting a positive JSONRPC code", i)
+			// The wanted error is either in the message or the data
+			assert.Contains(t, recv.Error.Message+recv.Error.Data, tt.wantErr, "#%d: expected substring", i)
+		}
+	}
+}
+
 func TestSendContract(t *testing.T) {
 
 	// -------------------------

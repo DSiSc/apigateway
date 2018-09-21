@@ -2,9 +2,8 @@ package types
 
 import (
 	"encoding/json"
+	"math"
 	"testing"
-
-	"github.com/ethereum/go-ethereum/common/math"
 )
 
 func TestBlockNumberJSONUnmarshal(t *testing.T) {

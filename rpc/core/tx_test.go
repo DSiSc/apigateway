@@ -202,7 +202,7 @@ func TestSendContract(t *testing.T) {
 	}{
 		{
 
-			fmt.Sprintf(`{"jsonrpc": "2.0", "method": "eth_sendTransaction", "id": "0", "params": [{
+			fmt.Sprintf(`{"jsonrpc": "2.0", "method": "eth_sendTransaction", "id": 1, "params": [{
               "from": "%s",
               "gas": "%s",
               "gasPrice": "%s",

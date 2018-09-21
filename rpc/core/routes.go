@@ -8,6 +8,8 @@ import (
 var Routes = map[string]*rpc.RPCFunc{
 	// namespace "eth" API
 	"eth_sendTransaction": rpc.NewRPCFunc(SendTransaction, "args"),
+	"eth_getBlockByHash": rpc.NewRPCFunc(GetBlockByHash, "blockHash, fullTx"),
+	"eth_getBlockByNumber": rpc.NewRPCFunc(GetBlockByNumber, "blockNr, fullTx"),
 }
 
 func AddTestRoutes() {

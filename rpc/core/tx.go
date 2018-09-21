@@ -120,5 +120,5 @@ func SendTransaction(args ctypes.SendTxArgs) (cmn.Hash, error) {
 
 	txId := types.TxHash(tx)
 
-	return cmn.BytesToHash(types.HashBytes(txId)), nil
+	return (cmn.Hash)(txId), nil
 }

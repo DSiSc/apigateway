@@ -107,6 +107,39 @@ func (h *Hex) DecodeString(data string) ([]byte, error) {
 	return dstdata, nil
 }
 
+func DecodeUint64(input string) (uint64, error) {
+	raw, err := checkNumber(input)
+	if err != nil {
+		return 0, err
+	}
+	dec, err := strconv.ParseUint(raw, 16, 64)
+	if err != nil {
+		return dec, wrapError(err)
+	}
+	return dec, err
+}
+
+func checkNumber(input string) (raw string, err error) {
+	if len(input) == 0 {
+		return "", ErrEmptyData
+	}
+	if !has0xPrefix(input) {
+		return "", ErrMissingPrefix
+	}
+	input = input[2:]
+	if len(input) == 0 {
+		return "", ErrEmptyNumber
+	}
+	if len(input) > 1 && input[0] == '0' {
+		return "", ErrLeadingZero
+	}
+	return input, nil
+}
+
+func has0xPrefix(input string) bool {
+	return len(input) >= 2 && input[0] == '0' && (input[1] == 'x' || input[1] == 'X')
+}
+
 // EncodeUint64 uint64 to []byte
 func (h *Hex) EncodeUint64(data uint64) []byte {
 

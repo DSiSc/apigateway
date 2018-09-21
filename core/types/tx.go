@@ -57,8 +57,9 @@ func TypeConvert(a *Address) *types.Address {
 	var address types.Address
 	if a != nil {
 		copy(address[:], a[:])
+		return &address
 	}
-	return &address
+	return nil
 }
 
 // New a transaction

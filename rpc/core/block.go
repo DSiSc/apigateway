@@ -32,6 +32,25 @@ func GetBlockByHash(blockHash cmn.Hash, fullTx bool) (*blockdata, error) {
 	return nil, err
 }
 
+func GetBlockTransactionCountByHash(blockHash cmn.Hash) (*cmn.Uint, error) {
+	blockchain, err := blockchain.NewLatestStateBlockChain()
+	if block, err := blockchain.GetBlockByHash(TypeConvert(&blockHash)); block != nil {
+		n := cmn.Uint(len(block.Transactions))
+		return &n, err
+	}
+	return nil,err
+}
+
+func GetBlockTransactionCountByNumber(blockNr apitypes.BlockNumber) (*cmn.Uint, error) {
+	blockchain, err := blockchain.NewLatestStateBlockChain()
+	height := blockNr.Touint64()
+	if block, err := blockchain.GetBlockByHeight(height); block != nil {
+		n := cmn.Uint(len(block.Transactions))
+		return &n, err
+	}
+	return nil, err
+}
+
 func GetBlockByNumber(blockNr apitypes.BlockNumber, fullTx bool) (*blockdata, error) {
 	blockchain, err := blockchain.NewLatestStateBlockChain()
 	if err == nil {

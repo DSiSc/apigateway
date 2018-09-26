@@ -10,6 +10,8 @@ var Routes = map[string]*rpc.RPCFunc{
 	"eth_sendTransaction": rpc.NewRPCFunc(SendTransaction, "args"),
 	"eth_getBlockByHash": rpc.NewRPCFunc(GetBlockByHash, "blockHash, fullTx"),
 	"eth_getBlockByNumber": rpc.NewRPCFunc(GetBlockByNumber, "blockNr, fullTx"),
+	"eth_getTransactionByHash": rpc.NewRPCFunc(GetTransactionByHash, "hash"),
+	"eth_getTransactionReceipt": rpc.NewRPCFunc(GetTransactionReceipt, "hash"),
 }
 
 func AddTestRoutes() {

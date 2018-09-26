@@ -15,6 +15,8 @@
 package common
 
 import (
+	"encoding/json"
+	"fmt"
 	inl "github.com/DSiSc/apigateway/common/internal"
 )
 
@@ -34,6 +36,11 @@ func NewUint(i uint) *Uint {
 // MarshalText implements encoding.TextMarshaler.
 func (b Uint) MarshalText() ([]byte, error) {
 	return Uint64(b).MarshalText()
+}
+
+// MarshalJSON implements encoding.JSONMarshaler.
+func (b Uint) MarshalJSON() ([]byte, error) {
+	return json.Marshal(fmt.Sprintf("%v", b))
 }
 
 // UnmarshalJSON implements json.Unmarshaler.

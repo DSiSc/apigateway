@@ -84,6 +84,11 @@ func (b Big) MarshalText() ([]byte, error) {
 	return Ghex.EncodeBig(b.ToBigInt()), nil
 }
 
+// MarshalJSON implements encoding.JSONMarshaler.
+func (b Big) MarshalJSON() ([]byte, error) {
+	return json.Marshal(fmt.Sprintf("%v", b))
+}
+
 // UnmarshalJSON implements json.Unmarshaler.
 func (b *Big) UnmarshalJSON(input []byte) error {
 	if !inl.IsString(input) {

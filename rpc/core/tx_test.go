@@ -3,6 +3,8 @@ package core
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/DSiSc/blockchain"
+	"github.com/DSiSc/monkey"
 	"io/ioutil"
 	"math/big"
 	"net/http"
@@ -14,7 +16,8 @@ import (
 
 	cmn "github.com/DSiSc/apigateway/common"
 	ctypes "github.com/DSiSc/apigateway/core/types"
-	rpctypes "github.com/DSiSc/apigateway/rpc/lib/types"
+	"github.com/DSiSc/apigateway/rpc/lib/types"
+	ltypes "github.com/DSiSc/apigateway/rpc/lib/types"
 	crafttypes "github.com/DSiSc/craft/types"
 	wtypes "github.com/DSiSc/wallet/core/types"
 	"github.com/stretchr/testify/assert"
@@ -358,6 +361,172 @@ func TestSendContract(t *testing.T) {
 			assert.Contains(t, recv.Error.Message+recv.Error.Data, tt.wantErr, "#%d: expected substring", i)
 		}
 	}
+}
+
+func TestGetTransactionByHash(t *testing.T) {
+	hashtest := cmn.HexToHash("0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99")
+	var b *blockchain.BlockChain
+	nonce, _ := strconv.ParseUint(request.nonce[2:], 16, 32)
+	to := ctypes.BytesToAddress(getBytes(request.to))
+	from := ctypes.BytesToAddress(getBytes(request.from))
+	gas, _ := strconv.ParseUint(request.gas[2:], 16, 32)
+	//value := new(big.Int).SetBytes(getBytes(request.value))
+	gasPrice := new(big.Int).SetBytes(getBytes(request.gasPrice))
+	data := getBytes(request.data)
+	recipient := (crafttypes.Address)(to)
+	craftfrom := (crafttypes.Address)(from)
+	d := crafttypes.TxData{
+		AccountNonce: nonce,
+		Recipient:    &recipient,
+		From:         &craftfrom,
+		Payload:      data,
+		Amount:       new(big.Int),
+		GasLimit:     gas,
+		Price:        gasPrice,
+		V:            new(big.Int),
+		R:            new(big.Int),
+		S:            new(big.Int),
+	}
+	mockReturnTx := &crafttypes.Transaction{Data: d}
+	monkey.Patch(blockchain.NewLatestStateBlockChain, func() (*blockchain.BlockChain, error) {
+		return b, nil
+	})
+
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetTransactionByHash", func(*blockchain.BlockChain, crafttypes.Hash) (*crafttypes.Transaction, crafttypes.Hash, uint64, uint64, error) {
+		return mockReturnTx, (crafttypes.Hash)(hashtest), 5, 7, nil
+	})
+
+	wantReturn := `{"jsonrpc":"2.0","id":1,"result":{"blockHash":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","blockNumber":"0x5","from":"0xb60e8dd61c5d32be8058bb8eb970870f07233155","gas":"0x76c0","gasPrice":"0x9184e72a0000","hash":"0x98a285ef7fb624025fd54d605455d0626b277eaf74206f2b31eb74949999788e","input":"0xd46e8dd67c5d32be8d46e8dd67c5d32be8058bb8eb970870f072445675058bb8eb970870f072445675","nonce":"0x10","to":"0xd46e8dd67c5d32be8058bb8eb970870f07244567","transactionIndex":"0x7","value":"0x0","v":"0x0","r":"0x0","s":"0x0"}}`
+	// tests case
+	tests := []struct {
+		payload string
+		wantErr string
+	}{
+		{
+
+			fmt.Sprintf(`{"jsonrpc": "2.0", "method": "eth_getTransactionByHash", "id": 1, "params": [
+              "0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99"]}`),
+			""},
+	}
+	// ------------------------
+	// httptest API
+	mux := testMux()
+	for i, tt := range tests {
+		req, _ := http.NewRequest("POST", "http://localhost/", strings.NewReader(tt.payload))
+		rec := httptest.NewRecorder()
+		mux.ServeHTTP(rec, req)
+
+		// --------------
+		// Test Response
+		res := rec.Result()
+		// Always expecting back a JSONRPCResponse
+		assert.True(t, statusOK(res.StatusCode), "#%d: should always return 2XX", i)
+		blob, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			t.Errorf("#%d: err reading body: %v", i, err)
+			continue
+		}
+		// ----------------
+		// Test reponse
+		recv := new(ltypes.RPCResponse)
+		json.Unmarshal(blob, recv)
+
+		b, _ := json.Marshal(recv)
+		assert.Equal(t, wantReturn, string(b))
+	}
+
+	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetTransactionByHash")
+	monkey.Unpatch(blockchain.NewLatestStateBlockChain)
+
+}
+func TestGetTransactionReceipt(t *testing.T) {
+	hashtest := cmn.HexToHash("0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99")
+	var b *blockchain.BlockChain
+	nonce, _ := strconv.ParseUint(request.nonce[2:], 16, 32)
+	to := ctypes.BytesToAddress(getBytes(request.to))
+	from := ctypes.BytesToAddress(getBytes(request.from))
+	gas, _ := strconv.ParseUint(request.gas[2:], 16, 32)
+	//value := new(big.Int).SetBytes(getBytes(request.value))
+	gasPrice := new(big.Int).SetBytes(getBytes(request.gasPrice))
+	data := getBytes(request.data)
+	recipient := (crafttypes.Address)(to)
+	craftfrom := (crafttypes.Address)(from)
+	d := crafttypes.TxData{
+		AccountNonce: nonce,
+		Recipient:    &recipient,
+		From:         &craftfrom,
+		Payload:      data,
+		Amount:       new(big.Int),
+		GasLimit:     gas,
+		Price:        gasPrice,
+		V:            new(big.Int),
+		R:            new(big.Int),
+		S:            new(big.Int),
+	}
+	mockReturnTx := &crafttypes.Transaction{Data: d}
+	mockReturnReceipt := &crafttypes.Receipt{
+		PostState: getBytes("0x7b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e929"),
+		Status: uint64(2),
+		CumulativeGasUsed: uint64(1239),
+		Bloom: crafttypes.Bloom{},
+		Logs: nil,
+		TxHash: (crafttypes.Hash)(hashtest),
+		ContractAddress: (crafttypes.Address)(from),
+		GasUsed: uint64(1510),
+	}
+	monkey.Patch(blockchain.NewLatestStateBlockChain, func() (*blockchain.BlockChain, error) {
+		return b, nil
+	})
+
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetTransactionByHash", func(*blockchain.BlockChain, crafttypes.Hash) (*crafttypes.Transaction, crafttypes.Hash, uint64, uint64, error) {
+		return mockReturnTx, (crafttypes.Hash)(hashtest), 5, 7, nil
+	})
+
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetReceiptByTxHash", func(*blockchain.BlockChain, crafttypes.Hash) (*crafttypes.Receipt, crafttypes.Hash, uint64, uint64, error) {
+		return mockReturnReceipt, (crafttypes.Hash)(hashtest), 5, 7, nil
+	})
+
+	wantReturn := `{"jsonrpc":"2.0","id":1,"result":{"blockHash":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","blockNumber":"0x5","transactionHash":"0x98a285ef7fb624025fd54d605455d0626b277eaf74206f2b31eb74949999788e","transactionIndex":"0x7","from":"0xb60e8dd61c5d32be8058bb8eb970870f07233155","to":"0xd46e8dd67c5d32be8058bb8eb970870f07244567","root":"e0ogr1SPXLN0gVeOE/bpYcUensG5k214HBBhMjmz6Sk=","status":"0x2","gasUsed":"0x5e6","cumulativeGasUsed":"0x4d7","logsBloom":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==","logs":null,"contractAddress":"0xb60e8dd61c5d32be8058bb8eb970870f07233155"}}`
+	// tests case
+	tests := []struct {
+		payload string
+		wantErr string
+	}{
+		{
+
+			fmt.Sprintf(`{"jsonrpc": "2.0", "method": "eth_getTransactionReceipt", "id": 1, "params": [
+              "0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99"]}`),
+			""},
+	}
+	// ------------------------
+	// httptest API
+	mux := testMux()
+	for i, tt := range tests {
+		req, _ := http.NewRequest("POST", "http://localhost/", strings.NewReader(tt.payload))
+		rec := httptest.NewRecorder()
+		mux.ServeHTTP(rec, req)
+
+		// --------------
+		// Test Response
+		res := rec.Result()
+		// Always expecting back a JSONRPCResponse
+		assert.True(t, statusOK(res.StatusCode), "#%d: should always return 2XX", i)
+		blob, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			t.Errorf("#%d: err reading body: %v", i, err)
+			continue
+		}
+		// ----------------
+		// Test reponse
+		recv := new(ltypes.RPCResponse)
+		json.Unmarshal(blob, recv)
+
+		b, _ := json.Marshal(recv)
+		assert.Equal(t, wantReturn, string(b))
+	}
+	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetReceiptByTxHash")
+	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetTransactionByHash")
+	monkey.Unpatch(blockchain.NewLatestStateBlockChain)
 }
 
 func getBytes(input string) []byte {

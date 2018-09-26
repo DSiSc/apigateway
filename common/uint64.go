@@ -17,6 +17,8 @@ package common
 import (
 	//inl "github.com/DSiSc/apigateway/common/internal"
 
+	"encoding/json"
+	"fmt"
 	"strconv"
 )
 
@@ -38,6 +40,11 @@ func NewUint64(i uint64) *Uint64 {
 // MarshalText implements encoding.TextMarshaler.
 func (b Uint64) MarshalText() ([]byte, error) {
 	return Ghex.EncodeUint64(b.Touint64()), nil
+}
+
+// MarshalJSON implements encoding.JSONMarshaler.
+func (b Uint64) MarshalJSON() ([]byte, error) {
+	return json.Marshal(fmt.Sprintf("%v", b))
 }
 
 // UnmarshalJSON implements json.Unmarshaler.

@@ -10,7 +10,6 @@ import (
 	"github.com/DSiSc/craft/types"
 	"github.com/DSiSc/monkey"
 	"github.com/stretchr/testify/assert"
-	"github.com/tendermint/go-amino"
 	"io/ioutil"
 	"math/big"
 	"net/http"
@@ -72,16 +71,7 @@ func TestGetBlockByHash(t *testing.T) {
 		}
 		return &blockdata, nil
 	})
-
-	block, err := GetBlockByHash(hashtest, true)
-	var localback []byte
-    //block is not nil
-	assert.NotNil(t, block)
-	assert.Nil(t, err)
-
-	cdc := amino.NewCodec()
-	a := ltypes.NewRPCSuccessResponse(cdc, 1, block)
-	localback, _ = json.Marshal(a)
+	wantReturn := `{"jsonrpc":"2.0","id":1,"result":{"number":"0xc","hash":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","parentHash":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","mixHash":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","stateRoot":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","miner":"0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b","timestamp":"0x85","transactionsRoot":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","receiptsRoot":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","transactions":[{"Data":{"nonce":"16","gasPrice":160000000000000,"gas":"30400","to":"1G6N1nxdMr6AWLuOuXCHDwckRWc=","from":"tg6N1hxdMr6AWLuOuXCHDwcjMVU=","value":2441406250,"input":"1G6N1nxdMr6NRujdZ8XTK+gFi7jrlwhw8HJEVnUFi7jrlwhw8HJEVnU=","v":0,"r":0,"s":0,"hash":null},"Hash":{},"Size":{},"From":{}}]}}`
 
 	// tests case
 	tests := []struct {
@@ -118,15 +108,7 @@ func TestGetBlockByHash(t *testing.T) {
 		json.Unmarshal(blob, recv)
 
 		b, _ := json.Marshal(recv)
-
-		if tt.wantErr == "" {
-			assert.Nil(t, recv.Error, "#%d: not expecting an error", i)
-			assert.Equal(t, string(b), string(localback), "Hash should equals")
-		} else {
-			assert.True(t, recv.Error.Code < 0, "#%d: not expecting a positive JSONRPC code", i)
-			// The wanted error is either in the message or the data
-			assert.Contains(t, recv.Error.Message+recv.Error.Data, tt.wantErr, "#%d: expected substring", i)
-		}
+		assert.Equal(t, wantReturn, string(b))
 	}
 
 	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHash")
@@ -136,7 +118,6 @@ func TestGetBlockByHash(t *testing.T) {
 func TestGetBlockByNumber(t *testing.T) {
 	var b *blockchain.BlockChain
 	hashtest := cmn.HexToHash("0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99")
-	num := ctypes.BlockNumber(17)
 
 	monkey.Patch(blockchain.NewLatestStateBlockChain, func() (*blockchain.BlockChain, error) {
 		return b, nil
@@ -175,15 +156,8 @@ func TestGetBlockByNumber(t *testing.T) {
 		return &blockdata, nil
 	})
 
-	block, err := GetBlockByNumber(num, true)
-	var localback []byte
-	//block is not nil
-    assert.NotNil(t, block)
-	assert.Nil(t, err)
+	wantReturn := `{"jsonrpc":"2.0","id":1,"result":{"number":"0xc","hash":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","parentHash":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","mixHash":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","stateRoot":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","miner":"0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b","timestamp":"0x85","transactionsRoot":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","receiptsRoot":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","transactions":[{"Data":{"nonce":"16","gasPrice":160000000000000,"gas":"30400","to":"1G6N1nxdMr6AWLuOuXCHDwckRWc=","from":"tg6N1hxdMr6AWLuOuXCHDwcjMVU=","value":2441406250,"input":"1G6N1nxdMr6NRujdZ8XTK+gFi7jrlwhw8HJEVnUFi7jrlwhw8HJEVnU=","v":0,"r":0,"s":0,"hash":null},"Hash":{},"Size":{},"From":{}}]}}`
 
-	cdc := amino.NewCodec()
-	a := ltypes.NewRPCSuccessResponse(cdc, 1, block)
-	localback, _ = json.Marshal(a)
 
 	// tests case
 	tests := []struct {
@@ -220,14 +194,7 @@ func TestGetBlockByNumber(t *testing.T) {
 		json.Unmarshal(blob, recv)
 
 		b, _ := json.Marshal(recv)
-		if tt.wantErr == "" {
-			assert.Nil(t, recv.Error, "#%d: not expecting an error", i)
-			assert.Equal(t, string(b), string(localback), "Hash should equals")
-		} else {
-			assert.True(t, recv.Error.Code < 0, "#%d: not expecting a positive JSONRPC code", i)
-			// The wanted error is either in the message or the data
-			assert.Contains(t, recv.Error.Message+recv.Error.Data, tt.wantErr, "#%d: expected substring", i)
-		}
+		assert.Equal(t, wantReturn, string(b))
 	}
 
 	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHash")

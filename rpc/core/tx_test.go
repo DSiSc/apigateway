@@ -275,10 +275,10 @@ func TestSendContract(t *testing.T) {
 	// Mock:  mockTransaction
 	nonce, _ := strconv.ParseUint(requestContract.nonce[2:], 16, 32)
 	from := ctypes.BytesToAddress(getBytes(requestContract.from))
-	gas, _ := strconv.ParseUint(requestContract.gas[2:], 16, 32)
+	//gas, _ := strconv.ParseUint(requestContract.gas[2:], 16, 32)
 	gasPrice := new(big.Int).SetBytes(getBytes(requestContract.gasPrice))
 	data := getBytes(requestContract.data)
-	mockTransaction := ctypes.NewTransaction(nonce, nil, nil, gas, gasPrice, data, from)
+	mockTransaction := ctypes.NewTransaction(nonce, nil, nil, 0, gasPrice, data, from)
 
 	// SignTx
 	key, _ := wtypes.DefaultTestKey()
@@ -304,11 +304,10 @@ func TestSendContract(t *testing.T) {
 
 			fmt.Sprintf(`{"jsonrpc": "2.0", "method": "eth_sendTransaction", "id": 1, "params": [{
               "from": "%s",
-              "gas": "%s",
               "gasPrice": "%s",
 			  "nonce": "%s",
               "data": "%s"
-              }]}`, requestContract.from, requestContract.gas, requestContract.gasPrice,
+              }]}`, requestContract.from, requestContract.gasPrice,
 				requestContract.nonce, requestContract.data),
 			""},
 	}

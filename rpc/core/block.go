@@ -5,22 +5,11 @@ import (
 	apitypes "github.com/DSiSc/apigateway/core/types"
 	"github.com/DSiSc/blockchain"
 	"github.com/DSiSc/craft/types"
+	rpctypes "github.com/DSiSc/apigateway/rpc/core/types"
 )
 
-type blockdata struct {
-	Number           cmn.Uint64           `json:"number"`
-	Hash             cmn.Hash             `json:"hash"`
-	ParentHash       cmn.Hash             `json:"parentHash"`
-	MixHash          cmn.Hash             `json:"mixHash"`
-	StateRoot        cmn.Hash             `json:"stateRoot"`
-	Miner            apitypes.Address     `json:"miner"`
-	Timestamp        cmn.Uint64           `json:"timestamp"`
-	TransactionsRoot cmn.Hash             `json:"transactionsRoot"`
-	ReceiptsRoot     cmn.Hash             `json:"receiptsRoot"`
-	Transactions     []*types.Transaction `json:"transactions"`
-}
 
-func GetBlockByHash(blockHash cmn.Hash, fullTx bool) (*blockdata, error) {
+func GetBlockByHash(blockHash cmn.Hash, fullTx bool) (*rpctypes.Blockdata, error) {
 	blockchain, err := blockchain.NewLatestStateBlockChain()
 	if err == nil {
 		block, err := blockchain.GetBlockByHash(TypeConvert(&blockHash))
@@ -51,7 +40,7 @@ func GetBlockTransactionCountByNumber(blockNr apitypes.BlockNumber) (*cmn.Uint, 
 	return nil, err
 }
 
-func GetBlockByNumber(blockNr apitypes.BlockNumber, fullTx bool) (*blockdata, error) {
+func GetBlockByNumber(blockNr apitypes.BlockNumber, fullTx bool) (*rpctypes.Blockdata, error) {
 	blockchain, err := blockchain.NewLatestStateBlockChain()
 	if err == nil {
 		height := blockNr.Touint64()
@@ -72,7 +61,7 @@ func TypeConvert(a *cmn.Hash) types.Hash {
 	return hash
 }
 
-func rpcOutputBlock(b *types.Block, inclTx bool, fullTx bool) (*blockdata, error) {
+func rpcOutputBlock(b *types.Block, inclTx bool, fullTx bool) (*rpctypes.Blockdata, error) {
 	fields, err := RPCMarshalBlock(b, inclTx, fullTx)
 	if err != nil {
 		return nil, err
@@ -81,9 +70,9 @@ func rpcOutputBlock(b *types.Block, inclTx bool, fullTx bool) (*blockdata, error
 	return fields, err
 }
 
-func RPCMarshalBlock(b *types.Block, inclTx bool, fullTx bool) (*blockdata, error) {
+func RPCMarshalBlock(b *types.Block, inclTx bool, fullTx bool) (*rpctypes.Blockdata, error) {
 	head := b.Header // copies the header once
-	fields := blockdata {
+	fields := rpctypes.Blockdata {
 		Number:           (cmn.Uint64)(head.Height),
 		Hash:             (cmn.Hash)(b.HeaderHash),
 		ParentHash:       (cmn.Hash)(head.PrevBlockHash),

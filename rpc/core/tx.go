@@ -8,6 +8,7 @@ import (
 	craft "github.com/DSiSc/craft/types"
 	"github.com/DSiSc/txpool"
 	wtypes "github.com/DSiSc/wallet/core/types"
+	rpctypes "github.com/DSiSc/apigateway/rpc/core/types"
 	"math/big"
 )
 
@@ -159,41 +160,7 @@ func SendTransaction(args ctypes.SendTxArgs) (cmn.Hash, error) {
 	S                *cmn.Big       `json:"s"`
 }*/
 
-type RPCTransaction struct {
-	BlockHash        cmn.Hash       `json:"blockHash"`
-	BlockNumber      cmn.Uint64     `json:"blockNumber"`
-	From             *types.Address `json:"from"`
-	Gas              cmn.Uint64     `json:"gas"`
-	GasPrice         *cmn.Big       `json:"gasPrice"`
-	Hash             *cmn.Hash      `json:"hash"`
-	Input            cmn.Bytes      `json:"input"`
-	Nonce            *cmn.Uint64    `json:"nonce"`
-	To               *types.Address `json:"to"`
-	TransactionIndex cmn.Uint       `json:"transactionIndex"`
-	Value            *cmn.Big       `json:"value"`
-	V                *cmn.Big       `json:"v"`
-	R                *cmn.Big       `json:"r"`
-	S                *cmn.Big       `json:"s"`
-}
-
-type RPCReceipt struct {
-	// Consensus fields
-	BlockHash         cmn.Hash       `json:"blockHash"`
-	BlockNumber       *cmn.Big       `json:"blockNumber"`
-	TransactionHash   *cmn.Hash      `json:"transactionHash"`
-	TransactionIndex  cmn.Uint       `json:"transactionIndex"`
-	From              *types.Address `json:"from"`
-	To                *types.Address `json:"to"`
-	Root              []byte         `json:"root"`
-	Status            *cmn.Uint64    `json:"status"`
-	GasUsed           *cmn.Uint64    `json:"gasUsed"`
-	CumulativeGasUsed *cmn.Uint64    `json:"cumulativeGasUsed"`
-	LogsBloom         *craft.Bloom   `json:"logsBloom"`
-	Logs              []*craft.Log   `json:"logs"`
-	ContractAddress   *types.Address `json:"contractAddress"`
-}
-
-func GetTransactionByHash(hash cmn.Hash) (*RPCTransaction, error) {
+func GetTransactionByHash(hash cmn.Hash) (*rpctypes.RPCTransaction, error) {
 	// Try to return an already finalized transaction
 	bc, _ := blockchain.NewLatestStateBlockChain()
 	if tx, blockHash, blockNumber, index, _ := bc.GetTransactionByHash(TypeConvert(&hash)); tx != nil {
@@ -208,7 +175,7 @@ func GetTransactionByHash(hash cmn.Hash) (*RPCTransaction, error) {
 	return nil, nil
 }
 
-func newRPCTransaction(tx *craft.Transaction, blockHash cmn.Hash, blockNumber uint64, index uint64) (*RPCTransaction, error) {
+func newRPCTransaction(tx *craft.Transaction, blockHash cmn.Hash, blockNumber uint64, index uint64) (*rpctypes.RPCTransaction, error) {
 	var from *types.Address
 	if tx.Data.From != nil {
 		from = (*types.Address)(tx.Data.From)
@@ -287,7 +254,7 @@ func newRPCTransaction(tx *craft.Transaction, blockHash cmn.Hash, blockNumber ui
 		s = nil
 	}
 
-	result := &RPCTransaction{
+	result := &rpctypes.RPCTransaction{
 		From:     from,
 		Gas:      gas,
 		GasPrice: gasPrice,
@@ -309,11 +276,11 @@ func newRPCTransaction(tx *craft.Transaction, blockHash cmn.Hash, blockNumber ui
 }
 
 // newRPCPendingTransaction returns a pending transaction that will serialize to the RPC representation
-func newRPCPendingTransaction(tx *craft.Transaction) (*RPCTransaction, error) {
+func newRPCPendingTransaction(tx *craft.Transaction) (*rpctypes.RPCTransaction, error) {
 	return newRPCTransaction(tx, cmn.Hash{}, 0, 0)
 }
 
-func GetTransactionReceipt(hash cmn.Hash) (*RPCReceipt, error) {
+func GetTransactionReceipt(hash cmn.Hash) (*rpctypes.RPCReceipt, error) {
 	// Try to return an already finalized transaction
 	bc, _ := blockchain.NewLatestStateBlockChain()
 	if tx, blockHash, blockNumber, index, _ := bc.GetTransactionByHash(TypeConvert(&hash)); tx != nil {
@@ -325,7 +292,7 @@ func GetTransactionReceipt(hash cmn.Hash) (*RPCReceipt, error) {
 	return nil, nil
 }
 
-func newRPCReceipt(tx *craft.Transaction, receipt *craft.Receipt, blockHash cmn.Hash, blockNumber uint64, index uint64) (*RPCReceipt, error) {
+func newRPCReceipt(tx *craft.Transaction, receipt *craft.Receipt, blockHash cmn.Hash, blockNumber uint64, index uint64) (*rpctypes.RPCReceipt, error) {
 	var hash *cmn.Hash
 	if tx != nil {
 		h := (cmn.Hash)(types.TxHash(tx))
@@ -400,7 +367,7 @@ func newRPCReceipt(tx *craft.Transaction, receipt *craft.Receipt, blockHash cmn.
 		contractAddress = nil
 	}
 
-	result := &RPCReceipt{
+	result := &rpctypes.RPCReceipt{
 		TransactionHash:   hash,
 		From:              from,
 		To:                to,

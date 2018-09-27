@@ -1,31 +1,20 @@
 package core
 
 import (
-	"encoding/json"
 	"fmt"
 	cmn "github.com/DSiSc/apigateway/common"
 	ctypes "github.com/DSiSc/apigateway/core/types"
-	ltypes "github.com/DSiSc/apigateway/rpc/lib/types"
 	"github.com/DSiSc/blockchain"
 	"github.com/DSiSc/craft/types"
 	"github.com/DSiSc/monkey"
-	"github.com/stretchr/testify/assert"
-	"io/ioutil"
 	"math/big"
-	"net/http"
-	"net/http/httptest"
 	"reflect"
 	"strconv"
-	"strings"
 	"testing"
 )
 
 // ------------------------
-type Requestdata struct {
-	payload string
-	wantErr string
-	wantRetrun string
-}
+
 
 var b *blockchain.BlockChain
 
@@ -63,33 +52,6 @@ func getMockBlock() *types.Block{
 	return &blockdata
 }
 
-func DoRpcTest(t *testing.T, tests []*Requestdata) {
-	mux := testMux()
-	for i, tt := range tests {
-		req, _ := http.NewRequest("POST", "http://localhost/", strings.NewReader(tt.payload))
-		rec := httptest.NewRecorder()
-		mux.ServeHTTP(rec, req)
-
-		// --------------
-		// Test Response
-		res := rec.Result()
-		// Always expecting back a JSONRPCResponse
-		assert.True(t, statusOK(res.StatusCode), "#%d: should always return 2XX", i)
-		blob, err := ioutil.ReadAll(res.Body)
-		if err != nil {
-			t.Errorf("#%d: err reading body: %v", i, err)
-			continue
-		}
-		// ----------------
-		// Test reponse
-		recv := new(ltypes.RPCResponse)
-		json.Unmarshal(blob, recv)
-
-		b, _ := json.Marshal(recv)
-		assert.Equal(t, tt.wantRetrun, string(b))
-	}
-}
-
 // ------------------------
 // package Test*
 
@@ -114,7 +76,7 @@ func TestGetBlockByHash(t *testing.T) {
 	}
 	// ------------------------
 	// httptest API
-	DoRpcTest(t, tests)
+	doRpcTest(t, tests)
 
 	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHash")
 	monkey.Unpatch(blockchain.NewLatestStateBlockChain)
@@ -142,7 +104,7 @@ func TestGetBlockByNumber(t *testing.T) {
 	}
 	// ------------------------
 	// httptest API
-	DoRpcTest(t, tests)
+	doRpcTest(t, tests)
 
 	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHash")
 	monkey.Unpatch(blockchain.NewLatestStateBlockChain)
@@ -169,7 +131,7 @@ func TestGetBlockTransactionCountByHash(t *testing.T) {
 	}
 	// ------------------------
 	// httptest API
-	DoRpcTest(t, tests)
+	doRpcTest(t, tests)
 
 	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHash")
 	monkey.Unpatch(blockchain.NewLatestStateBlockChain)
@@ -195,7 +157,7 @@ func TestGetBlockTransactionCountByNumber(t *testing.T) {
 	}
 	// ------------------------
 	// httptest API
-	DoRpcTest(t, tests)
+	doRpcTest(t, tests)
 
 	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHash")
 	monkey.Unpatch(blockchain.NewLatestStateBlockChain)

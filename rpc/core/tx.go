@@ -1,16 +1,16 @@
 package core
 
 import (
-	cmn "github.com/DSiSc/apigateway/common"
-	"github.com/DSiSc/apigateway/core/types"
-	ctypes "github.com/DSiSc/apigateway/rpc/core/types"
-	"github.com/DSiSc/blockchain"
-	craft "github.com/DSiSc/craft/types"
-	"github.com/DSiSc/txpool"
-	wtypes "github.com/DSiSc/wallet/core/types"
-	rpctypes "github.com/DSiSc/apigateway/rpc/core/types"
 	"math/big"
 	"errors"
+	"github.com/DSiSc/apigateway/core/types"
+	"github.com/DSiSc/blockchain"
+	"github.com/DSiSc/txpool"
+	cmn "github.com/DSiSc/apigateway/common"
+	ctypes "github.com/DSiSc/apigateway/rpc/core/types"
+	craft "github.com/DSiSc/craft/types"
+	wtypes "github.com/DSiSc/wallet/core/types"
+
 )
 
 var (
@@ -161,7 +161,7 @@ func SendTransaction(args ctypes.SendTxArgs) (cmn.Hash, error) {
 	S                *cmn.Big       `json:"s"`
 }*/
 
-func GetTransactionByHash(hash cmn.Hash) (*rpctypes.RPCTransaction, error) {
+func GetTransactionByHash(hash cmn.Hash) (*ctypes.RPCTransaction, error) {
 	// Try to return an already finalized transaction
 	bc, _ := blockchain.NewLatestStateBlockChain()
 	if tx, blockHash, blockNumber, index, _ := bc.GetTransactionByHash(TypeConvert(&hash)); tx != nil {
@@ -176,7 +176,7 @@ func GetTransactionByHash(hash cmn.Hash) (*rpctypes.RPCTransaction, error) {
 	return nil, nil
 }
 
-func newRPCTransaction(tx *craft.Transaction, blockHash cmn.Hash, blockNumber uint64, index uint64) (*rpctypes.RPCTransaction, error) {
+func newRPCTransaction(tx *craft.Transaction, blockHash cmn.Hash, blockNumber uint64, index uint64) (*ctypes.RPCTransaction, error) {
 	var from *types.Address
 	if tx.Data.From != nil {
 		from = (*types.Address)(tx.Data.From)
@@ -255,7 +255,7 @@ func newRPCTransaction(tx *craft.Transaction, blockHash cmn.Hash, blockNumber ui
 		s = nil
 	}
 
-	result := &rpctypes.RPCTransaction{
+	result := &ctypes.RPCTransaction{
 		From:     from,
 		Gas:      gas,
 		GasPrice: gasPrice,
@@ -277,11 +277,11 @@ func newRPCTransaction(tx *craft.Transaction, blockHash cmn.Hash, blockNumber ui
 }
 
 // newRPCPendingTransaction returns a pending transaction that will serialize to the RPC representation
-func newRPCPendingTransaction(tx *craft.Transaction) (*rpctypes.RPCTransaction, error) {
+func newRPCPendingTransaction(tx *craft.Transaction) (*ctypes.RPCTransaction, error) {
 	return newRPCTransaction(tx, cmn.Hash{}, 0, 0)
 }
 
-func GetTransactionReceipt(hash cmn.Hash) (*rpctypes.RPCReceipt, error) {
+func GetTransactionReceipt(hash cmn.Hash) (*ctypes.RPCReceipt, error) {
 	// Try to return an already finalized transaction
 	bc, _ := blockchain.NewLatestStateBlockChain()
 	if tx, blockHash, blockNumber, index, _ := bc.GetTransactionByHash(TypeConvert(&hash)); tx != nil {
@@ -293,7 +293,7 @@ func GetTransactionReceipt(hash cmn.Hash) (*rpctypes.RPCReceipt, error) {
 	return nil, nil
 }
 
-func newRPCReceipt(tx *craft.Transaction, receipt *craft.Receipt, blockHash cmn.Hash, blockNumber uint64, index uint64) (*rpctypes.RPCReceipt, error) {
+func newRPCReceipt(tx *craft.Transaction, receipt *craft.Receipt, blockHash cmn.Hash, blockNumber uint64, index uint64) (*ctypes.RPCReceipt, error) {
 	var hash *cmn.Hash
 	if tx != nil {
 		h := (cmn.Hash)(types.TxHash(tx))
@@ -368,7 +368,7 @@ func newRPCReceipt(tx *craft.Transaction, receipt *craft.Receipt, blockHash cmn.
 		contractAddress = nil
 	}
 
-	result := &rpctypes.RPCReceipt{
+	result := &ctypes.RPCReceipt{
 		TransactionHash:   hash,
 		From:              from,
 		To:                to,
@@ -388,7 +388,7 @@ func newRPCReceipt(tx *craft.Transaction, receipt *craft.Receipt, blockHash cmn.
 	return result, nil
 }
 
-func newRPCTransactionFromBlockIndex(b *craft.Block, index uint64) (*rpctypes.RPCTransaction, error) {
+func newRPCTransactionFromBlockIndex(b *craft.Block, index uint64) (*ctypes.RPCTransaction, error) {
 	txs := b.Transactions
 	if index >= uint64(len(txs)) {
 		return nil,errors.New("index is too large")
@@ -397,9 +397,25 @@ func newRPCTransactionFromBlockIndex(b *craft.Block, index uint64) (*rpctypes.RP
 }
 
 // GetTransactionByBlockHashAndIndex returns the transaction for the given block hash and index.
-func GetTransactionByBlockHashAndIndex(blockHash cmn.Hash, index cmn.Uint) (*rpctypes.RPCTransaction, error) {
+func GetTransactionByBlockHashAndIndex(blockHash cmn.Hash, index cmn.Uint) (*ctypes.RPCTransaction, error) {
 	bc, err := blockchain.NewLatestStateBlockChain()
 	if block, _ := bc.GetBlockByHash(TypeConvert(&blockHash)); block != nil {
+		return newRPCTransactionFromBlockIndex(block, uint64(index))
+	}
+	return nil, err
+}
+
+// GetTransactionByBlockNumberAndIndex returns the bytes of the transaction for the given block number and index.
+func GetTransactionByBlockNumberAndIndex(blockNr types.BlockNumber, index cmn.Uint) (*ctypes.RPCTransaction, error) {
+	bc, err := blockchain.NewLatestStateBlockChain()
+	var block *craft.Block
+		if blockNr == types.LatestBlockNumber {
+			block = bc.GetCurrentBlock()
+		} else {
+			height := blockNr.Touint64()
+			block, err = bc.GetBlockByHeight(height)
+		}
+	if  block != nil {
 		return newRPCTransactionFromBlockIndex(block, uint64(index))
 	}
 	return nil, err

@@ -245,6 +245,46 @@ func TestGetTransactionByBlockHashAndIndex(t *testing.T) {
 
 }
 
+func TestGetTransactionByBlockNumberAndIndex(t *testing.T) {
+	// ------------------------
+	// mock
+	monkey.Patch(blockchain.NewLatestStateBlockChain, func() (*blockchain.BlockChain, error) {
+		return b, nil
+	})
+
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHeight", func(*blockchain.BlockChain, uint64) (*crafttypes.Block, error) {
+		blockdata := getMockBlock()
+		return blockdata, nil
+	})
+
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlock", func(*blockchain.BlockChain) (*crafttypes.Block) {
+		blockdata := getMockBlock()
+		return blockdata
+	})
+
+	// tests case
+	tests := []*Requestdata{
+		{
+
+			fmt.Sprintf(`{"jsonrpc": "2.0", "method": "eth_getTransactionByBlockNumberAndIndex", "id": 1, "params": [
+              "0x1b4", "0x0"]}`),
+			"", `{"jsonrpc":"2.0","id":1,"result":{"blockHash":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","blockNumber":"0xc","from":"0xb60e8dd61c5d32be8058bb8eb970870f07233155","gas":"0x76c0","gasPrice":"0x9184e72a0000","hash":"0x7415fa475109f885c690e0f4f26119aaa0b6b40dfab665069c6dd1daa2ac6f98","input":"0xd46e8dd67c5d32be8d46e8dd67c5d32be8058bb8eb970870f072445675058bb8eb970870f072445675","nonce":"0x10","to":"0xd46e8dd67c5d32be8058bb8eb970870f07244567","transactionIndex":"0x0","value":"0x9184e72a","v":"0x0","r":"0x0","s":"0x0"}}`},
+		{
+
+			fmt.Sprintf(`{"jsonrpc": "2.0", "method": "eth_getTransactionByBlockNumberAndIndex", "id": 1, "params": [
+              "latest", "0x0"]}`),
+			"", `{"jsonrpc":"2.0","id":1,"result":{"blockHash":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","blockNumber":"0xc","from":"0xb60e8dd61c5d32be8058bb8eb970870f07233155","gas":"0x76c0","gasPrice":"0x9184e72a0000","hash":"0x7415fa475109f885c690e0f4f26119aaa0b6b40dfab665069c6dd1daa2ac6f98","input":"0xd46e8dd67c5d32be8d46e8dd67c5d32be8058bb8eb970870f072445675058bb8eb970870f072445675","nonce":"0x10","to":"0xd46e8dd67c5d32be8058bb8eb970870f07244567","transactionIndex":"0x0","value":"0x9184e72a","v":"0x0","r":"0x0","s":"0x0"}}`},
+	}
+	// ------------------------
+	// httptest API
+	doRpcTest(t, tests)
+
+	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHeight")
+	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlock")
+	monkey.Unpatch(blockchain.NewLatestStateBlockChain)
+
+}
+
 func getMockTx() *crafttypes.Transaction {
 	nonce, _ := strconv.ParseUint(request.nonce[2:], 16, 32)
 	to := ctypes.BytesToAddress(getBytes(request.to))

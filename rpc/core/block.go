@@ -89,6 +89,28 @@ func GetBalance(address apitypes.Address, blockNr apitypes.BlockNumber) (*cmn.Bi
 	return nil, err
 }
 
+func GetCode(address apitypes.Address, blockNr apitypes.BlockNumber) (*cmn.Bytes, error) {
+	bc, err := blockchain.NewLatestStateBlockChain()
+	var block *types.Block
+	if err == nil {
+		if blockNr == apitypes.LatestBlockNumber {
+			block = bc.GetCurrentBlock()
+		} else {
+			height := blockNr.Touint64()
+			block, err = bc.GetBlockByHeight(height)
+		}
+		if &block.HeaderHash != nil {
+			bchash, errbc := blockchain.NewBlockChainByHash(block.HeaderHash)
+			if errbc == nil {
+				code := (bchash.GetCode((types.Address)(address)))
+				return cmn.NewBytes(code), nil
+			}
+		}
+		return nil, err
+	}
+	return nil, err
+}
+
 func TypeConvert(a *cmn.Hash) types.Hash {
 	var hash types.Hash
 	if a != nil {

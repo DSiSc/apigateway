@@ -93,6 +93,11 @@ func TestGetBlockByNumber(t *testing.T) {
 		return blockdata, nil
 	})
 
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlock", func(*blockchain.BlockChain) (*types.Block) {
+		blockdata := getMockBlock()
+		return blockdata
+	})
+
 	// tests case
 	tests := []*Requestdata {
 		{
@@ -101,12 +106,19 @@ func TestGetBlockByNumber(t *testing.T) {
               "0x1b4",true]}`),
 			"",
 			`{"jsonrpc":"2.0","id":1,"result":{"number":"0xc","hash":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","parentHash":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","mixHash":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","stateRoot":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","miner":"0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b","timestamp":"0x85","transactionsRoot":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","receiptsRoot":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","transactions":[{"Data":{"nonce":"16","gasPrice":160000000000000,"gas":"30400","to":"1G6N1nxdMr6AWLuOuXCHDwckRWc=","from":"tg6N1hxdMr6AWLuOuXCHDwcjMVU=","value":2441406250,"input":"1G6N1nxdMr6NRujdZ8XTK+gFi7jrlwhw8HJEVnUFi7jrlwhw8HJEVnU=","v":0,"r":0,"s":0,"hash":null},"Hash":{},"Size":{},"From":{}}]}}`},
+		{
+
+			fmt.Sprintf(`{"jsonrpc": "2.0", "method": "eth_getBlockByNumber", "id": 1, "params": [
+              "latest",true]}`),
+			"",
+			`{"jsonrpc":"2.0","id":1,"result":{"number":"0xc","hash":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","parentHash":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","mixHash":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","stateRoot":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","miner":"0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b","timestamp":"0x85","transactionsRoot":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","receiptsRoot":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","transactions":[{"Data":{"nonce":"16","gasPrice":160000000000000,"gas":"30400","to":"1G6N1nxdMr6AWLuOuXCHDwckRWc=","from":"tg6N1hxdMr6AWLuOuXCHDwcjMVU=","value":2441406250,"input":"1G6N1nxdMr6NRujdZ8XTK+gFi7jrlwhw8HJEVnUFi7jrlwhw8HJEVnU=","v":0,"r":0,"s":0,"hash":null},"Hash":{},"Size":{},"From":{}}]}}`},
 	}
 	// ------------------------
 	// httptest API
 	doRpcTest(t, tests)
 
-	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHash")
+	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHeight")
+	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlock")
 	monkey.Unpatch(blockchain.NewLatestStateBlockChain)
 }
 
@@ -159,7 +171,7 @@ func TestGetBlockTransactionCountByNumber(t *testing.T) {
 	// httptest API
 	doRpcTest(t, tests)
 
-	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHash")
+	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHeight")
 	monkey.Unpatch(blockchain.NewLatestStateBlockChain)
 }
 
@@ -183,6 +195,6 @@ func TestBlockNumber(t *testing.T) {
 	// httptest API
 	doRpcTest(t, tests)
 
-	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHash")
+	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlockHeight")
 	monkey.Unpatch(blockchain.NewLatestStateBlockChain)
 }

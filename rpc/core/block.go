@@ -41,9 +41,14 @@ func GetBlockTransactionCountByNumber(blockNr apitypes.BlockNumber) (*cmn.Uint, 
 
 func GetBlockByNumber(blockNr apitypes.BlockNumber, fullTx bool) (*rpctypes.Blockdata, error) {
 	blockchain, err := blockchain.NewLatestStateBlockChain()
+	var block *types.Block
 	if err == nil {
-		height := blockNr.Touint64()
-		block, err := blockchain.GetBlockByHeight(height)
+		if blockNr == apitypes.LatestBlockNumber {
+			block = blockchain.GetCurrentBlock()
+		} else {
+			height := blockNr.Touint64()
+			block, err = blockchain.GetBlockByHeight(height)
+		}
 		if block != nil {
 			return rpcOutputBlock(block, true, fullTx)
 		}

@@ -9,9 +9,9 @@ import (
 )
 
 func GetBlockByHash(blockHash cmn.Hash, fullTx bool) (*rpctypes.Blockdata, error) {
-	blockchain, err := blockchain.NewLatestStateBlockChain()
+	bc, err := blockchain.NewLatestStateBlockChain()
 	if err == nil {
-		block, err := blockchain.GetBlockByHash(TypeConvert(&blockHash))
+		block, err := bc.GetBlockByHash(TypeConvert(&blockHash))
 		if block != nil {
 			return rpcOutputBlock(block, true, fullTx)
 		}
@@ -21,8 +21,8 @@ func GetBlockByHash(blockHash cmn.Hash, fullTx bool) (*rpctypes.Blockdata, error
 }
 
 func GetBlockTransactionCountByHash(blockHash cmn.Hash) (*cmn.Uint, error) {
-	blockchain, err := blockchain.NewLatestStateBlockChain()
-	if block, err := blockchain.GetBlockByHash(TypeConvert(&blockHash)); block != nil {
+	bc, err := blockchain.NewLatestStateBlockChain()
+	if block, err := bc.GetBlockByHash(TypeConvert(&blockHash)); block != nil {
 		n := cmn.Uint(len(block.Transactions))
 		return &n, err
 	}
@@ -30,9 +30,9 @@ func GetBlockTransactionCountByHash(blockHash cmn.Hash) (*cmn.Uint, error) {
 }
 
 func GetBlockTransactionCountByNumber(blockNr apitypes.BlockNumber) (*cmn.Uint, error) {
-	blockchain, err := blockchain.NewLatestStateBlockChain()
+	bc, err := blockchain.NewLatestStateBlockChain()
 	height := blockNr.Touint64()
-	if block, err := blockchain.GetBlockByHeight(height); block != nil {
+	if block, err := bc.GetBlockByHeight(height); block != nil {
 		n := cmn.Uint(len(block.Transactions))
 		return &n, err
 	}
@@ -40,14 +40,14 @@ func GetBlockTransactionCountByNumber(blockNr apitypes.BlockNumber) (*cmn.Uint, 
 }
 
 func GetBlockByNumber(blockNr apitypes.BlockNumber, fullTx bool) (*rpctypes.Blockdata, error) {
-	blockchain, err := blockchain.NewLatestStateBlockChain()
+	bc, err := blockchain.NewLatestStateBlockChain()
 	var block *types.Block
 	if err == nil {
 		if blockNr == apitypes.LatestBlockNumber {
-			block = blockchain.GetCurrentBlock()
+			block = bc.GetCurrentBlock()
 		} else {
 			height := blockNr.Touint64()
-			block, err = blockchain.GetBlockByHeight(height)
+			block, err = bc.GetBlockByHeight(height)
 		}
 		if block != nil {
 			return rpcOutputBlock(block, true, fullTx)
@@ -63,6 +63,28 @@ func BlockNumber() (*cmn.Uint64, error) {
 		blockHeight := blockchain.GetCurrentBlockHeight()
 		lastHeight := (*cmn.Uint64)(&blockHeight)
 		return lastHeight, err
+	}
+	return nil, err
+}
+
+func GetBalance(address apitypes.Address, blockNr apitypes.BlockNumber) (*cmn.Big, error) {
+	bc, err := blockchain.NewLatestStateBlockChain()
+	var block *types.Block
+	if err == nil {
+		if blockNr == apitypes.LatestBlockNumber {
+			block = bc.GetCurrentBlock()
+		} else {
+			height := blockNr.Touint64()
+			block, err = bc.GetBlockByHeight(height)
+		}
+		if &block.HeaderHash != nil {
+			bchash, errbc := blockchain.NewBlockChainByHash(block.HeaderHash)
+			if errbc == nil {
+				balance := (bchash.GetBalance((types.Address)(address)))
+				return (*cmn.Big)(balance), nil
+			}
+		}
+		return nil, err
 	}
 	return nil, err
 }

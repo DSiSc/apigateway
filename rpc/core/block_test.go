@@ -198,3 +198,48 @@ func TestBlockNumber(t *testing.T) {
 	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlockHeight")
 	monkey.Unpatch(blockchain.NewLatestStateBlockChain)
 }
+
+func TestGetBalance(t *testing.T) {
+	monkey.Patch(blockchain.NewLatestStateBlockChain, func() (*blockchain.BlockChain, error) {
+		return b, nil
+	})
+
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHeight", func(*blockchain.BlockChain, uint64) (*types.Block, error) {
+		blockdata := getMockBlock()
+		return blockdata, nil
+	})
+
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlock", func(*blockchain.BlockChain) (*types.Block) {
+		blockdata := getMockBlock()
+		return blockdata
+	})
+	monkey.Patch(blockchain.NewBlockChainByHash, func(types.Hash) (*blockchain.BlockChain, error) {
+		return b, nil
+	})
+
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetBalance", func(*blockchain.BlockChain, types.Address) (*big.Int) {
+		return big.NewInt(int64(56))
+	})
+
+	// tests case
+	tests := []*Requestdata{
+		{
+
+			fmt.Sprintf(`{"jsonrpc": "2.0", "method": "eth_getBalance", "id": 1, "params": ["0xc94770007dda54cF92009BFF0dE90c06F603a09f","latest"]}`),
+			"",`{"jsonrpc":"2.0","id":1,"result":"0x38"}`},
+		{
+
+			fmt.Sprintf(`{"jsonrpc": "2.0", "method": "eth_getBalance", "id": 1, "params": ["0xc94770007dda54cF92009BFF0dE90c06F603a09f","0x4"]}`),
+			"",`{"jsonrpc":"2.0","id":1,"result":"0x38"}`},
+	}
+	// ------------------------
+	// httptest API
+	doRpcTest(t, tests)
+
+	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetBalance")
+	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlock")
+	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHeight")
+	monkey.Unpatch(blockchain.NewLatestStateBlockChain)
+	monkey.Unpatch(blockchain.NewBlockChainByHash)
+	monkey.Unpatch(blockchain.NewLatestStateBlockChain)
+}

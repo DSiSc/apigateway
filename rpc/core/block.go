@@ -3,11 +3,10 @@ package core
 import (
 	cmn "github.com/DSiSc/apigateway/common"
 	apitypes "github.com/DSiSc/apigateway/core/types"
+	rpctypes "github.com/DSiSc/apigateway/rpc/core/types"
 	"github.com/DSiSc/blockchain"
 	"github.com/DSiSc/craft/types"
-	rpctypes "github.com/DSiSc/apigateway/rpc/core/types"
 )
-
 
 func GetBlockByHash(blockHash cmn.Hash, fullTx bool) (*rpctypes.Blockdata, error) {
 	blockchain, err := blockchain.NewLatestStateBlockChain()
@@ -27,7 +26,7 @@ func GetBlockTransactionCountByHash(blockHash cmn.Hash) (*cmn.Uint, error) {
 		n := cmn.Uint(len(block.Transactions))
 		return &n, err
 	}
-	return nil,err
+	return nil, err
 }
 
 func GetBlockTransactionCountByNumber(blockNr apitypes.BlockNumber) (*cmn.Uint, error) {
@@ -53,6 +52,16 @@ func GetBlockByNumber(blockNr apitypes.BlockNumber, fullTx bool) (*rpctypes.Bloc
 	return nil, err
 }
 
+func BlockNumber() (*cmn.Uint64, error) {
+	blockchain, err := blockchain.NewLatestStateBlockChain()
+	if err == nil {
+		blockHeight := blockchain.GetCurrentBlockHeight()
+		lastHeight := (*cmn.Uint64)(&blockHeight)
+		return lastHeight, err
+	}
+	return nil, err
+}
+
 func TypeConvert(a *cmn.Hash) types.Hash {
 	var hash types.Hash
 	if a != nil {
@@ -72,7 +81,7 @@ func rpcOutputBlock(b *types.Block, inclTx bool, fullTx bool) (*rpctypes.Blockda
 
 func RPCMarshalBlock(b *types.Block, inclTx bool, fullTx bool) (*rpctypes.Blockdata, error) {
 	head := b.Header // copies the header once
-	fields := rpctypes.Blockdata {
+	fields := rpctypes.Blockdata{
 		Number:           (cmn.Uint64)(head.Height),
 		Hash:             (cmn.Hash)(b.HeaderHash),
 		ParentHash:       (cmn.Hash)(head.PrevBlockHash),

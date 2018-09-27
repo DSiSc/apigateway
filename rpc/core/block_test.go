@@ -162,3 +162,27 @@ func TestGetBlockTransactionCountByNumber(t *testing.T) {
 	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHash")
 	monkey.Unpatch(blockchain.NewLatestStateBlockChain)
 }
+
+func TestBlockNumber(t *testing.T) {
+	monkey.Patch(blockchain.NewLatestStateBlockChain, func() (*blockchain.BlockChain, error) {
+		return b, nil
+	})
+
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlockHeight", func(*blockchain.BlockChain) (uint64) {
+		return uint64(56)
+	})
+
+	// tests case
+	tests := []*Requestdata{
+		{
+
+			fmt.Sprintf(`{"jsonrpc": "2.0", "method": "eth_blockNumber", "id": 1, "params": []}`),
+			"",`{"jsonrpc":"2.0","id":1,"result":"0x38"}`},
+	}
+	// ------------------------
+	// httptest API
+	doRpcTest(t, tests)
+
+	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHash")
+	monkey.Unpatch(blockchain.NewLatestStateBlockChain)
+}

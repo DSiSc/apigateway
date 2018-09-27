@@ -10,6 +10,7 @@ import (
 	wtypes "github.com/DSiSc/wallet/core/types"
 	rpctypes "github.com/DSiSc/apigateway/rpc/core/types"
 	"math/big"
+	"errors"
 )
 
 var (
@@ -385,4 +386,21 @@ func newRPCReceipt(tx *craft.Transaction, receipt *craft.Receipt, blockHash cmn.
 		result.TransactionIndex = cmn.Uint(index)
 	}
 	return result, nil
+}
+
+func newRPCTransactionFromBlockIndex(b *craft.Block, index uint64) (*rpctypes.RPCTransaction, error) {
+	txs := b.Transactions
+	if index >= uint64(len(txs)) {
+		return nil,errors.New("index is too large")
+	}
+	return newRPCTransaction(txs[index], (cmn.Hash)(b.HeaderHash), b.Header.Height, index)
+}
+
+// GetTransactionByBlockHashAndIndex returns the transaction for the given block hash and index.
+func GetTransactionByBlockHashAndIndex(blockHash cmn.Hash, index cmn.Uint) (*rpctypes.RPCTransaction, error) {
+	bc, err := blockchain.NewLatestStateBlockChain()
+	if block, _ := bc.GetBlockByHash(TypeConvert(&blockHash)); block != nil {
+		return newRPCTransactionFromBlockIndex(block, uint64(index))
+	}
+	return nil, err
 }

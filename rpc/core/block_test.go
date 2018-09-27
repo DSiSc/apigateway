@@ -2,55 +2,19 @@ package core
 
 import (
 	"fmt"
-	cmn "github.com/DSiSc/apigateway/common"
-	ctypes "github.com/DSiSc/apigateway/core/types"
 	"github.com/DSiSc/blockchain"
 	"github.com/DSiSc/craft/types"
 	"github.com/DSiSc/monkey"
 	"math/big"
 	"reflect"
-	"strconv"
 	"testing"
 )
 
 // ------------------------
 
-
 var b *blockchain.BlockChain
 
 // -------------------------
-func getMockBlock() *types.Block{
-	hashtest := cmn.HexToHash("0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99")
-	nonce, _ := strconv.ParseUint(request.nonce[2:], 16, 32)
-	to := ctypes.BytesToAddress(getBytes(request.to))
-	from := ctypes.BytesToAddress(getBytes(request.from))
-	gas, _ := strconv.ParseUint(request.gas[2:], 16, 32)
-	value := new(big.Int).SetBytes(getBytes(request.value))
-	gasPrice := new(big.Int).SetBytes(getBytes(request.gasPrice))
-	data := getBytes(request.data)
-
-	mockTransaction := ctypes.NewTransaction(nonce, &to, value, gas, gasPrice, data, from)
-	transactions := make([]*types.Transaction, 1)
-	transactions[0] = mockTransaction
-
-	headerdata := types.Header{
-		ChainID:       uint64(11),
-		PrevBlockHash: (types.Hash)(hashtest),
-		StateRoot:     (types.Hash)(hashtest),
-		TxRoot:        (types.Hash)(hashtest),
-		ReceiptsRoot:  (types.Hash)(hashtest),
-		Height:        uint64(12),
-		Timestamp:     uint64(133),
-		MixDigest:     (types.Hash)(hashtest),
-		Coinbase:      (types.Address)(ctypes.BytesToAddress(getBytes("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"))),
-	}
-	blockdata := types.Block{
-		Header:       &headerdata,
-		Transactions: transactions,
-		HeaderHash:   (types.Hash)(hashtest),
-	}
-	return &blockdata
-}
 
 // ------------------------
 // package Test*
@@ -99,7 +63,7 @@ func TestGetBlockByNumber(t *testing.T) {
 	})
 
 	// tests case
-	tests := []*Requestdata {
+	tests := []*Requestdata{
 		{
 
 			fmt.Sprintf(`{"jsonrpc": "2.0", "method": "eth_getBlockByNumber", "id": 1, "params": [
@@ -139,7 +103,7 @@ func TestGetBlockTransactionCountByHash(t *testing.T) {
 
 			fmt.Sprintf(`{"jsonrpc": "2.0", "method": "eth_getBlockTransactionCountByHash", "id": 1, "params": [
               "0xe670ec64341771606e55d6b4ca35a1a6b75ee3d5145a99d05921026d152733"]}`),
-			"",`{"jsonrpc":"2.0","id":1,"result":"0x1"}`},
+			"", `{"jsonrpc":"2.0","id":1,"result":"0x1"}`},
 	}
 	// ------------------------
 	// httptest API
@@ -165,7 +129,7 @@ func TestGetBlockTransactionCountByNumber(t *testing.T) {
 
 			fmt.Sprintf(`{"jsonrpc": "2.0", "method": "eth_getBlockTransactionCountByNumber", "id": 1, "params": [
               "0x1b4"]}`),
-			"",`{"jsonrpc":"2.0","id":1,"result":"0x1"}`},
+			"", `{"jsonrpc":"2.0","id":1,"result":"0x1"}`},
 	}
 	// ------------------------
 	// httptest API
@@ -189,7 +153,7 @@ func TestBlockNumber(t *testing.T) {
 		{
 
 			fmt.Sprintf(`{"jsonrpc": "2.0", "method": "eth_blockNumber", "id": 1, "params": []}`),
-			"",`{"jsonrpc":"2.0","id":1,"result":"0x38"}`},
+			"", `{"jsonrpc":"2.0","id":1,"result":"0x38"}`},
 	}
 	// ------------------------
 	// httptest API
@@ -226,11 +190,11 @@ func TestGetBalance(t *testing.T) {
 		{
 
 			fmt.Sprintf(`{"jsonrpc": "2.0", "method": "eth_getBalance", "id": 1, "params": ["0xc94770007dda54cF92009BFF0dE90c06F603a09f","latest"]}`),
-			"",`{"jsonrpc":"2.0","id":1,"result":"0x38"}`},
+			"", `{"jsonrpc":"2.0","id":1,"result":"0x38"}`},
 		{
 
 			fmt.Sprintf(`{"jsonrpc": "2.0", "method": "eth_getBalance", "id": 1, "params": ["0xc94770007dda54cF92009BFF0dE90c06F603a09f","0x4"]}`),
-			"",`{"jsonrpc":"2.0","id":1,"result":"0x38"}`},
+			"", `{"jsonrpc":"2.0","id":1,"result":"0x38"}`},
 	}
 	// ------------------------
 	// httptest API
@@ -271,11 +235,11 @@ func TestGetCode(t *testing.T) {
 		{
 
 			fmt.Sprintf(`{"jsonrpc": "2.0", "method": "eth_getCode", "id": 1, "params": ["0xc94770007dda54cF92009BFF0dE90c06F603a09f","latest"]}`),
-			"",`{"jsonrpc":"2.0","id":1,"result":"0x616263"}`},
+			"", `{"jsonrpc":"2.0","id":1,"result":"0x616263"}`},
 		{
 
 			fmt.Sprintf(`{"jsonrpc": "2.0", "method": "eth_getCode", "id": 1, "params": ["0xc94770007dda54cF92009BFF0dE90c06F603a09f","0x4"]}`),
-			"",`{"jsonrpc":"2.0","id":1,"result":"0x616263"}`},
+			"", `{"jsonrpc":"2.0","id":1,"result":"0x616263"}`},
 	}
 	// ------------------------
 	// httptest API
@@ -316,11 +280,11 @@ func TestGetTransactionCount(t *testing.T) {
 		{
 
 			fmt.Sprintf(`{"jsonrpc": "2.0", "method": "eth_getTransactionCount", "id": 1, "params": ["0xc94770007dda54cF92009BFF0dE90c06F603a09f","latest"]}`),
-			"",`{"jsonrpc":"2.0","id":1,"result":"0x39"}`},
+			"", `{"jsonrpc":"2.0","id":1,"result":"0x39"}`},
 		{
 
 			fmt.Sprintf(`{"jsonrpc": "2.0", "method": "eth_getTransactionCount", "id": 1, "params": ["0xc94770007dda54cF92009BFF0dE90c06F603a09f","0x4"]}`),
-			"",`{"jsonrpc":"2.0","id":1,"result":"0x39"}`},
+			"", `{"jsonrpc":"2.0","id":1,"result":"0x39"}`},
 	}
 	// ------------------------
 	// httptest API

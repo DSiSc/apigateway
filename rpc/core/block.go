@@ -111,6 +111,28 @@ func GetCode(address apitypes.Address, blockNr apitypes.BlockNumber) (*cmn.Bytes
 	return nil, err
 }
 
+func GetTransactionCount(address apitypes.Address, blockNr apitypes.BlockNumber) (*cmn.Uint64, error) {
+	bc, err := blockchain.NewLatestStateBlockChain()
+	var block *types.Block
+	if err == nil {
+		if blockNr == apitypes.LatestBlockNumber {
+			block = bc.GetCurrentBlock()
+		} else {
+			height := blockNr.Touint64()
+			block, err = bc.GetBlockByHeight(height)
+		}
+		if &block.HeaderHash != nil {
+			bchash, errbc := blockchain.NewBlockChainByHash(block.HeaderHash)
+			if errbc == nil {
+				nonce := (bchash.GetNonce((types.Address)(address)))
+				return (*cmn.Uint64)(&nonce), nil
+			}
+		}
+		return nil, err
+	}
+	return nil, err
+}
+
 func TypeConvert(a *cmn.Hash) types.Hash {
 	var hash types.Hash
 	if a != nil {

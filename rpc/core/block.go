@@ -8,6 +8,60 @@ import (
 	"github.com/DSiSc/craft/types"
 )
 
+//#### eth_getBlockByHash
+//
+//Returns information about a block by hash.
+//
+//
+//##### Parameters
+//
+//1. `DATA`, 32 Bytes - Hash of a block.
+//2. `Boolean` - If `true` it returns the full transaction objects, if `false` only the hashes of the transactions.
+//
+//```js
+//params: [
+//   '0xe670ec64341771606e55d6b4ca35a1a6b75ee3d5145a99d05921026d1527331',
+//   true
+//]
+//```
+//
+//##### Returns
+//
+//`Object` - A block object, or `null` when no block was found:
+//
+//- `number`: `QUANTITY` - the block number. `null` when its pending block.
+//- `hash`: `DATA`, 32 Bytes - hash of the block. `null` when its pending block.
+//- `parentHash`: `DATA`, 32 Bytes - hash of the parent block.
+//- `transactionsRoot`: `DATA`, 32 Bytes - the root of the transaction trie of the block.
+//- `stateRoot`: `DATA`, 32 Bytes - the root of the final state trie of the block.
+//- `receiptsRoot`: `DATA`, 32 Bytes - the root of the receipts trie of the block.
+//- `miner`: `DATA`, 20 Bytes - the address of the beneficiary to whom the mining rewards were given.
+//- `timestamp`: `QUANTITY` - the unix timestamp for when the block was collated.
+//- `transactions`: `Array` - Array of transaction objects, or 32 Bytes transaction hashes depending on the last given parameter.
+//
+//##### Example
+//```js
+//// Request
+//curl -X POST --data '{"jsonrpc":"2.0","method":"eth_getBlockByHash","params":["0xe670ec64341771606e55d6b4ca35a1a6b75ee3d5145a99d05921026d1527331", true],"id":1}'
+//
+//// Result
+//{
+//"id":1,
+//"jsonrpc":"2.0",
+//"result": {
+//    "number": "0x1b4", // 436
+//    "hash": "0xe670ec64341771606e55d6b4ca35a1a6b75ee3d5145a99d05921026d1527331",
+//    "parentHash": "0x9646252be9520f6e71339a8df9c55e4d7619deeb018d2a3f2d21fc165dde5eb5",
+//    "transactionsRoot": "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+//    "stateRoot": "0xd5855eb08b3387c0af375e9cdb6acfc05eb8f519e419b874b6ff2ffda7ed1dff",
+//    "miner": "0x4e65fda2159562a496f9f3522f89122a3088497a",
+//    "timestamp": "0x54e34e8e" // 1424182926
+//    "transactions": [{...},{ ... }]
+//  }
+//}
+//```
+//
+//***
 func GetBlockByHash(blockHash cmn.Hash, fullTx bool) (*rpctypes.Blockdata, error) {
 	bc, err := blockchain.NewLatestStateBlockChain()
 	if err == nil {
@@ -20,6 +74,40 @@ func GetBlockByHash(blockHash cmn.Hash, fullTx bool) (*rpctypes.Blockdata, error
 	return nil, err
 }
 
+//#### eth_getBlockTransactionCountByHash
+//
+//Returns the number of transactions in a block from a block matching the given block hash.
+//
+//
+//##### Parameters
+//
+//1. `DATA`, 32 Bytes - hash of a block.
+//
+//```js
+//params: [
+//   '0xb903239f8543d04b5dc1ba6579132b143087c68db1b2168786408fcbce568238'
+//]
+//```
+//
+//##### Returns
+//
+//`QUANTITY` - integer of the number of transactions in this block.
+//
+//
+//##### Example
+//```js
+//// Request
+//curl -X POST --data '{"jsonrpc":"2.0","method":"eth_getBlockTransactionCountByHash","params":["0xc94770007dda54cF92009BFF0dE90c06F603a09f"],"id":1}'
+//
+//// Result
+//{
+//  "id":1,
+//  "jsonrpc": "2.0",
+//  "result": "0xc" // 11
+//}
+//```
+//
+//***
 func GetBlockTransactionCountByHash(blockHash cmn.Hash) (*cmn.Uint, error) {
 	bc, err := blockchain.NewLatestStateBlockChain()
 	if block, err := bc.GetBlockByHash(TypeConvert(&blockHash)); block != nil {
@@ -29,6 +117,39 @@ func GetBlockTransactionCountByHash(blockHash cmn.Hash) (*cmn.Uint, error) {
 	return nil, err
 }
 
+//#### eth_getBlockTransactionCountByNumber
+//> >
+//Returns the number of transactions in a block matching the given block number.
+//
+//
+//##### Parameters
+//
+//1. `QUANTITY|TAG` - integer of a block number, or the string `"earliest"`, `"latest"` or `"pending"`, as in the [default block parameter](#the-default-block-parameter).
+//
+//```js
+//params: [
+//   '0xe8', // 232
+//]
+//```
+//
+//##### Returns
+//
+//`QUANTITY` - integer of the number of transactions in this block.
+//
+//##### Example
+//```js
+//// Request
+//curl -X POST --data '{"jsonrpc":"2.0","method":"eth_getBlockTransactionCountByNumber","params":["0xe8"],"id":1}'
+//
+//// Result
+//{
+//  "id":1,
+//  "jsonrpc": "2.0",
+//  "result": "0xa" // 10
+//}
+//```
+//
+//***
 func GetBlockTransactionCountByNumber(blockNr apitypes.BlockNumber) (*cmn.Uint, error) {
 	bc, err := blockchain.NewLatestStateBlockChain()
 	height := blockNr.Touint64()
@@ -39,6 +160,35 @@ func GetBlockTransactionCountByNumber(blockNr apitypes.BlockNumber) (*cmn.Uint, 
 	return nil, err
 }
 
+//#### eth_getBlockByNumber
+//
+//Returns information about a block by block number.
+//
+//##### Parameters
+//
+//1. `QUANTITY|TAG` - integer of a block number, or the string `"earliest"`, `"latest"` or `"pending"`, as in the [default block parameter](#the-default-block-parameter).
+//2. `Boolean` - If `true` it returns the full transaction objects, if `false` only the hashes of the transactions.
+//
+//```js
+//params: [
+//   '0x1b4', // 436
+//   true
+//]
+//```
+//
+//##### Returns
+//
+//See [eth_getBlockByHash](#eth_getblockbyhash)
+//
+//##### Example
+//```js
+//// Request
+//curl -X POST --data '{"jsonrpc":"2.0","method":"eth_getBlockByNumber","params":["0x1b4", true],"id":1}'
+//```
+//
+//Result see [eth_getBlockByHash](#eth_getblockbyhash)
+//
+//***
 func GetBlockByNumber(blockNr apitypes.BlockNumber, fullTx bool) (*rpctypes.Blockdata, error) {
 	bc, err := blockchain.NewLatestStateBlockChain()
 	var block *types.Block
@@ -57,6 +207,31 @@ func GetBlockByNumber(blockNr apitypes.BlockNumber, fullTx bool) (*rpctypes.Bloc
 	return nil, err
 }
 
+//#### eth_blockNumber
+//
+//Returns the number of most recent block.
+//
+//##### Parameters
+//none
+//
+//##### Returns
+//
+//`QUANTITY` - integer of the current block number the client is on.
+//
+//##### Example
+//```js
+//// Request
+//curl -X POST --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":83}'
+//
+//// Result
+//{
+//  "id":83,
+//  "jsonrpc": "2.0",
+//  "result": "0xc94" // 1207
+//}
+//```
+//
+//***
 func BlockNumber() (*cmn.Uint64, error) {
 	blockchain, err := blockchain.NewLatestStateBlockChain()
 	if err == nil {
@@ -67,6 +242,41 @@ func BlockNumber() (*cmn.Uint64, error) {
 	return nil, err
 }
 
+//#### eth_getBalance
+//
+//Returns the balance of the account of given address.
+//
+//##### Parameters
+//
+//1. `DATA`, 20 Bytes - address to check for balance.
+//2. `QUANTITY|TAG` - integer block number, or the string `"latest"`, `"earliest"` or `"pending"`, see the [default block parameter](#the-default-block-parameter)
+//
+//```js
+//params: [
+//   '0xc94770007dda54cF92009BFF0dE90c06F603a09f',
+//   'latest'
+//]
+//```
+//
+//##### Returns
+//
+//`QUANTITY` - integer of the current balance in wei.
+//
+//
+//##### Example
+//```js
+//// Request
+//curl -X POST --data '{"jsonrpc":"2.0","method":"eth_getBalance","params":["0xc94770007dda54cF92009BFF0dE90c06F603a09f", "latest"],"id":1}'
+//
+//// Result
+//{
+//  "id":1,
+//  "jsonrpc": "2.0",
+//  "result": "0x0234c8a3397aab58" // 158972490234375000
+//}
+//```
+//
+//***
 func GetBalance(address apitypes.Address, blockNr apitypes.BlockNumber) (*cmn.Big, error) {
 	bc, err := blockchain.NewLatestStateBlockChain()
 	var block *types.Block
@@ -89,6 +299,42 @@ func GetBalance(address apitypes.Address, blockNr apitypes.BlockNumber) (*cmn.Bi
 	return nil, err
 }
 
+//#### eth_getCode
+//
+//Returns code at a given address.
+//
+//
+//##### Parameters
+//
+//1. `DATA`, 20 Bytes - address.
+//2. `QUANTITY|TAG` - integer block number, or the string `"latest"`, `"earliest"` or `"pending"`, see the [default block parameter](#the-default-block-parameter).
+//
+//```js
+//params: [
+//   '0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b',
+//   '0x2'  // 2
+//]
+//```
+//
+//##### Returns
+//
+//`DATA` - the code from the given address.
+//
+//
+//##### Example
+//```js
+//// Request
+//curl -X POST --data '{"jsonrpc":"2.0","method":"eth_getCode","params":["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b", "0x2"],"id":1}'
+//
+//// Result
+//{
+//  "id":1,
+//  "jsonrpc": "2.0",
+//  "result": "0x600160008035811a818181146012578301005b601b6001356025565b8060005260206000f25b600060078202905091905056"
+//}
+//```
+//
+//***
 func GetCode(address apitypes.Address, blockNr apitypes.BlockNumber) (*cmn.Bytes, error) {
 	bc, err := blockchain.NewLatestStateBlockChain()
 	var block *types.Block
@@ -111,6 +357,42 @@ func GetCode(address apitypes.Address, blockNr apitypes.BlockNumber) (*cmn.Bytes
 	return nil, err
 }
 
+//#### eth_getTransactionCount
+//
+//Returns the number of transactions *sent* from an address.
+//
+//
+//##### Parameters
+//
+//1. `DATA`, 20 Bytes - address.
+//2. `QUANTITY|TAG` - integer block number, or the string `"latest"`, `"earliest"` or `"pending"`, see the [default block parameter](#the-default-block-parameter)
+//
+//```js
+//params: [
+//   '0xc94770007dda54cF92009BFF0dE90c06F603a09f',
+//   'latest' // state at the latest block
+//]
+//```
+//
+//##### Returns
+//
+//`QUANTITY` - integer of the number of transactions send from this address.
+//
+//
+//##### Example
+//```js
+//// Request
+//curl -X POST --data '{"jsonrpc":"2.0","method":"eth_getTransactionCount","params":["0xc94770007dda54cF92009BFF0dE90c06F603a09f","latest"],"id":1}'
+//
+//// Result
+//{
+//  "id":1,
+//  "jsonrpc": "2.0",
+//  "result": "0x1" // 1
+//}
+//```
+//
+//***
 func GetTransactionCount(address apitypes.Address, blockNr apitypes.BlockNumber) (*cmn.Uint64, error) {
 	bc, err := blockchain.NewLatestStateBlockChain()
 	var block *types.Block

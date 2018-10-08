@@ -21,6 +21,8 @@ var Routes = map[string]*rpc.RPCFunc{
 	"eth_getTransactionByBlockHashAndIndex": rpc.NewRPCFunc(GetTransactionByBlockHashAndIndex, "blockHash, index"),
 	"eth_getTransactionByBlockNumberAndIndex": rpc.NewRPCFunc(GetTransactionByBlockNumberAndIndex, "blockNr, index"),
 	"eth_call": rpc.NewRPCFunc(Call, "args, blockNr"),
+	"eth_gasPrice": rpc.NewRPCFunc(GasPrice, ""),
+	"eth_estimateGas": rpc.NewRPCFunc(EstimateGas, "args"),
 }
 
 func AddTestRoutes() {

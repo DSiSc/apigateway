@@ -535,3 +535,11 @@ func doCall(tx *craft.Transaction, blockNr types.BlockNumber) ([]byte, uint64, b
 	result, gas, failed, err := worker.ApplyTransaction(evmEnv, tx, gp)
 	return result, gas, failed, err
 }
+
+func GasPrice() (*cmn.Big, error) {
+	return (*cmn.Big)(new(big.Int).SetUint64(types.DefaultGasPrice)), nil
+}
+
+func EstimateGas(args ctypes.SendTxArgs) (cmn.Uint64, error) {
+	return cmn.Uint64(100), nil
+}

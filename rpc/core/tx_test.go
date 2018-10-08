@@ -395,6 +395,45 @@ func getMockTx() *crafttypes.Transaction {
 	return mockReturnTx
 }
 
+func TestGasPrice(t *testing.T) {
+
+	// tests case
+	tests := []*Requestdata{
+		{
+
+			fmt.Sprintf(`{"jsonrpc": "2.0", "method": "eth_gasPrice", "id": 1, "params": []}`),
+			"", `{"jsonrpc":"2.0","id":1,"result":"0x1"}`},
+	}
+	// ------------------------
+	// httptest API
+	doRpcTest(t, tests)
+
+}
+
+func TestEstimateGas(t *testing.T) {
+
+	// tests case
+	tests := []*Requestdata{
+		{
+
+			fmt.Sprintf(`{"jsonrpc": "2.0", "method": "eth_estimateGas", "id": 1, "params": [{
+              "from": "%s",
+              "to": "%s",
+              "gas": "%s",
+              "gasPrice": "%s",
+              "value": "%s",
+			  "nonce": "%s",
+              "data": "%s"
+              }]}`, request.from, request.to, request.gas, request.gasPrice,
+				request.value, request.nonce, request.data),
+			"", `{"jsonrpc":"2.0","id":1,"result":"0x64"}`},
+	}
+	// ------------------------
+	// httptest API
+	doRpcTest(t, tests)
+
+}
+
 func getBytes(input string) []byte {
 	bytes, _ := cmn.Ghex.DecodeString(input)
 	return bytes

@@ -205,7 +205,6 @@ func TestGetBalance(t *testing.T) {
 	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHeight")
 	monkey.Unpatch(blockchain.NewLatestStateBlockChain)
 	monkey.Unpatch(blockchain.NewBlockChainByHash)
-	monkey.Unpatch(blockchain.NewLatestStateBlockChain)
 }
 
 func TestGetCode(t *testing.T) {

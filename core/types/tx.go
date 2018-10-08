@@ -25,6 +25,10 @@ import (
 	"github.com/DSiSc/craft/types"
 )
 
+const (
+	DefaultGasPrice = 1
+)
+
 func Sum(bz []byte) []byte {
 	hash := sha256.Sum256(bz)
 	return hash[:types.HashLength]

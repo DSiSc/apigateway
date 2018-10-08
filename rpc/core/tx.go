@@ -1,16 +1,19 @@
 package core
 
 import (
-	"math/big"
 	"errors"
-	"github.com/DSiSc/apigateway/core/types"
-	"github.com/DSiSc/blockchain"
-	"github.com/DSiSc/txpool"
 	cmn "github.com/DSiSc/apigateway/common"
+	"github.com/DSiSc/apigateway/core/types"
 	ctypes "github.com/DSiSc/apigateway/rpc/core/types"
+	"github.com/DSiSc/blockchain"
 	craft "github.com/DSiSc/craft/types"
+	"github.com/DSiSc/evm-NG"
+	"github.com/DSiSc/txpool"
+	"github.com/DSiSc/validator/worker"
+	"github.com/DSiSc/validator/worker/common"
 	wtypes "github.com/DSiSc/wallet/core/types"
-
+	"math"
+	"math/big"
 )
 
 var (
@@ -87,8 +90,11 @@ func SetSwCh(ch chan<- interface{}) {
 // - `error`: `error` - error detail info
 func SendTransaction(args ctypes.SendTxArgs) (cmn.Hash, error) {
 	// give an initValue when nonce is nil
-	if args.Nonce == nil {
-		args.Nonce = cmn.NewUint64(16)
+	var nonce uint64
+	if args.Nonce != nil {
+		nonce = args.Nonce.Touint64()
+	} else {
+		nonce = uint64(0)
 	}
 	// value can be nil
 	var value *big.Int
@@ -108,18 +114,32 @@ func SendTransaction(args ctypes.SendTxArgs) (cmn.Hash, error) {
 	var gas uint64
 	if args.Gas != nil {
 		gas = args.Gas.Touint64()
+		if gas == 0 {
+			gas = math.MaxUint64 / 2
+		}
 	} else {
-		gas = uint64(0)
+		gas = math.MaxUint64 / 2
 	}
+	// give an initValue when gasPrice is nil
+	var gasPrice *big.Int
+	if args.GasPrice == nil {
+		gasPrice = new(big.Int).SetUint64(types.DefaultGasPrice)
+	} else {
+		gasPrice = args.GasPrice.ToBigInt()
+		if gasPrice.Sign() == 0 {
+			gasPrice = new(big.Int).SetUint64(types.DefaultGasPrice)
+		}
+	}
+
 	// new types.Transaction base on SendTxArgs
 	tx := types.NewTransaction(
-		args.Nonce.Touint64(),
+		nonce,
 		args.To,
 		value,
 		gas,
-		args.GasPrice.ToBigInt(),
+		gasPrice,
 		data,
-		types.BytesToAddress(args.From.Bytes()),
+		args.From,
 	)
 
 	// SignTx
@@ -391,7 +411,7 @@ func newRPCReceipt(tx *craft.Transaction, receipt *craft.Receipt, blockHash cmn.
 func newRPCTransactionFromBlockIndex(b *craft.Block, index uint64) (*ctypes.RPCTransaction, error) {
 	txs := b.Transactions
 	if index >= uint64(len(txs)) {
-		return nil,errors.New("index is too large")
+		return nil, errors.New("index is too large")
 	}
 	return newRPCTransaction(txs[index], (cmn.Hash)(b.HeaderHash), b.Header.Height, index)
 }
@@ -409,14 +429,109 @@ func GetTransactionByBlockHashAndIndex(blockHash cmn.Hash, index cmn.Uint) (*cty
 func GetTransactionByBlockNumberAndIndex(blockNr types.BlockNumber, index cmn.Uint) (*ctypes.RPCTransaction, error) {
 	bc, err := blockchain.NewLatestStateBlockChain()
 	var block *craft.Block
-		if blockNr == types.LatestBlockNumber {
-			block = bc.GetCurrentBlock()
-		} else {
-			height := blockNr.Touint64()
-			block, err = bc.GetBlockByHeight(height)
-		}
-	if  block != nil {
+	if blockNr == types.LatestBlockNumber {
+		block = bc.GetCurrentBlock()
+	} else {
+		height := blockNr.Touint64()
+		block, err = bc.GetBlockByHeight(height)
+	}
+	if block != nil {
 		return newRPCTransactionFromBlockIndex(block, uint64(index))
 	}
 	return nil, err
+}
+
+func Call(args ctypes.SendTxArgs, blockNr types.BlockNumber) (cmn.Bytes, error) {
+	// to can not be nil
+	var to *types.Address
+	if &args.To == nil || *args.To == (types.Address{}) {
+		return nil, errors.New("to is nil")
+	} else {
+		to = args.To
+	}
+
+	// value can be nil
+	var value *big.Int
+	if args.Value != nil {
+		value = args.Value.ToBigInt()
+	} else {
+		value = nil
+	}
+	// data can be nil
+	var data []byte
+	if args.Data != nil {
+		data = args.Data.Bytes()
+	} else {
+		data = nil
+	}
+	// give an initValue when gas is nil
+	var gas uint64
+	if args.Gas != nil {
+		gas = args.Gas.Touint64()
+		if gas == 0 {
+			gas = math.MaxUint64 / 2
+		}
+	} else {
+		gas = math.MaxUint64 / 2
+	}
+	// give an initValue when gasPrice is nil
+	var gasPrice *big.Int
+	if args.GasPrice == nil {
+		gasPrice = new(big.Int).SetUint64(types.DefaultGasPrice)
+	} else {
+		gasPrice = args.GasPrice.ToBigInt()
+		if gasPrice.Sign() == 0 {
+			gasPrice = new(big.Int).SetUint64(types.DefaultGasPrice)
+		}
+	}
+
+	// give an initValue when from is nil
+	var from types.Address
+	if &args.From == nil || args.From == (types.Address{}) {
+		_, addr := wtypes.DefaultTestKey()
+		from = types.Address(addr)
+	} else {
+		from = args.From
+	}
+
+	// new types.Transaction base on SendTxArgs
+	tx := types.NewTransaction(
+		0,
+		to,
+		value,
+		gas,
+		gasPrice,
+		data,
+		from,
+	)
+	result, _, _, err := doCall(tx, blockNr)
+	return (cmn.Bytes)(result), err
+}
+
+func doCall(tx *craft.Transaction, blockNr types.BlockNumber) ([]byte, uint64, bool, error) {
+	bc, err := blockchain.NewLatestStateBlockChain()
+	if err != nil {
+		return nil, 0, true, err
+	}
+	var block *craft.Block
+	if blockNr == types.LatestBlockNumber {
+		block = bc.GetCurrentBlock()
+	} else {
+		height := blockNr.Touint64()
+		block, err = bc.GetBlockByHeight(height)
+		if err != nil {
+			return nil, 0, true, err
+		}
+	}
+
+	bchash, err := blockchain.NewBlockChainByHash(block.HeaderHash)
+	if err != nil {
+		return nil, 0, true, err
+	}
+
+	context := evm.NewEVMContext(*tx, block.Header, bchash, block.Header.Coinbase)
+	evmEnv := evm.NewEVM(context, bchash)
+	gp := new(common.GasPool).AddGas(uint64(65536))
+	result, gas, failed, err := worker.ApplyTransaction(evmEnv, tx, gp)
+	return result, gas, failed, err
 }

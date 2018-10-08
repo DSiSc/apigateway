@@ -4,13 +4,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/DSiSc/blockchain"
+	"github.com/DSiSc/evm-NG"
 	"github.com/DSiSc/monkey"
+	"github.com/DSiSc/validator/worker"
+	"github.com/DSiSc/validator/worker/common"
 	"io/ioutil"
+	"math"
 	"math/big"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
-	"strconv"
 	"strings"
 	"testing"
 
@@ -34,17 +37,8 @@ func TestSendTransaction(t *testing.T) {
 
 	// -------------------------
 	// Mock:  mockTransaction
-	nonce, _ := strconv.ParseUint(request.nonce[2:], 16, 32)
-	to := ctypes.BytesToAddress(getBytes(request.to))
-	from := ctypes.BytesToAddress(getBytes(request.from))
-	gas, _ := strconv.ParseUint(request.gas[2:], 16, 32)
-	value := new(big.Int).SetBytes(getBytes(request.value))
-	gasPrice := new(big.Int).SetBytes(getBytes(request.gasPrice))
-	data := getBytes(request.data)
-
 	mockTransaction := ctypes.NewTransaction(nonce, &to, value, gas, gasPrice, data, from)
-	mockContract := ctypes.NewTransaction(nonce, nil, nil, 0, gasPrice, nil, from)
-
+	mockContract := ctypes.NewTransaction(uint64(0), nil, nil, math.MaxUint64/2, new(big.Int).SetUint64(1), nil, from)
 
 	// SignTx
 	key, _ := wtypes.DefaultTestKey()
@@ -67,11 +61,10 @@ func TestSendTransaction(t *testing.T) {
 	// ---------------------------
 	// tests case
 	tests := []struct {
-		payload string
-		wantErr string
-		wantReturn []byte
+		payload         string
+		wantErr         string
+		wantReturn      []byte
 		mockTransaction *crafttypes.Transaction
-
 	}{
 		{
 
@@ -85,14 +78,12 @@ func TestSendTransaction(t *testing.T) {
               "data": "%s"
               }]}`, request.from, request.to, request.gas, request.gasPrice,
 				request.value, request.nonce, request.data),
-			"", mockTxHash, mockTransaction },
+			"", mockTxHash, mockTransaction},
 		{
 
 			fmt.Sprintf(`{"jsonrpc": "2.0", "method": "eth_sendTransaction", "id": "0", "params": [{
-              "from": "%s",
-              "gasPrice": "%s"
-              }]}`, request.from,  request.gasPrice),
-			"", mockContractHash, mockContract },
+              "from": "%s"}]}`, request.from),
+			"", mockContractHash, mockContract},
 	}
 
 	// ------------------------
@@ -285,14 +276,107 @@ func TestGetTransactionByBlockNumberAndIndex(t *testing.T) {
 
 }
 
+func TestCall(t *testing.T) {
+	// -------------------------
+	// Mock:  mockTransaction
+	mockTx1 := ctypes.NewTransaction(uint64(0), &to, value, gas, gasPrice, data, from)
+	mockTx2 := ctypes.NewTransaction(uint64(0), &to, nil, math.MaxUint64/2, new(big.Int).SetUint64(1), nil, ctypes.Address{})
+	// tests case
+	tests := []struct {
+		payload         string
+		wantErr         string
+		wantReturn      string
+		mockTransaction *crafttypes.Transaction
+	}{
+		{
+
+			fmt.Sprintf(`{"jsonrpc": "2.0", "method": "eth_call", "id": 1, "params": [{
+              "from": "%s",
+              "to": "%s",
+              "gas": "%s",
+              "gasPrice": "%s",
+              "value": "%s",
+			  "nonce": "%s",
+              "data": "%s"}, "0x1b4"]}`, request.from, request.to, request.gas, request.gasPrice,
+				request.value, request.nonce, request.data),
+			"", `{"jsonrpc":"2.0","id":1,"result":"0x38"}`, mockTx1},
+		{
+
+			fmt.Sprintf(`{"jsonrpc": "2.0", "method": "eth_call", "id": 1, "params": [{
+              "from": "%s",
+              "to": "%s"}, "0x1b4"]}`, request.from, request.to),
+			"", `{"jsonrpc":"2.0","id":1,"result":"0x38"}`, mockTx2},
+	}
+
+	monkey.Patch(blockchain.NewLatestStateBlockChain, func() (*blockchain.BlockChain, error) {
+		return b, nil
+	})
+
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHeight", func(*blockchain.BlockChain, uint64) (*crafttypes.Block, error) {
+		blockdata := getMockBlock()
+		return blockdata, nil
+	})
+
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlock", func(*blockchain.BlockChain) (*crafttypes.Block) {
+		blockdata := getMockBlock()
+		return blockdata
+	})
+	monkey.Patch(blockchain.NewBlockChainByHash, func(crafttypes.Hash) (*blockchain.BlockChain, error) {
+		return b, nil
+	})
+
+	mux := testMux()
+	for i, tt := range tests {
+
+		monkey.Patch(evm.NewEVMContext, func(tx crafttypes.Transaction,  header *crafttypes.Header, bc *blockchain.BlockChain, addr crafttypes.Address) (evm.Context) {
+			//assert.Equal(t, tt.mockTransaction, &tx)
+			return  evm.Context{}
+		})
+
+		monkey.Patch(evm.NewEVM, func(evm.Context, *blockchain.BlockChain) (*evm.EVM) {
+			return  &evm.EVM{}
+		})
+
+		monkey.Patch(worker.ApplyTransaction, func(*evm.EVM, *crafttypes.Transaction, *common.GasPool) ([]byte, uint64, bool, error) {
+			return  getBytes("0x38"), uint64(0), true, nil
+		})
+
+
+		req, _ := http.NewRequest("POST", "http://localhost/", strings.NewReader(tt.payload))
+		rec := httptest.NewRecorder()
+		mux.ServeHTTP(rec, req)
+
+		// --------------
+		// Test Response
+		res := rec.Result()
+		// Always expecting back a JSONRPCResponse
+		assert.True(t, statusOK(res.StatusCode), "#%d: should always return 2XX", i)
+		blob, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			t.Errorf("#%d: err reading body: %v", i, err)
+			continue
+		}
+		// ----------------
+		// Test reponse
+		recv := new(rpctypes.RPCResponse)
+		json.Unmarshal(blob, recv)
+
+		b, _ := json.Marshal(recv)
+		assert.Equal(t, tt.wantReturn, string(b))
+
+		monkey.Unpatch(worker.ApplyTransaction)
+		monkey.Unpatch(evm.NewEVM)
+		monkey.Unpatch(evm.NewEVMContext)
+
+	}
+	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlock")
+	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHeight")
+	monkey.Unpatch(blockchain.NewBlockChainByHash)
+	monkey.Unpatch(blockchain.NewLatestStateBlockChain)
+}
+
 func getMockTx() *crafttypes.Transaction {
-	nonce, _ := strconv.ParseUint(request.nonce[2:], 16, 32)
-	to := ctypes.BytesToAddress(getBytes(request.to))
-	from := ctypes.BytesToAddress(getBytes(request.from))
-	gas, _ := strconv.ParseUint(request.gas[2:], 16, 32)
-	//value := new(big.Int).SetBytes(getBytes(request.value))
-	gasPrice := new(big.Int).SetBytes(getBytes(request.gasPrice))
-	data := getBytes(request.data)
+
 	recipient := (crafttypes.Address)(to)
 	craftfrom := (crafttypes.Address)(from)
 	d := crafttypes.TxData{

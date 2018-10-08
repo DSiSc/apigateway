@@ -128,7 +128,7 @@ func getMockBlock() *types.Block {
 		Height:        uint64(12),
 		Timestamp:     uint64(133),
 		MixDigest:     (types.Hash)(hashtest),
-		Coinbase:      (types.Address)(ctypes.BytesToAddress(getBytes("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"))),
+		CoinBase:      (types.Address)(ctypes.BytesToAddress(getBytes("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"))),
 	}
 	blockdata := types.Block{
 		Header:       &headerdata,

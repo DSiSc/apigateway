@@ -529,7 +529,7 @@ func doCall(tx *craft.Transaction, blockNr types.BlockNumber) ([]byte, uint64, b
 		return nil, 0, true, err
 	}
 
-	context := evm.NewEVMContext(*tx, block.Header, bchash, block.Header.Coinbase)
+	context := evm.NewEVMContext(*tx, block.Header, bchash, block.Header.CoinBase)
 	evmEnv := evm.NewEVM(context, bchash)
 	gp := new(common.GasPool).AddGas(uint64(65536))
 	result, gas, failed, err := worker.ApplyTransaction(evmEnv, tx, gp)

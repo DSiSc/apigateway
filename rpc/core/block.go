@@ -158,7 +158,7 @@ func RPCMarshalBlock(b *types.Block, inclTx bool, fullTx bool) (*rpctypes.Blockd
 		ParentHash:       (cmn.Hash)(head.PrevBlockHash),
 		MixHash:          (cmn.Hash)(head.MixDigest),
 		StateRoot:        (cmn.Hash)(head.StateRoot),
-		Miner:            (apitypes.Address)(head.Coinbase),
+		Miner:            (apitypes.Address)(head.CoinBase),
 		Timestamp:        (cmn.Uint64)(head.Timestamp),
 		TransactionsRoot: (cmn.Hash)(head.TxRoot),
 		ReceiptsRoot:     (cmn.Hash)(head.ReceiptsRoot),

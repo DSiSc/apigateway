@@ -50,6 +50,10 @@ func (bz Bytes) MarshalJSON() ([]byte, error) {
 
 // This is the point of Bytes.
 func (bz *Bytes) UnmarshalJSON(data []byte) error {
+	if string(data) == `""` {
+		*bz = []byte(``)
+		return nil
+	}
 
 	unQuote, err := strconv.Unquote(string(data))
 	if err != nil {

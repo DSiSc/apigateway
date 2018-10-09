@@ -78,6 +78,7 @@ func TestUnmarshalJSON(t *testing.T) {
 		input    string
 		expected []byte
 	}{
+		{`{"B1":"","B2":""}`, []byte(``)},
 		{`{"B1":"","B2":"0x"}`, []byte(``)},
 		{`{"B1":"YQ==","B2":"0x61"}`, []byte(`a`)},
 		{`{"B1":"YWJj","B2":"0x616263"}`, []byte(`abc`)},

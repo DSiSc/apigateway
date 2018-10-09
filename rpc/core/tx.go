@@ -707,7 +707,7 @@ func doCall(tx *craft.Transaction, blockNr types.BlockNumber) ([]byte, uint64, b
 		}
 	}
 
-	bchash, err := blockchain.NewBlockChainByHash(block.HeaderHash)
+	bchash, err := blockchain.NewBlockChainByBlockHash(block.HeaderHash)
 	if err != nil {
 		return nil, 0, true, err
 	}

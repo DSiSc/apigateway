@@ -321,7 +321,7 @@ func TestCall(t *testing.T) {
 		blockdata := getMockBlock()
 		return blockdata
 	})
-	monkey.Patch(blockchain.NewBlockChainByHash, func(crafttypes.Hash) (*blockchain.BlockChain, error) {
+	monkey.Patch(blockchain.NewBlockChainByBlockHash, func(crafttypes.Hash) (*blockchain.BlockChain, error) {
 		return b, nil
 	})
 
@@ -371,7 +371,7 @@ func TestCall(t *testing.T) {
 	}
 	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlock")
 	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHeight")
-	monkey.Unpatch(blockchain.NewBlockChainByHash)
+	monkey.Unpatch(blockchain.NewBlockChainByBlockHash)
 	monkey.Unpatch(blockchain.NewLatestStateBlockChain)
 }
 

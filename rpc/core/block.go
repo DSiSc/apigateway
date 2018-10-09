@@ -288,7 +288,7 @@ func GetBalance(address apitypes.Address, blockNr apitypes.BlockNumber) (*cmn.Bi
 			block, err = bc.GetBlockByHeight(height)
 		}
 		if &block.HeaderHash != nil {
-			bchash, errbc := blockchain.NewBlockChainByHash(block.HeaderHash)
+			bchash, errbc := blockchain.NewBlockChainByBlockHash(block.HeaderHash)
 			if errbc == nil {
 				balance := (bchash.GetBalance((types.Address)(address)))
 				return (*cmn.Big)(balance), nil
@@ -346,7 +346,7 @@ func GetCode(address apitypes.Address, blockNr apitypes.BlockNumber) (*cmn.Bytes
 			block, err = bc.GetBlockByHeight(height)
 		}
 		if &block.HeaderHash != nil {
-			bchash, errbc := blockchain.NewBlockChainByHash(block.HeaderHash)
+			bchash, errbc := blockchain.NewBlockChainByBlockHash(block.HeaderHash)
 			if errbc == nil {
 				code := (bchash.GetCode((types.Address)(address)))
 				return cmn.NewBytes(code), nil
@@ -404,7 +404,7 @@ func GetTransactionCount(address apitypes.Address, blockNr apitypes.BlockNumber)
 			block, err = bc.GetBlockByHeight(height)
 		}
 		if &block.HeaderHash != nil {
-			bchash, errbc := blockchain.NewBlockChainByHash(block.HeaderHash)
+			bchash, errbc := blockchain.NewBlockChainByBlockHash(block.HeaderHash)
 			if errbc == nil {
 				nonce := (bchash.GetNonce((types.Address)(address)))
 				return (*cmn.Uint64)(&nonce), nil

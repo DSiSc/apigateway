@@ -177,7 +177,7 @@ func TestGetBalance(t *testing.T) {
 		blockdata := getMockBlock()
 		return blockdata
 	})
-	monkey.Patch(blockchain.NewBlockChainByHash, func(types.Hash) (*blockchain.BlockChain, error) {
+	monkey.Patch(blockchain.NewBlockChainByBlockHash, func(types.Hash) (*blockchain.BlockChain, error) {
 		return b, nil
 	})
 
@@ -204,7 +204,7 @@ func TestGetBalance(t *testing.T) {
 	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlock")
 	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHeight")
 	monkey.Unpatch(blockchain.NewLatestStateBlockChain)
-	monkey.Unpatch(blockchain.NewBlockChainByHash)
+	monkey.Unpatch(blockchain.NewBlockChainByBlockHash)
 }
 
 func TestGetCode(t *testing.T) {
@@ -221,7 +221,7 @@ func TestGetCode(t *testing.T) {
 		blockdata := getMockBlock()
 		return blockdata
 	})
-	monkey.Patch(blockchain.NewBlockChainByHash, func(types.Hash) (*blockchain.BlockChain, error) {
+	monkey.Patch(blockchain.NewBlockChainByBlockHash, func(types.Hash) (*blockchain.BlockChain, error) {
 		return b, nil
 	})
 
@@ -248,7 +248,7 @@ func TestGetCode(t *testing.T) {
 	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlock")
 	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHeight")
 	monkey.Unpatch(blockchain.NewLatestStateBlockChain)
-	monkey.Unpatch(blockchain.NewBlockChainByHash)
+	monkey.Unpatch(blockchain.NewBlockChainByBlockHash)
 	monkey.Unpatch(blockchain.NewLatestStateBlockChain)
 }
 
@@ -266,7 +266,7 @@ func TestGetTransactionCount(t *testing.T) {
 		blockdata := getMockBlock()
 		return blockdata
 	})
-	monkey.Patch(blockchain.NewBlockChainByHash, func(types.Hash) (*blockchain.BlockChain, error) {
+	monkey.Patch(blockchain.NewBlockChainByBlockHash, func(types.Hash) (*blockchain.BlockChain, error) {
 		return b, nil
 	})
 
@@ -293,6 +293,6 @@ func TestGetTransactionCount(t *testing.T) {
 	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlock")
 	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHeight")
 	monkey.Unpatch(blockchain.NewLatestStateBlockChain)
-	monkey.Unpatch(blockchain.NewBlockChainByHash)
+	monkey.Unpatch(blockchain.NewBlockChainByBlockHash)
 	monkey.Unpatch(blockchain.NewLatestStateBlockChain)
 }

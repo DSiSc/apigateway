@@ -151,11 +151,17 @@ func RecoverAndLogHandler(handler http.Handler, logger log.Logger) http.Handler 
 		begin := time.Now()
 
 		// Common headers
-		origin := r.Header.Get("Origin")
-		rww.Header().Set("Access-Control-Allow-Origin", origin)
-		rww.Header().Set("Access-Control-Allow-Credentials", "true")
-		rww.Header().Set("Access-Control-Expose-Headers", "X-Server-Time")
-		rww.Header().Set("X-Server-Time", fmt.Sprintf("%v", begin.Unix()))
+		//origin := r.Header.Get("Origin")
+		//rww.Header().Set("Access-Control-Allow-Origin", origin)
+		//rww.Header().Set("Access-Control-Allow-Credentials", "true")
+		//rww.Header().Set("Access-Control-Expose-Headers", "X-Server-Time")
+		//rww.Header().Set("X-Server-Time", fmt.Sprintf("%v", begin.Unix()))
+		rww.Header().Set("Access-Control-Allow-Origin", "*")
+		rww.Header().Set("Access-Control-Allow-Methods", "*")
+		rww.Header().Set("Content-Type", "text/plain")
+		rww.Header().Set("Connections", "keep-alive")
+		rww.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
+
 
 		defer func() {
 			// Send a 500 error if a panic happens during a handler.

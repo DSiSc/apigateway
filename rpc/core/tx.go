@@ -777,3 +777,19 @@ func GasPrice() (*cmn.Big, error) {
 func EstimateGas(args ctypes.SendTxArgs) (cmn.Uint64, error) {
 	return cmn.Uint64(100), nil
 }
+
+func Accounts() ([]types.Address, error) {
+	addresses := make([]types.Address, 0) // return [] instead of nil if empty
+	_, addr := wtypes.DefaultTestKey()
+	addresses = append(addresses, types.Address(addr))
+
+	return addresses,nil
+}
+
+func Listening() (bool, error) {
+	return true, nil // always listening
+}
+
+func Version() (string, error) {
+	return "5777", nil
+}

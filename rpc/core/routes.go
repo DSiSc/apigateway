@@ -23,6 +23,9 @@ var Routes = map[string]*rpc.RPCFunc{
 	"eth_call": rpc.NewRPCFunc(Call, "args, blockNr"),
 	"eth_gasPrice": rpc.NewRPCFunc(GasPrice, ""),
 	"eth_estimateGas": rpc.NewRPCFunc(EstimateGas, "args"),
+	"eth_accounts": rpc.NewRPCFunc(Accounts, ""),
+	"eth_listening": rpc.NewRPCFunc(Listening, ""),
+	"eth_version": rpc.NewRPCFunc(Version, ""),
 }
 
 func AddTestRoutes() {

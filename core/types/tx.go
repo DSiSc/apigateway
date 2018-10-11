@@ -19,18 +19,29 @@ package types
 import (
 	"math/big"
 
-	"crypto/sha256"
 	"encoding/json"
 
 	"github.com/DSiSc/craft/types"
+	"github.com/DSiSc/crypto-suite/crypto/sha3"
+	gconf "github.com/DSiSc/craft/config"
 )
 
 const (
 	DefaultGasPrice = 1
 )
 
+
+// Sum returns the first 32 bytes of hash of the bz.
 func Sum(bz []byte) []byte {
-	hash := sha256.Sum256(bz)
+	var alg string
+	if value, ok := gconf.GlobalConfig.Load(gconf.HashAlgName); ok {
+		alg = value.(string)
+	} else {
+		alg = "SHA256"
+	}
+	hasher := sha3.NewHashByAlgName(alg)
+	hasher.Write(bz)
+	hash := hasher.Sum(nil)
 	return hash[:types.HashLength]
 }
 

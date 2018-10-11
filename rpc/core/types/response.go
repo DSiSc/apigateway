@@ -11,16 +11,16 @@ type ResultEcho struct {
 }
 
 type Blockdata struct {
-	Number           cmn.Uint64           `json:"number"`
-	Hash             cmn.Hash             `json:"hash"`
-	ParentHash       cmn.Hash             `json:"parentHash"`
-	MixHash          cmn.Hash             `json:"mixHash"`
-	StateRoot        cmn.Hash             `json:"stateRoot"`
-	Miner            apitypes.Address     `json:"miner"`
-	Timestamp        cmn.Uint64           `json:"timestamp"`
-	TransactionsRoot cmn.Hash             `json:"transactionsRoot"`
-	ReceiptsRoot     cmn.Hash             `json:"receiptsRoot"`
-	Transactions     []*types.Transaction `json:"transactions"`
+	Number           cmn.Uint64        `json:"number"`
+	Hash             cmn.Hash          `json:"hash"`
+	ParentHash       cmn.Hash          `json:"parentHash"`
+	MixHash          cmn.Hash          `json:"mixHash"`
+	StateRoot        cmn.Hash          `json:"stateRoot"`
+	Miner            apitypes.Address  `json:"miner"`
+	Timestamp        cmn.Uint64        `json:"timestamp"`
+	TransactionsRoot cmn.Hash          `json:"transactionsRoot"`
+	ReceiptsRoot     cmn.Hash          `json:"receiptsRoot"`
+	Transactions     []*BlockTransaction `json:"transactions"`
 }
 
 type RPCTransaction struct {
@@ -34,6 +34,20 @@ type RPCTransaction struct {
 	Nonce            *cmn.Uint64       `json:"nonce"`
 	To               *apitypes.Address `json:"to"`
 	TransactionIndex cmn.Uint          `json:"transactionIndex"`
+	Value            *cmn.Big          `json:"value"`
+	V                *cmn.Big          `json:"v"`
+	R                *cmn.Big          `json:"r"`
+	S                *cmn.Big          `json:"s"`
+}
+
+type BlockTransaction struct {
+	From             *apitypes.Address `json:"from"`
+	Gas              cmn.Uint64        `json:"gas"`
+	GasPrice         *cmn.Big          `json:"gasPrice"`
+	Hash             *cmn.Hash         `json:"hash"`
+	Input            cmn.Bytes         `json:"input"`
+	Nonce            *cmn.Uint64       `json:"nonce"`
+	To               *apitypes.Address `json:"to"`
 	Value            *cmn.Big          `json:"value"`
 	V                *cmn.Big          `json:"v"`
 	R                *cmn.Big          `json:"r"`
@@ -59,7 +73,7 @@ type RPCReceipt struct {
 type NodeInfo struct {
 	HostName string `json:"hostName"`
 	Url      string `json:"url"`
-	Genesis  string `json:"Genesis"`
+	Genesis  string `json:"genesis"`
 }
 
 type ChannelInfo struct {

@@ -447,11 +447,112 @@ func RPCMarshalBlock(b *types.Block, inclTx bool, fullTx bool) (*rpctypes.Blockd
 	}
 
 	if inclTx {
+		var blockTxs []*rpctypes.BlockTransaction
 		txs := b.Transactions
+		for i := 0; i < len(txs); i++ {
+			tx, _ := toRPCTransaction(txs[i])
+			blockTxs = append(blockTxs, tx)
+		}
 		if fullTx {
-			fields.Transactions = txs
+			fields.Transactions = blockTxs
 		}
 	}
 
 	return &fields, nil
+}
+
+func toRPCTransaction(tx *types.Transaction) (*rpctypes.BlockTransaction, error) {
+	var from *apitypes.Address
+	if tx.Data.From != nil {
+		from = (*apitypes.Address)(tx.Data.From)
+	} else {
+		from = nil
+	}
+
+	var gas cmn.Uint64
+	if &tx.Data.GasLimit != nil {
+		gas = (cmn.Uint64)(tx.Data.GasLimit)
+	} else {
+		gas = cmn.Uint64(0)
+	}
+
+	var gasPrice *cmn.Big
+	if tx.Data.Price != nil {
+		gasPrice = (*cmn.Big)(tx.Data.Price)
+	} else {
+		gasPrice = nil
+	}
+
+	var hash *cmn.Hash
+	if tx != nil {
+		h := (cmn.Hash)(apitypes.TxHash(tx))
+		hash = &h
+	} else {
+		hash = nil
+	}
+
+	var input cmn.Bytes
+	if tx.Data.Payload != nil {
+		input = cmn.Bytes(tx.Data.Payload)
+	} else {
+		input = nil
+	}
+
+	var nonce *cmn.Uint64
+	if &tx.Data.AccountNonce != nil {
+		nonce = (*cmn.Uint64)(&tx.Data.AccountNonce)
+	} else {
+		nonce = nil
+	}
+
+	var to *apitypes.Address
+	if tx.Data.Recipient != nil {
+		to = (*apitypes.Address)(tx.Data.Recipient)
+	} else {
+		to = nil
+	}
+
+	var value *cmn.Big
+	if tx.Data.Amount != nil {
+		value = (*cmn.Big)(tx.Data.Amount)
+	} else {
+		value = nil
+	}
+
+	var v *cmn.Big
+	if tx.Data.V != nil {
+		v = (*cmn.Big)(tx.Data.V)
+	} else {
+		v = nil
+	}
+
+	var r *cmn.Big
+	if tx.Data.R != nil {
+		r = (*cmn.Big)(tx.Data.R)
+	} else {
+		r = nil
+	}
+
+	var s *cmn.Big
+	if tx.Data.S != nil {
+		s = (*cmn.Big)(tx.Data.S)
+	} else {
+		s = nil
+	}
+
+	result := &rpctypes.BlockTransaction{
+		From:     from,
+		Gas:      gas,
+		GasPrice: gasPrice,
+		Hash:     hash,
+		Input:    input,
+		Nonce:    nonce,
+		To:       to,
+		Value:    value,
+		V:        v,
+		R:        r,
+		S:        s,
+	}
+
+	return result, nil
 }

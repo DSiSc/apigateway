@@ -7,7 +7,7 @@ import (
 func ChannelInfo() ([]ctypes.ChannelInfo, error) {
 	channels := make([]ctypes.ChannelInfo, 0) // return [] instead of nil if empty
 	channelInfo := ctypes.ChannelInfo{
-		Name:      "justitia",
+		Name:      "justitia-chan1",
 		ChannelId: "justitia-chan1",
 	}
 	channels = append(channels, channelInfo)

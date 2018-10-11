@@ -30,6 +30,7 @@ help:
 	@echo '    make fmt             Check code formatting.'
 	@echo '    make static-check    Static code check: style & spelling & formatting.'
 	@echo '    make build           Compile the project.'
+	@echo '    make rpc-docs	Generate RPC docs.'
 	@echo '    make vet             Examine source code and reports suspicious constructs.'
 	@echo '    make unit-test       Run unit tests with coverage report.'
 	@echo '    make test            Run unit tests with coverage report.'
@@ -57,6 +58,12 @@ build:
 	@echo "building apigateway ${VERSION}"
 	@echo "GOPATH=${GOPATH}"
 	go build -v -ldflags "-X github.com/DSiSc/apigateway/version.GitCommit=${GIT_COMMIT}${GIT_DIRTY} -X github.com/DSiSc/apigateway/version.BuildDate=${BUILD_DATE}" ./...
+
+DESTINATION = ./index.html.md
+
+rpc-docs:
+	cat rpc/core/slate_header.txt > $(DESTINATION)
+	godoc2md -template rpc/core/doc_template.txt github.com/DSiSc/apigateway/rpc/core | grep -v -e "pipe.go" -e "routes.go" -e "dev.go" | sed 's,/src/target,https://github.com/DSiSc/apigateway/tree/master/rpc/core,' >> $(DESTINATION)
 
 vet:
 	@echo "Examine source code and reports suspicious constructs..."

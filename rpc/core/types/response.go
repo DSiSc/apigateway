@@ -24,35 +24,45 @@ type Blockdata struct {
 }
 
 type RPCTransaction struct {
-	BlockHash        cmn.Hash       `json:"blockHash"`
-	BlockNumber      cmn.Uint64     `json:"blockNumber"`
+	BlockHash        cmn.Hash          `json:"blockHash"`
+	BlockNumber      cmn.Uint64        `json:"blockNumber"`
 	From             *apitypes.Address `json:"from"`
-	Gas              cmn.Uint64     `json:"gas"`
-	GasPrice         *cmn.Big       `json:"gasPrice"`
-	Hash             *cmn.Hash      `json:"hash"`
-	Input            cmn.Bytes      `json:"input"`
-	Nonce            *cmn.Uint64    `json:"nonce"`
+	Gas              cmn.Uint64        `json:"gas"`
+	GasPrice         *cmn.Big          `json:"gasPrice"`
+	Hash             *cmn.Hash         `json:"hash"`
+	Input            cmn.Bytes         `json:"input"`
+	Nonce            *cmn.Uint64       `json:"nonce"`
 	To               *apitypes.Address `json:"to"`
-	TransactionIndex cmn.Uint       `json:"transactionIndex"`
-	Value            *cmn.Big       `json:"value"`
-	V                *cmn.Big       `json:"v"`
-	R                *cmn.Big       `json:"r"`
-	S                *cmn.Big       `json:"s"`
+	TransactionIndex cmn.Uint          `json:"transactionIndex"`
+	Value            *cmn.Big          `json:"value"`
+	V                *cmn.Big          `json:"v"`
+	R                *cmn.Big          `json:"r"`
+	S                *cmn.Big          `json:"s"`
 }
 
 type RPCReceipt struct {
-	// Consensus fields
-	BlockHash         cmn.Hash       `json:"blockHash"`
-	BlockNumber       *cmn.Big       `json:"blockNumber"`
-	TransactionHash   *cmn.Hash      `json:"transactionHash"`
-	TransactionIndex  cmn.Uint       `json:"transactionIndex"`
+	BlockHash         cmn.Hash          `json:"blockHash"`
+	BlockNumber       *cmn.Big          `json:"blockNumber"`
+	TransactionHash   *cmn.Hash         `json:"transactionHash"`
+	TransactionIndex  cmn.Uint          `json:"transactionIndex"`
 	From              *apitypes.Address `json:"from"`
 	To                *apitypes.Address `json:"to"`
-	Root              []byte         `json:"root"`
-	Status            *cmn.Uint64    `json:"status"`
-	GasUsed           *cmn.Uint64    `json:"gasUsed"`
-	CumulativeGasUsed *cmn.Uint64    `json:"cumulativeGasUsed"`
-	LogsBloom         *types.Bloom   `json:"logsBloom"`
-	Logs              []*types.Log   `json:"logs"`
+	Root              []byte            `json:"root"`
+	Status            *cmn.Uint64       `json:"status"`
+	GasUsed           *cmn.Uint64       `json:"gasUsed"`
+	CumulativeGasUsed *cmn.Uint64       `json:"cumulativeGasUsed"`
+	LogsBloom         *types.Bloom      `json:"logsBloom"`
+	Logs              []*types.Log      `json:"logs"`
 	ContractAddress   *apitypes.Address `json:"contractAddress"`
+}
+
+type NodeInfo struct {
+	HostName string `json:"hostName"`
+	Url      string `json:"url"`
+	Genesis  string `json:"Genesis"`
+}
+
+type ChannelInfo struct {
+	Name      string `json:"name"`
+	ChannelId string `json:"channelId"`
 }

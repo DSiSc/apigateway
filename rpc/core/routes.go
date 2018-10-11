@@ -26,6 +26,8 @@ var Routes = map[string]*rpc.RPCFunc{
 	"eth_accounts": rpc.NewRPCFunc(Accounts, ""),
 	"net_listening": rpc.NewRPCFunc(Listening, ""),
 	"net_version": rpc.NewRPCFunc(Version, ""),
+	"net_nodeInfo": rpc.NewRPCFunc(NodeInfo, ""),
+	"net_channelInfo": rpc.NewRPCFunc(ChannelInfo, ""),
 }
 
 func AddTestRoutes() {

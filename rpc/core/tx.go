@@ -78,6 +78,8 @@ func SendTransaction(args ctypes.SendTxArgs) (cmn.Hash, error) {
 		nonce = args.Nonce.Touint64()
 	} else {
 		nonce = uint64(0)
+		bc, _ := blockchain.NewLatestStateBlockChain()
+		nonce = bc.GetNonce((craft.Address)(args.From))
 	}
 	// value can be nil
 	var value *big.Int

@@ -38,7 +38,7 @@ func TestSendTransaction(t *testing.T) {
 	// -------------------------
 	// Mock:  mockTransaction
 	mockTransaction := ctypes.NewTransaction(nonce, &to, value, gas, gasPrice, data, from)
-	mockContract := ctypes.NewTransaction(uint64(0), nil, nil, math.MaxUint64/2, new(big.Int).SetUint64(1), nil, from)
+	mockContract := ctypes.NewTransaction(uint64(5), nil, nil, math.MaxUint64/2, new(big.Int).SetUint64(1), nil, from)
 
 	// SignTx
 	key, _ := wtypes.DefaultTestKey()
@@ -57,6 +57,14 @@ func TestSendTransaction(t *testing.T) {
 	mockSwCh := make(chan interface{})
 	defer close(mockSwCh)
 	SetSwCh(mockSwCh)
+
+	monkey.Patch(blockchain.NewLatestStateBlockChain, func() (*blockchain.BlockChain, error) {
+		return b, nil
+	})
+
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetNonce", func(*blockchain.BlockChain, crafttypes.Address) (uint64) {
+		return uint64(5)
+	})
 
 	// ---------------------------
 	// tests case
@@ -134,6 +142,9 @@ func TestSendTransaction(t *testing.T) {
 			assert.Contains(t, recv.Error.Message+recv.Error.Data, tt.wantErr, "#%d: expected substring", i)
 		}
 	}
+
+	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetNonce")
+	monkey.Unpatch(blockchain.NewLatestStateBlockChain)
 }
 
 func TestGetTransactionByHash(t *testing.T) {

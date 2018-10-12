@@ -79,7 +79,14 @@ func SendTransaction(args ctypes.SendTxArgs) (cmn.Hash, error) {
 	} else {
 		nonce = uint64(0)
 		bc, _ := blockchain.NewLatestStateBlockChain()
-		nonce = bc.GetNonce((craft.Address)(args.From))
+		noncePool := txpool.GetNonceByAddress((craft.Address)(args.From))
+		nonceChain := bc.GetNonce((craft.Address)(args.From))
+
+		if noncePool > nonceChain {
+			nonce = noncePool
+		} else {
+			nonce = nonceChain
+		}
 	}
 	// value can be nil
 	var value *big.Int
@@ -217,8 +224,7 @@ func GetTransactionByHash(hash cmn.Hash) (*ctypes.RPCTransaction, error) {
 		return newRPCTransaction(tx, (cmn.Hash)(blockHash), blockNumber, index)
 	}
 	// No finalized transaction, try to retrieve it from the pool
-	txp := txpool.NewTxPool(txpool.DefaultTxPoolConfig)
-	if tx := txp.GetTxByHash((craft.Hash)(hash)); tx != nil {
+	if tx := txpool.GetTxByHash((craft.Hash)(hash)); tx != nil {
 		return newRPCPendingTransaction(tx)
 	}
 	// Transaction unknown, return as such

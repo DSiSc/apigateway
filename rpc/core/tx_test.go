@@ -6,6 +6,7 @@ import (
 	"github.com/DSiSc/blockchain"
 	"github.com/DSiSc/evm-NG"
 	"github.com/DSiSc/monkey"
+	"github.com/DSiSc/txpool"
 	"github.com/DSiSc/validator/worker"
 	"github.com/DSiSc/validator/worker/common"
 	"io/ioutil"
@@ -63,6 +64,10 @@ func TestSendTransaction(t *testing.T) {
 	})
 
 	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetNonce", func(*blockchain.BlockChain, crafttypes.Address) (uint64) {
+		return uint64(5)
+	})
+
+	monkey.Patch(txpool.GetNonceByAddress, func(crafttypes.Address) (uint64) {
 		return uint64(5)
 	})
 
@@ -144,6 +149,7 @@ func TestSendTransaction(t *testing.T) {
 	}
 
 	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetNonce")
+	monkey.Unpatch(txpool.GetNonceByAddress)
 	monkey.Unpatch(blockchain.NewLatestStateBlockChain)
 }
 

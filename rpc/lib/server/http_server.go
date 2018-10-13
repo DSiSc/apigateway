@@ -16,6 +16,7 @@ import (
 
 	"github.com/DSiSc/apigateway/log"
 	types "github.com/DSiSc/apigateway/rpc/lib/types"
+	craftlog "github.com/DSiSc/craft/log"
 )
 
 // Config is an RPC server configuration.
@@ -47,7 +48,8 @@ func StartHTTPServer(
 	}
 	proto, addr = parts[0], parts[1]
 
-	logger.Info(fmt.Sprintf("Starting RPC HTTP server on %s", listenAddr))
+	//logger.Info(fmt.Sprintf("Starting RPC HTTP server on %s", listenAddr))
+	craftlog.Info(fmt.Sprintf("Starting RPC HTTP server on %s", listenAddr))
 	listener, err = net.Listen(proto, addr)
 	if err != nil {
 		return nil, errors.Errorf("Failed to listen on %v: %v", listenAddr, err)
@@ -61,7 +63,8 @@ func StartHTTPServer(
 			listener,
 			RecoverAndLogHandler(maxBytesHandler{h: handler, n: maxBodyBytes}, logger),
 		)
-		logger.Error("RPC HTTP server stopped", "err", err)
+		//logger.Error("RPC HTTP server stopped", "err", err)
+		craftlog.ErrorKV("RPC HTTP server stopped", map[string]interface{}{"err": err})
 	}()
 	return listener, nil
 }
@@ -86,14 +89,20 @@ func StartHTTPAndTLSServer(
 	}
 	proto, addr = parts[0], parts[1]
 
-	logger.Info(
-		fmt.Sprintf(
-			"Starting RPC HTTPS server on %s (cert: %q, key: %q)",
-			listenAddr,
-			certFile,
-			keyFile,
-		),
-	)
+	//logger.Info(
+	//	fmt.Sprintf(
+	//		"Starting RPC HTTPS server on %s (cert: %q, key: %q)",
+	//		listenAddr,
+	//		certFile,
+	//		keyFile,
+	//	),
+	//)
+	craftlog.Info(fmt.Sprintf(
+		"Starting RPC HTTPS server on %s (cert: %q, key: %q)",
+		listenAddr,
+		certFile,
+		keyFile,
+	))
 	listener, err = net.Listen(proto, addr)
 	if err != nil {
 		return nil, errors.Errorf("Failed to listen on %v: %v", listenAddr, err)
@@ -109,7 +118,8 @@ func StartHTTPAndTLSServer(
 			certFile,
 			keyFile,
 		)
-		logger.Error("RPC HTTPS server stopped", "err", err)
+		//logger.Error("RPC HTTPS server stopped", "err", err)
+		craftlog.ErrorKV("RPC HTTP server stopped", map[string]interface{}{"err": err})
 	}()
 	return listener, nil
 }
@@ -162,7 +172,6 @@ func RecoverAndLogHandler(handler http.Handler, logger log.Logger) http.Handler 
 		rww.Header().Set("Connections", "keep-alive")
 		rww.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
 
-
 		defer func() {
 			// Send a 500 error if a panic happens during a handler.
 			// Without this, Chrome & Firefox were retrying aborted ajax requests,
@@ -174,10 +183,11 @@ func RecoverAndLogHandler(handler http.Handler, logger log.Logger) http.Handler 
 					WriteRPCResponseHTTP(rww, res)
 				} else {
 					// For the rest,
-					logger.Error(
-						"Panic in RPC HTTP handler", "err", e, "stack",
-						string(debug.Stack()),
-					)
+					//logger.Error(
+					//	"Panic in RPC HTTP handler", "err", e, "stack",
+					//	string(debug.Stack()),
+					//)
+					craftlog.ErrorKV("Panic in RPC HTTP handler", map[string]interface{}{"err": e, "stack": string(debug.Stack())})
 					rww.WriteHeader(http.StatusInternalServerError)
 					WriteRPCResponseHTTP(rww, types.RPCInternalError("", e.(error)))
 				}
@@ -188,11 +198,15 @@ func RecoverAndLogHandler(handler http.Handler, logger log.Logger) http.Handler 
 			if rww.Status == -1 {
 				rww.Status = 200
 			}
-			logger.Info("Served RPC HTTP response",
-				"method", r.Method, "url", r.URL,
-				"status", rww.Status, "duration", durationMS,
-				"remoteAddr", r.RemoteAddr,
-			)
+			//logger.Info("Served RPC HTTP response",
+			//	"method", r.Method, "url", r.URL,
+			//	"status", rww.Status, "duration", durationMS,
+			//	"remoteAddr", r.RemoteAddr,
+			//)
+			craftlog.InfoKV("Panic in RPC HTTP handler",
+				map[string]interface{}{"method": r.Method, "url": r.URL,
+					"status": rww.Status, "duration": durationMS,
+					"remoteAddr": r.RemoteAddr})
 		}()
 
 		handler.ServeHTTP(rww, r)

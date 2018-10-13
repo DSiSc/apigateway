@@ -14,6 +14,7 @@ import (
 
 	rpccore "github.com/DSiSc/apigateway/rpc/core"
 	rpcserver "github.com/DSiSc/apigateway/rpc/lib/server"
+	craftlog "github.com/DSiSc/craft/log"
 )
 
 var colorFn = func(keyvals ...interface{}) term.FgBgColor {
@@ -69,9 +70,11 @@ func StartRPC(listenAddr string) ([]net.Listener, error) {
 func StopRPC(rpcListeners []net.Listener) error {
 
 	for _, l := range rpcListeners {
-		logger.Info("Closing rpc listener", "listener", l)
+		//logger.Info("Closing rpc listener", "listener", l)
+		craftlog.InfoKV("Closing rpc listener",map[string]interface{}{"listener": l})
 		if err := l.Close(); err != nil {
-			logger.Error("Error closing listener", "listener", l, "err", err)
+			//logger.Error("Error closing listener", "listener", l, "err", err)
+			craftlog.ErrorKV("Error closing listener",map[string]interface{}{"listener": l, "err": err})
 			return err
 		}
 	}

@@ -20,7 +20,8 @@ import (
 	cmn "github.com/DSiSc/apigateway/common"
 	"github.com/DSiSc/apigateway/log"
 	types "github.com/DSiSc/apigateway/rpc/lib/types"
-	amino "github.com/tendermint/go-amino"
+	craftlog "github.com/DSiSc/craft/log"
+	"github.com/tendermint/go-amino"
 )
 
 // RegisterRPCFuncs adds a route for each function in the funcMap, as well as general jsonrpc and websocket handlers for all functions.
@@ -122,7 +123,8 @@ func makeJSONRPCHandler(funcMap map[string]*RPCFunc, cdc *amino.Codec, logger lo
 		// A Notification is a Request object without an "id" member.
 		// The Server MUST NOT reply to a Notification, including those that are within a batch request
 		if request.ID == nil {
-			logger.Debug("HTTPJSONRPC received a notification, skipping... (please send a non-empty ID if you want to call a method)")
+			//logger.Debug("HTTPJSONRPC received a notification, skipping... (please send a non-empty ID if you want to call a method)")
+			craftlog.Debug("HTTPJSONRPC received a notification, skipping... (please send a non-empty ID if you want to call a method)")
 			return
 		}
 		if len(r.URL.Path) > 1 {
@@ -143,7 +145,8 @@ func makeJSONRPCHandler(funcMap map[string]*RPCFunc, cdc *amino.Codec, logger lo
 			}
 		}
 		returns := rpcFunc.f.Call(args)
-		logger.Info("HTTPJSONRPC", "method", request.Method, "args", args, "returns", returns)
+		//logger.Info("HTTPJSONRPC", "method", request.Method, "args", args, "returns", returns)
+		craftlog.InfoKV("HTTPJSONRPC",map[string]interface{}{"method": request.Method, "args": args, "returns": returns})
 		result, err := unreflectResult(returns)
 		if err != nil {
 			WriteRPCResponseHTTP(w, types.RPCInternalError(request.ID, err))
@@ -260,14 +263,16 @@ func makeHTTPHandler(rpcFunc *RPCFunc, cdc *amino.Codec, logger log.Logger) func
 	}
 	// All other endpoints
 	return func(w http.ResponseWriter, r *http.Request) {
-		logger.Debug("HTTP HANDLER", "req", r)
+		//logger.Debug("HTTP HANDLER", "req", r)
+		craftlog.DebugKV("HTTP HANDLER",map[string]interface{}{"req": r})
 		args, err := httpParamsToArgs(rpcFunc, cdc, r)
 		if err != nil {
 			WriteRPCResponseHTTP(w, types.RPCInvalidParamsError("", errors.Wrap(err, "Error converting http params to arguments")))
 			return
 		}
 		returns := rpcFunc.f.Call(args)
-		logger.Info("HTTPRestRPC", "method", r.URL.Path, "args", args, "returns", returns)
+		//logger.Info("HTTPRestRPC", "method", r.URL.Path, "args", args, "returns", returns)
+		craftlog.InfoKV("HTTPRestRPC",map[string]interface{}{"method": r.URL.Path, "args": args, "returns": returns})
 		result, err := unreflectResult(returns)
 		if err != nil {
 			WriteRPCResponseHTTP(w, types.RPCInternalError("", err))
@@ -579,7 +584,8 @@ func (wsc *wsConnection) readRoutine() {
 			if !ok {
 				err = fmt.Errorf("WSJSONRPC: %v", r)
 			}
-			wsc.Logger.Error("Panic in WSJSONRPC handler", "err", err, "stack", string(debug.Stack()))
+			//wsc.Logger.Error("Panic in WSJSONRPC handler", "err", err, "stack", string(debug.Stack()))
+			craftlog.ErrorKV("Panic in WSJSONRPC handler",map[string]interface{}{"err": err, "stack": string(debug.Stack())})
 			wsc.WriteRPCResponse(types.RPCInternalError("unknown", err))
 			go wsc.readRoutine()
 		} else {
@@ -598,15 +604,18 @@ func (wsc *wsConnection) readRoutine() {
 		default:
 			// reset deadline for every type of message (control or data)
 			if err := wsc.baseConn.SetReadDeadline(time.Now().Add(wsc.readWait)); err != nil {
-				wsc.Logger.Error("failed to set read deadline", "err", err)
+				//wsc.Logger.Error("failed to set read deadline", "err", err)
+				craftlog.ErrorKV("failed to set read deadline",map[string]interface{}{"err": err})
 			}
 			var in []byte
 			_, in, err := wsc.baseConn.ReadMessage()
 			if err != nil {
 				if websocket.IsCloseError(err, websocket.CloseNormalClosure) {
-					wsc.Logger.Info("Client closed the connection")
+					//wsc.Logger.Info("Client closed the connection")
+					craftlog.Info("Client closed the connection")
 				} else {
-					wsc.Logger.Error("Failed to read request", "err", err)
+					//wsc.Logger.Error("Failed to read request", "err", err)
+					craftlog.ErrorKV("Failed to read request",map[string]interface{}{"err": err})
 				}
 				wsc.Stop()
 				return
@@ -622,7 +631,8 @@ func (wsc *wsConnection) readRoutine() {
 			// A Notification is a Request object without an "id" member.
 			// The Server MUST NOT reply to a Notification, including those that are within a batch request.
 			if request.ID == nil {
-				wsc.Logger.Debug("WSJSONRPC received a notification, skipping... (please send a non-empty ID if you want to call a method)")
+				//wsc.Logger.Debug("WSJSONRPC received a notification, skipping... (please send a non-empty ID if you want to call a method)")
+				craftlog.Debug("WSJSONRPC received a notification, skipping... (please send a non-empty ID if you want to call a method)")
 				continue
 			}
 
@@ -651,7 +661,8 @@ func (wsc *wsConnection) readRoutine() {
 			returns := rpcFunc.f.Call(args)
 
 			// TODO: Need to encode args/returns to string if we want to log them
-			wsc.Logger.Info("WSJSONRPC", "method", request.Method)
+			//wsc.Logger.Info("WSJSONRPC", "method", request.Method)
+			craftlog.InfoKV("WSJSONRPC",map[string]interface{}{"method": request.Method})
 
 			result, err := unreflectResult(returns)
 			if err != nil {
@@ -670,7 +681,8 @@ func (wsc *wsConnection) writeRoutine() {
 	defer func() {
 		pingTicker.Stop()
 		if err := wsc.baseConn.Close(); err != nil {
-			wsc.Logger.Error("Error closing connection", "err", err)
+			//wsc.Logger.Error("Error closing connection", "err", err)
+			craftlog.ErrorKV("Error closing connection",map[string]interface{}{"err": err})
 		}
 	}()
 
@@ -689,22 +701,26 @@ func (wsc *wsConnection) writeRoutine() {
 		case m := <-pongs:
 			err := wsc.writeMessageWithDeadline(websocket.PongMessage, []byte(m))
 			if err != nil {
-				wsc.Logger.Info("Failed to write pong (client may disconnect)", "err", err)
+				//wsc.Logger.Info("Failed to write pong (client may disconnect)", "err", err)
+				craftlog.ErrorKV("Failed to write pong (client may disconnect)",map[string]interface{}{"err": err})
 			}
 		case <-pingTicker.C:
 			err := wsc.writeMessageWithDeadline(websocket.PingMessage, []byte{})
 			if err != nil {
-				wsc.Logger.Error("Failed to write ping", "err", err)
+				//wsc.Logger.Error("Failed to write ping", "err", err)
+				craftlog.ErrorKV("Failed to write ping",map[string]interface{}{"err": err})
 				wsc.Stop()
 				return
 			}
 		case msg := <-wsc.writeChan:
 			jsonBytes, err := json.MarshalIndent(msg, "", "  ")
 			if err != nil {
-				wsc.Logger.Error("Failed to marshal RPCResponse to JSON", "err", err)
+				//wsc.Logger.Error("Failed to marshal RPCResponse to JSON", "err", err)
+				craftlog.ErrorKV("Failed to marshal RPCResponse to JSON",map[string]interface{}{"err": err})
 			} else {
 				if err = wsc.writeMessageWithDeadline(websocket.TextMessage, jsonBytes); err != nil {
-					wsc.Logger.Error("Failed to write response", "err", err)
+					//wsc.Logger.Error("Failed to write response", "err", err)
+					craftlog.ErrorKV("Failed to write response",map[string]interface{}{"err": err})
 					wsc.Stop()
 					return
 				}
@@ -766,17 +782,20 @@ func (wm *WebsocketManager) WebsocketHandler(w http.ResponseWriter, r *http.Requ
 	wsConn, err := wm.Upgrade(w, r, nil)
 	if err != nil {
 		// TODO - return http error
-		wm.logger.Error("Failed to upgrade to websocket connection", "err", err)
+		//wm.logger.Error("Failed to upgrade to websocket connection", "err", err)
+		craftlog.ErrorKV("Failed to upgrade to websocket connection",map[string]interface{}{"err": err})
 		return
 	}
 
 	// register connection
 	con := NewWSConnection(wsConn, wm.funcMap, wm.cdc, wm.wsConnOptions...)
 	con.SetLogger(wm.logger.With("remote", wsConn.RemoteAddr()))
-	wm.logger.Info("New websocket connection", "remote", con.remoteAddr)
+	//wm.logger.Info("New websocket connection", "remote", con.remoteAddr)
+	craftlog.InfoKV("New websocket connection",map[string]interface{}{"remote": con.remoteAddr})
 	err = con.Start() // Blocking
 	if err != nil {
-		wm.logger.Error("Error starting connection", "err", err)
+		//wm.logger.Error("Error starting connection", "err", err)
+		craftlog.ErrorKV("Error starting connection",map[string]interface{}{"err": err})
 	}
 }
 

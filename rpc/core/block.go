@@ -6,6 +6,7 @@ import (
 	rpctypes "github.com/DSiSc/apigateway/rpc/core/types"
 	"github.com/DSiSc/blockchain"
 	"github.com/DSiSc/craft/types"
+	"github.com/DSiSc/txpool"
 )
 
 //#### eth_getBlockByHash
@@ -394,25 +395,28 @@ func GetCode(address apitypes.Address, blockNr apitypes.BlockNumber) (*cmn.Bytes
 //
 //***
 func GetTransactionCount(address apitypes.Address, blockNr apitypes.BlockNumber) (*cmn.Uint64, error) {
-	bc, err := blockchain.NewLatestStateBlockChain()
-	var block *types.Block
-	if err == nil {
-		if blockNr == apitypes.LatestBlockNumber {
-			block = bc.GetCurrentBlock()
+
+		if blockNr == apitypes.PendingBlockNumber {
+			noncePool := txpool.GetPoolNonce((types.Address)(address))
+			return (*cmn.Uint64)(&noncePool), nil
 		} else {
-			height := blockNr.Touint64()
-			block, err = bc.GetBlockByHeight(height)
-		}
-		if &block.HeaderHash != nil {
-			bchash, errbc := blockchain.NewBlockChainByBlockHash(block.HeaderHash)
-			if errbc == nil {
-				nonce := (bchash.GetNonce((types.Address)(address)))
-				return (*cmn.Uint64)(&nonce), nil
+			bc, err := blockchain.NewLatestStateBlockChain()
+			var block *types.Block
+			if blockNr == apitypes.LatestBlockNumber {
+				block = bc.GetCurrentBlock()
+			} else {
+				height := blockNr.Touint64()
+				block, err = bc.GetBlockByHeight(height)
 			}
+			if &block.HeaderHash != nil {
+				bchash, errbc := blockchain.NewBlockChainByBlockHash(block.HeaderHash)
+				if errbc == nil {
+					nonce := (bchash.GetNonce((types.Address)(address)))
+					return (*cmn.Uint64)(&nonce), nil
+				}
+			}
+			return nil, err
 		}
-		return nil, err
-	}
-	return nil, err
 }
 
 func TypeConvert(a *cmn.Hash) types.Hash {

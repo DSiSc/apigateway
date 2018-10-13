@@ -79,7 +79,7 @@ func SendTransaction(args ctypes.SendTxArgs) (cmn.Hash, error) {
 	} else {
 		nonce = uint64(0)
 		bc, _ := blockchain.NewLatestStateBlockChain()
-		noncePool := txpool.GetNonceByAddress((craft.Address)(args.From))
+		noncePool := txpool.GetPoolNonce((craft.Address)(args.From))
 		nonceChain := bc.GetNonce((craft.Address)(args.From))
 
 		if noncePool > nonceChain {

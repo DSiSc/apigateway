@@ -67,7 +67,7 @@ func TestSendTransaction(t *testing.T) {
 		return uint64(5)
 	})
 
-	monkey.Patch(txpool.GetNonceByAddress, func(crafttypes.Address) (uint64) {
+	monkey.Patch(txpool.GetPoolNonce, func(crafttypes.Address) (uint64) {
 		return uint64(5)
 	})
 
@@ -149,7 +149,7 @@ func TestSendTransaction(t *testing.T) {
 	}
 
 	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetNonce")
-	monkey.Unpatch(txpool.GetNonceByAddress)
+	monkey.Unpatch(txpool.GetPoolNonce)
 	monkey.Unpatch(blockchain.NewLatestStateBlockChain)
 }
 

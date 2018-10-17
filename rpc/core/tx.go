@@ -233,82 +233,48 @@ func GetTransactionByHash(hash cmn.Hash) (*ctypes.RPCTransaction, error) {
 
 func newRPCTransaction(tx *craft.Transaction, blockHash cmn.Hash, blockNumber uint64, index uint64) (*ctypes.RPCTransaction, error) {
 	var from *types.Address
-	if tx.Data.From != nil {
-		from = (*types.Address)(tx.Data.From)
-	} else {
-		from = nil
-	}
+	from = (*types.Address)(tx.Data.From)
+
 
 	var gas cmn.Uint64
-	if &tx.Data.GasLimit != nil {
-		gas = (cmn.Uint64)(tx.Data.GasLimit)
-	} else {
-		gas = cmn.Uint64(0)
-	}
+	gas = (cmn.Uint64)(tx.Data.GasLimit)
+
 
 	var gasPrice *cmn.Big
-	if tx.Data.Price != nil {
-		gasPrice = (*cmn.Big)(tx.Data.Price)
-	} else {
-		gasPrice = nil
-	}
+	gasPrice = (*cmn.Big)(tx.Data.Price)
+
 
 	var hash *cmn.Hash
-	if tx != nil {
-		h := (cmn.Hash)(types.TxHash(tx))
-		hash = &h
-	} else {
-		hash = nil
-	}
+	h := (cmn.Hash)(types.TxHash(tx))
+	hash = &h
+
 
 	var input cmn.Bytes
-	if tx.Data.Payload != nil {
-		input = cmn.Bytes(tx.Data.Payload)
-	} else {
-		input = nil
-	}
+	input = cmn.Bytes(tx.Data.Payload)
+
 
 	var nonce *cmn.Uint64
-	if &tx.Data.AccountNonce != nil {
-		nonce = (*cmn.Uint64)(&tx.Data.AccountNonce)
-	} else {
-		nonce = nil
-	}
+	nonce = (*cmn.Uint64)(&tx.Data.AccountNonce)
+
 
 	var to *types.Address
-	if tx.Data.Recipient != nil {
-		to = (*types.Address)(tx.Data.Recipient)
-	} else {
-		to = nil
-	}
+	to = (*types.Address)(tx.Data.Recipient)
+
 
 	var value *cmn.Big
-	if tx.Data.Amount != nil {
-		value = (*cmn.Big)(tx.Data.Amount)
-	} else {
-		value = nil
-	}
+	value = (*cmn.Big)(tx.Data.Amount)
+
 
 	var v *cmn.Big
-	if tx.Data.V != nil {
-		v = (*cmn.Big)(tx.Data.V)
-	} else {
-		v = nil
-	}
+	v = (*cmn.Big)(tx.Data.V)
+
 
 	var r *cmn.Big
-	if tx.Data.R != nil {
-		r = (*cmn.Big)(tx.Data.R)
-	} else {
-		r = nil
-	}
+	r = (*cmn.Big)(tx.Data.R)
 
 	var s *cmn.Big
-	if tx.Data.S != nil {
-		s = (*cmn.Big)(tx.Data.S)
-	} else {
-		s = nil
-	}
+	s = (*cmn.Big)(tx.Data.S)
+
 
 	result := &ctypes.RPCTransaction{
 		From:     from,
@@ -415,26 +381,15 @@ func GetTransactionReceipt(hash cmn.Hash) (*ctypes.RPCReceipt, error) {
 
 func newRPCReceipt(tx *craft.Transaction, receipt *craft.Receipt, blockHash cmn.Hash, blockNumber uint64, index uint64) (*ctypes.RPCReceipt, error) {
 	var hash *cmn.Hash
-	if tx != nil {
-		h := (cmn.Hash)(types.TxHash(tx))
-		hash = &h
-	} else {
-		hash = nil
-	}
+	h := (cmn.Hash)(types.TxHash(tx))
+	hash = &h
+
 
 	var from *types.Address
-	if tx.Data.From != nil {
-		from = (*types.Address)(tx.Data.From)
-	} else {
-		from = nil
-	}
+	from = (*types.Address)(tx.Data.From)
 
 	var to *types.Address
-	if tx.Data.Recipient != nil {
-		to = (*types.Address)(tx.Data.Recipient)
-	} else {
-		to = nil
-	}
+	to = (*types.Address)(tx.Data.Recipient)
 
 	var root []byte
 	if receipt.PostState != nil {
@@ -444,35 +399,20 @@ func newRPCReceipt(tx *craft.Transaction, receipt *craft.Receipt, blockHash cmn.
 	}
 
 	var status *cmn.Uint64
-	if &receipt.Status != nil {
 		s := cmn.Uint64(receipt.Status)
 		status = &s
-	} else {
-		status = nil
-	}
 
 	var gasUsed *cmn.Uint64
-	if &receipt.GasUsed != nil {
 		g := cmn.Uint64(receipt.GasUsed)
 		gasUsed = &g
-	} else {
-		gasUsed = nil
-	}
 
 	var cumulativeGasUsed *cmn.Uint64
-	if &receipt.CumulativeGasUsed != nil {
 		c := cmn.Uint64(receipt.CumulativeGasUsed)
 		cumulativeGasUsed = &c
-	} else {
-		cumulativeGasUsed = nil
-	}
 
-	var logsBloom *craft.Bloom
-	if &receipt.Bloom != nil {
-		logsBloom = &receipt.Bloom
-	} else {
-		logsBloom = nil
-	}
+	var logsBloom [] byte
+	copy(logsBloom[:], receipt.Bloom[:])
+
 
 	var logs []*craft.Log
 	if receipt.Logs != nil {
@@ -482,7 +422,7 @@ func newRPCReceipt(tx *craft.Transaction, receipt *craft.Receipt, blockHash cmn.
 	}
 
 	var contractAddress *types.Address
-	if &receipt.ContractAddress != nil {
+	if receipt.ContractAddress != (craft.Address{}) {
 		contractAddress = (*types.Address)(&receipt.ContractAddress)
 	} else {
 		contractAddress = nil

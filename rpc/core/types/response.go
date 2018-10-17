@@ -65,7 +65,7 @@ type RPCReceipt struct {
 	Status            *cmn.Uint64       `json:"status"`
 	GasUsed           *cmn.Uint64       `json:"gasUsed"`
 	CumulativeGasUsed *cmn.Uint64       `json:"cumulativeGasUsed"`
-	LogsBloom         *types.Bloom      `json:"logsBloom"`
+	LogsBloom         [] byte      `json:"logsBloom"`
 	Logs              []*types.Log      `json:"logs"`
 	ContractAddress   *apitypes.Address `json:"contractAddress"`
 }

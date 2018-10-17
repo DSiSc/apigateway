@@ -214,7 +214,7 @@ func TestGetTransactionReceipt(t *testing.T) {
 
 			fmt.Sprintf(`{"jsonrpc": "2.0", "method": "eth_getTransactionReceipt", "id": 1, "params": [
               "0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99"]}`),
-			"", `{"jsonrpc":"2.0","id":1,"result":{"blockHash":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","blockNumber":"0x5","transactionHash":"0x88da6692896bd38bf3145afef63088632f74ca0c74b0221b8940ba8eb996d1f0","transactionIndex":"0x7","from":"0xb60e8dd61c5d32be8058bb8eb970870f07233155","to":"0xd46e8dd67c5d32be8058bb8eb970870f07244567","root":"e0ogr1SPXLN0gVeOE/bpYcUensG5k214HBBhMjmz6Sk=","status":"0x2","gasUsed":"0x5e6","cumulativeGasUsed":"0x4d7","logsBloom":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==","logs":null,"contractAddress":"0xb60e8dd61c5d32be8058bb8eb970870f07233155"}}`},
+			"", `{"jsonrpc":"2.0","id":1,"result":{"blockHash":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","blockNumber":"0x5","transactionHash":"0x88da6692896bd38bf3145afef63088632f74ca0c74b0221b8940ba8eb996d1f0","transactionIndex":"0x7","from":"0xb60e8dd61c5d32be8058bb8eb970870f07233155","to":"0xd46e8dd67c5d32be8058bb8eb970870f07244567","root":"e0ogr1SPXLN0gVeOE/bpYcUensG5k214HBBhMjmz6Sk=","status":"0x2","gasUsed":"0x5e6","cumulativeGasUsed":"0x4d7","logsBloom":null,"logs":null,"contractAddress":"0xb60e8dd61c5d32be8058bb8eb970870f07233155"}}`},
 	}
 	// ------------------------
 	// httptest API

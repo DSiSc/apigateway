@@ -38,8 +38,8 @@ func TestSendTransaction(t *testing.T) {
 
 	// -------------------------
 	// Mock:  mockTransaction
-	mockTransaction := ctypes.NewTransaction(nonce, &to, value, gas, gasPrice, data, from)
-	mockContract := ctypes.NewTransaction(uint64(5), nil, nil, math.MaxUint64/2, new(big.Int).SetUint64(1), nil, from)
+	mockTransaction := ctypes.NewTransaction(uint64(11), &to, value, gas, gasPrice, data, from)
+	mockContract := ctypes.NewTransaction(uint64(11), nil, nil, math.MaxUint64/2, new(big.Int).SetUint64(1), nil, from)
 
 	// SignTx
 	key, _ := wtypes.DefaultTestKey()
@@ -64,11 +64,11 @@ func TestSendTransaction(t *testing.T) {
 	})
 
 	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetNonce", func(*blockchain.BlockChain, crafttypes.Address) (uint64) {
-		return uint64(5)
+		return uint64(10)
 	})
 
 	monkey.Patch(txpool.GetPoolNonce, func(crafttypes.Address) (uint64) {
-		return uint64(5)
+		return uint64(10)
 	})
 
 	// ---------------------------

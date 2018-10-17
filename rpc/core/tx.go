@@ -74,20 +74,16 @@ func SetSwCh(ch chan<- interface{}) {
 func SendTransaction(args ctypes.SendTxArgs) (cmn.Hash, error) {
 	// give an initValue when nonce is nil
 	var nonce uint64
-	if args.Nonce != nil {
-		nonce = args.Nonce.Touint64()
-	} else {
-		nonce = uint64(0)
-		bc, _ := blockchain.NewLatestStateBlockChain()
-		noncePool := txpool.GetPoolNonce((craft.Address)(args.From))
-		nonceChain := bc.GetNonce((craft.Address)(args.From))
+	bc, _ := blockchain.NewLatestStateBlockChain()
+	noncePool := txpool.GetPoolNonce((craft.Address)(args.From))
+	nonceChain := bc.GetNonce((craft.Address)(args.From))
 
-		if noncePool > nonceChain {
-			nonce = noncePool
+	if noncePool > nonceChain {
+		nonce = noncePool + 1
 		} else {
-			nonce = nonceChain
+			nonce = nonceChain +1
 		}
-	}
+
 	// value can be nil
 	var value *big.Int
 	if args.Value != nil {

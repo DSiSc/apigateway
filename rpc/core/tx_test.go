@@ -63,11 +63,11 @@ func TestSendTransaction(t *testing.T) {
 		return b, nil
 	})
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetNonce", func(*blockchain.BlockChain, crafttypes.Address) (uint64) {
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetNonce", func(*blockchain.BlockChain, crafttypes.Address) uint64 {
 		return uint64(10)
 	})
 
-	monkey.Patch(txpool.GetPoolNonce, func(crafttypes.Address) (uint64) {
+	monkey.Patch(txpool.GetPoolNonce, func(crafttypes.Address) uint64 {
 		return uint64(10)
 	})
 
@@ -265,7 +265,7 @@ func TestGetTransactionByBlockNumberAndIndex(t *testing.T) {
 		return blockdata, nil
 	})
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlock", func(*blockchain.BlockChain) (*crafttypes.Block) {
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlock", func(*blockchain.BlockChain) *crafttypes.Block {
 		blockdata := getMockBlock()
 		return blockdata
 	})
@@ -334,7 +334,7 @@ func TestCall(t *testing.T) {
 		return blockdata, nil
 	})
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlock", func(*blockchain.BlockChain) (*crafttypes.Block) {
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlock", func(*blockchain.BlockChain) *crafttypes.Block {
 		blockdata := getMockBlock()
 		return blockdata
 	})
@@ -345,19 +345,18 @@ func TestCall(t *testing.T) {
 	mux := testMux()
 	for i, tt := range tests {
 
-		monkey.Patch(evm.NewEVMContext, func(tx crafttypes.Transaction,  header *crafttypes.Header, bc *blockchain.BlockChain, addr crafttypes.Address) (evm.Context) {
+		monkey.Patch(evm.NewEVMContext, func(tx crafttypes.Transaction, header *crafttypes.Header, bc *blockchain.BlockChain, addr crafttypes.Address) evm.Context {
 			//assert.Equal(t, tt.mockTransaction, &tx)
-			return  evm.Context{}
+			return evm.Context{}
 		})
 
-		monkey.Patch(evm.NewEVM, func(evm.Context, *blockchain.BlockChain) (*evm.EVM) {
-			return  &evm.EVM{}
+		monkey.Patch(evm.NewEVM, func(evm.Context, *blockchain.BlockChain) *evm.EVM {
+			return &evm.EVM{}
 		})
 
 		monkey.Patch(worker.ApplyTransaction, func(*evm.EVM, *crafttypes.Transaction, *common.GasPool) ([]byte, uint64, bool, error) {
-			return  getBytes("0x38"), uint64(0), true, nil
+			return getBytes("0x38"), uint64(0), true, nil
 		})
-
 
 		req, _ := http.NewRequest("POST", "http://localhost/", strings.NewReader(tt.payload))
 		rec := httptest.NewRecorder()

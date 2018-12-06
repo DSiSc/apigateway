@@ -18,7 +18,7 @@ import (
 
 type RPCRequest struct {
 	JSONRPC string          `json:"jsonrpc"`
-	ID      interface{}          `json:"id"`
+	ID      interface{}     `json:"id"`
 	Method  string          `json:"method"`
 	Params  json.RawMessage `json:"params"` // must be map[string]interface{} or []interface{}
 }
@@ -89,7 +89,7 @@ func (err RPCError) Error() string {
 
 type RPCResponse struct {
 	JSONRPC string          `json:"jsonrpc"`
-	ID      interface{}          `json:"id"`
+	ID      interface{}     `json:"id"`
 	Result  json.RawMessage `json:"result,omitempty"`
 	Error   *RPCError       `json:"error,omitempty"`
 }

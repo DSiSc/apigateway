@@ -2,9 +2,9 @@ package types
 
 import (
 	"fmt"
+	cmn "github.com/DSiSc/apigateway/common"
 	"github.com/DSiSc/wallet/common/math"
 	"strings"
-	cmn "github.com/DSiSc/apigateway/common"
 )
 
 type BlockNumber int64

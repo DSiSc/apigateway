@@ -57,7 +57,7 @@ func TestGetBlockByNumber(t *testing.T) {
 		return blockdata, nil
 	})
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlock", func(*blockchain.BlockChain) (*types.Block) {
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlock", func(*blockchain.BlockChain) *types.Block {
 		blockdata := getMockBlock()
 		return blockdata
 	})
@@ -144,7 +144,7 @@ func TestBlockNumber(t *testing.T) {
 		return b, nil
 	})
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlockHeight", func(*blockchain.BlockChain) (uint64) {
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlockHeight", func(*blockchain.BlockChain) uint64 {
 		return uint64(56)
 	})
 
@@ -173,7 +173,7 @@ func TestGetBalance(t *testing.T) {
 		return blockdata, nil
 	})
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlock", func(*blockchain.BlockChain) (*types.Block) {
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlock", func(*blockchain.BlockChain) *types.Block {
 		blockdata := getMockBlock()
 		return blockdata
 	})
@@ -181,7 +181,7 @@ func TestGetBalance(t *testing.T) {
 		return b, nil
 	})
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetBalance", func(*blockchain.BlockChain, types.Address) (*big.Int) {
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetBalance", func(*blockchain.BlockChain, types.Address) *big.Int {
 		return big.NewInt(int64(56))
 	})
 
@@ -217,7 +217,7 @@ func TestGetCode(t *testing.T) {
 		return blockdata, nil
 	})
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlock", func(*blockchain.BlockChain) (*types.Block) {
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlock", func(*blockchain.BlockChain) *types.Block {
 		blockdata := getMockBlock()
 		return blockdata
 	})
@@ -225,7 +225,7 @@ func TestGetCode(t *testing.T) {
 		return b, nil
 	})
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetCode", func(*blockchain.BlockChain, types.Address) ([]byte) {
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetCode", func(*blockchain.BlockChain, types.Address) []byte {
 		return []byte(`abc`)
 	})
 
@@ -262,7 +262,7 @@ func TestGetTransactionCount(t *testing.T) {
 		return blockdata, nil
 	})
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlock", func(*blockchain.BlockChain) (*types.Block) {
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlock", func(*blockchain.BlockChain) *types.Block {
 		blockdata := getMockBlock()
 		return blockdata
 	})
@@ -270,7 +270,7 @@ func TestGetTransactionCount(t *testing.T) {
 		return b, nil
 	})
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetNonce", func(*blockchain.BlockChain, types.Address) (uint64) {
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetNonce", func(*blockchain.BlockChain, types.Address) uint64 {
 		return uint64(57)
 	})
 

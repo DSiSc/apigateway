@@ -24,7 +24,6 @@ func SetSwCh(ch chan<- interface{}) {
 	swch = ch
 }
 
-
 //#### eth_sendTransaction
 //
 //Creates new message call transaction or a contract creation, if the data field contains code.
@@ -80,9 +79,9 @@ func SendTransaction(args ctypes.SendTxArgs) (cmn.Hash, error) {
 
 	if noncePool > nonceChain {
 		nonce = noncePool + 1
-		} else {
-			nonce = nonceChain +1
-		}
+	} else {
+		nonce = nonceChain + 1
+	}
 
 	// value can be nil
 	var value *big.Int
@@ -231,46 +230,36 @@ func newRPCTransaction(tx *craft.Transaction, blockHash cmn.Hash, blockNumber ui
 	var from *types.Address
 	from = (*types.Address)(tx.Data.From)
 
-
 	var gas cmn.Uint64
 	gas = (cmn.Uint64)(tx.Data.GasLimit)
 
-
 	var gasPrice *cmn.Big
 	gasPrice = (*cmn.Big)(tx.Data.Price)
-
 
 	var hash *cmn.Hash
 	h := (cmn.Hash)(types.TxHash(tx))
 	hash = &h
 
-
 	var input cmn.Bytes
 	input = cmn.Bytes(tx.Data.Payload)
-
 
 	var nonce *cmn.Uint64
 	nonce = (*cmn.Uint64)(&tx.Data.AccountNonce)
 
-
 	var to *types.Address
 	to = (*types.Address)(tx.Data.Recipient)
-
 
 	var value *cmn.Big
 	value = (*cmn.Big)(tx.Data.Amount)
 
-
 	var v *cmn.Big
 	v = (*cmn.Big)(tx.Data.V)
-
 
 	var r *cmn.Big
 	r = (*cmn.Big)(tx.Data.R)
 
 	var s *cmn.Big
 	s = (*cmn.Big)(tx.Data.S)
-
 
 	result := &ctypes.RPCTransaction{
 		From:     from,
@@ -380,7 +369,6 @@ func newRPCReceipt(tx *craft.Transaction, receipt *craft.Receipt, blockHash cmn.
 	h := (cmn.Hash)(types.TxHash(tx))
 	hash = &h
 
-
 	var from *types.Address
 	from = (*types.Address)(tx.Data.From)
 
@@ -395,20 +383,19 @@ func newRPCReceipt(tx *craft.Transaction, receipt *craft.Receipt, blockHash cmn.
 	}
 
 	var status *cmn.Uint64
-		s := cmn.Uint64(receipt.Status)
-		status = &s
+	s := cmn.Uint64(receipt.Status)
+	status = &s
 
 	var gasUsed *cmn.Uint64
-		g := cmn.Uint64(receipt.GasUsed)
-		gasUsed = &g
+	g := cmn.Uint64(receipt.GasUsed)
+	gasUsed = &g
 
 	var cumulativeGasUsed *cmn.Uint64
-		c := cmn.Uint64(receipt.CumulativeGasUsed)
-		cumulativeGasUsed = &c
+	c := cmn.Uint64(receipt.CumulativeGasUsed)
+	cumulativeGasUsed = &c
 
-	var logsBloom [] byte
+	var logsBloom []byte
 	copy(logsBloom[:], receipt.Bloom[:])
-
 
 	var logs []*craft.Log
 	if receipt.Logs != nil {
@@ -727,7 +714,7 @@ func Accounts() ([]types.Address, error) {
 	_, addr := wtypes.DefaultTestKey()
 	addresses = append(addresses, types.Address(addr))
 
-	return addresses,nil
+	return addresses, nil
 }
 
 func Listening() (bool, error) {

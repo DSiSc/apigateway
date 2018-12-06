@@ -21,15 +21,14 @@ import (
 
 	"encoding/json"
 
+	gconf "github.com/DSiSc/craft/config"
 	"github.com/DSiSc/craft/types"
 	"github.com/DSiSc/crypto-suite/crypto/sha3"
-	gconf "github.com/DSiSc/craft/config"
 )
 
 const (
 	DefaultGasPrice = 1
 )
-
 
 // Sum returns the first 32 bytes of hash of the bz.
 func Sum(bz []byte) []byte {

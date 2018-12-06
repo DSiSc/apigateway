@@ -203,7 +203,7 @@ func RecoverAndLogHandler(handler http.Handler, logger log.Logger) http.Handler 
 			//	"status", rww.Status, "duration", durationMS,
 			//	"remoteAddr", r.RemoteAddr,
 			//)
-			craftlog.InfoKV("Panic in RPC HTTP handler",
+			craftlog.DebugKV("Panic in RPC HTTP handler",
 				map[string]interface{}{"method": r.Method, "url": r.URL,
 					"status": rww.Status, "duration": durationMS,
 					"remoteAddr": r.RemoteAddr})

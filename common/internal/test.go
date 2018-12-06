@@ -14,10 +14,10 @@
 
 package common
 
-
 import (
-   "testing"
+	"testing"
 )
+
 // ------------------------
 // package Consts, Vars
 

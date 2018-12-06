@@ -396,27 +396,27 @@ func GetCode(address apitypes.Address, blockNr apitypes.BlockNumber) (*cmn.Bytes
 //***
 func GetTransactionCount(address apitypes.Address, blockNr apitypes.BlockNumber) (*cmn.Uint64, error) {
 
-		if blockNr == apitypes.PendingBlockNumber {
-			noncePool := txpool.GetPoolNonce((types.Address)(address))
-			return (*cmn.Uint64)(&noncePool), nil
+	if blockNr == apitypes.PendingBlockNumber {
+		noncePool := txpool.GetPoolNonce((types.Address)(address))
+		return (*cmn.Uint64)(&noncePool), nil
+	} else {
+		bc, err := blockchain.NewLatestStateBlockChain()
+		var block *types.Block
+		if blockNr == apitypes.LatestBlockNumber {
+			block = bc.GetCurrentBlock()
 		} else {
-			bc, err := blockchain.NewLatestStateBlockChain()
-			var block *types.Block
-			if blockNr == apitypes.LatestBlockNumber {
-				block = bc.GetCurrentBlock()
-			} else {
-				height := blockNr.Touint64()
-				block, err = bc.GetBlockByHeight(height)
-			}
-			if &block.HeaderHash != nil {
-				bchash, errbc := blockchain.NewBlockChainByBlockHash(block.HeaderHash)
-				if errbc == nil {
-					nonce := (bchash.GetNonce((types.Address)(address)))
-					return (*cmn.Uint64)(&nonce), nil
-				}
-			}
-			return nil, err
+			height := blockNr.Touint64()
+			block, err = bc.GetBlockByHeight(height)
 		}
+		if &block.HeaderHash != nil {
+			bchash, errbc := blockchain.NewBlockChainByBlockHash(block.HeaderHash)
+			if errbc == nil {
+				nonce := (bchash.GetNonce((types.Address)(address)))
+				return (*cmn.Uint64)(&nonce), nil
+			}
+		}
+		return nil, err
+	}
 }
 
 func TypeConvert(a *cmn.Hash) types.Hash {

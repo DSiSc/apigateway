@@ -71,10 +71,10 @@ func StopRPC(rpcListeners []net.Listener) error {
 
 	for _, l := range rpcListeners {
 		//logger.Info("Closing rpc listener", "listener", l)
-		craftlog.InfoKV("Closing rpc listener",map[string]interface{}{"listener": l})
+		craftlog.InfoKV("Closing rpc listener", map[string]interface{}{"listener": l})
 		if err := l.Close(); err != nil {
 			//logger.Error("Error closing listener", "listener", l, "err", err)
-			craftlog.ErrorKV("Error closing listener",map[string]interface{}{"listener": l, "err": err})
+			craftlog.ErrorKV("Error closing listener", map[string]interface{}{"listener": l, "err": err})
 			return err
 		}
 	}

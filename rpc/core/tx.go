@@ -136,7 +136,7 @@ func SendTransaction(args ctypes.SendTxArgs) (cmn.Hash, error) {
 	if err != nil {
 		return cmn.BytesToHash([]byte("Fail to signTx")), err
 	}
-
+	txId := types.TxHash(tx)
 	// Send Tx to gossipswith
 	go func() {
 		// send transacation to swch, wait for transaction ID
@@ -144,9 +144,6 @@ func SendTransaction(args ctypes.SendTxArgs) (cmn.Hash, error) {
 		swMsg = tx
 		swch <- swMsg
 	}()
-
-	txId := types.TxHash(tx)
-
 	return (cmn.Hash)(txId), nil
 }
 

@@ -6,6 +6,7 @@ import (
 	"github.com/DSiSc/apigateway/core/types"
 	ctypes "github.com/DSiSc/apigateway/rpc/core/types"
 	"github.com/DSiSc/blockchain"
+	"github.com/DSiSc/craft/monitor"
 	craft "github.com/DSiSc/craft/types"
 	"github.com/DSiSc/evm-NG"
 	"github.com/DSiSc/txpool"
@@ -71,6 +72,8 @@ func SetSwCh(ch chan<- interface{}) {
 //
 //***
 func SendTransaction(args ctypes.SendTxArgs) (cmn.Hash, error) {
+	monitor.JTMetrics.ApigatewayReceivedTx.Add(1)
+
 	// give an initValue when nonce is nil
 	var nonce uint64
 	bc, _ := blockchain.NewLatestStateBlockChain()
@@ -143,6 +146,7 @@ func SendTransaction(args ctypes.SendTxArgs) (cmn.Hash, error) {
 		var swMsg interface{}
 		swMsg = tx
 		swch <- swMsg
+		monitor.JTMetrics.SwitchTakenTx.Add(1)
 	}()
 	return (cmn.Hash)(txId), nil
 }

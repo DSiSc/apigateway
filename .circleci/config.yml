@@ -3,29 +3,71 @@
 version: 2
 
 jobs:
-  build:
+  check:
 
     docker:
-      - image: circleci/golang:1.10.3
+    - image: circleci/golang:1.10.3
     working_directory: /go/src/github.com/DSiSc/apigateway
 
     steps:
-      - checkout
+    - checkout
 
-      - run:
-          name: Get dependencies
-          command: make fetch-deps
+    - run:
+        name: Get dependencies
+        command: make fetch-deps
+    - run:
+        name: Static checks
+        command: make static-check
 
-      - run:
-          name: Static checks
-          command: make static-check
+    - run:
+        name: Correctness check
+        command: make build && make vet
 
-      - run:
-          name: Correctness check
-          command: make build && make vet
+    - run:
+        name: Test with coverage
+        command: |
+          make coverage
+          bash <(curl -s https://codecov.io/bash)
 
-      - run:
-          name: Test with coverage
-          command: |
-            make coverage
-            bash <(curl -s https://codecov.io/bash)
+    - run:
+        name: RPC test
+        command: |
+          git checkout master
+          go get -u github.com/DSiSc/justitia
+          cd ../justitia; make fetch-deps
+          cd ../apigateway; git checkout ${CIRCLE_BRANCH}
+          cd ../justitia; go build -o justitia main.go
+
+    - persist_to_workspace:
+        root: ./../justitia
+        paths:
+        - justitia
+
+  rpctest:
+    docker:
+    - image: circleci/python:3.6.1
+    working_directory: ~/repo
+    steps:
+    - attach_workspace:
+        at: ./
+    - run:
+        name: install pyresttest
+        command: |
+          sudo pip install pyresttest
+    - run:
+        name: run justitia and rpc test
+        command: |
+          mkdir -p /home/circleci/.justitia && curl -q -o /home/circleci/.justitia/justitia.yml https://raw.githubusercontent.com/DSiSc/justitia/master/config/justitia.yaml
+          ./justitia --log_path=/tmp/justitia.log > /dev/null &
+          curl -q -O https://raw.githubusercontent.com/DSiSc/tester/master/JTtests/RPCtests/testcases_tx.yaml
+          pyresttest http://localhost:47768 testcases_tx.yaml
+          pkill justitia
+
+workflows:
+  version: 2
+  ciflow:
+    jobs:
+    - check
+    - rpctest:
+        requires:
+        - check

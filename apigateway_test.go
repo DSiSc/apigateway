@@ -26,7 +26,7 @@ func TestStartAndStopRPC(t *testing.T) {
 	}
 
 	for _, tcase := range cases {
-		actualListenr, err := StartRPC(tcase.input)
+		actualListenr, err := StartRPC(tcase.input, nil)
 		require.Nil(t, err)
 		assert.Equal(t, tcase.want, actualListenr[0].Addr().String(), "Listener should be same")
 

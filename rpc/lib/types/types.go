@@ -1,16 +1,15 @@
 package rpctypes
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
 
 	"github.com/pkg/errors"
 
-	amino "github.com/tendermint/go-amino"
+	"github.com/tendermint/go-amino"
 
-	tmpubsub "github.com/DSiSc/apigateway/core/libs/pubsub"
+	"github.com/DSiSc/craft/types"
 )
 
 //----------------------------------------
@@ -89,9 +88,11 @@ func (err RPCError) Error() string {
 
 type RPCResponse struct {
 	JSONRPC string          `json:"jsonrpc"`
-	ID      interface{}     `json:"id"`
+	ID      interface{}     `json:"id,omitempty"`
 	Result  json.RawMessage `json:"result,omitempty"`
 	Error   *RPCError       `json:"error,omitempty"`
+	Method  string          `json:"method,omitempty"`
+	Params  json.RawMessage `json:"params,omitempty"`
 }
 
 func NewRPCSuccessResponse(cdc *amino.Codec, id interface{}, res interface{}) RPCResponse {
@@ -114,6 +115,26 @@ func NewRPCErrorResponse(id interface{}, code int, msg string, data string) RPCR
 		ID:      id,
 		Error:   &RPCError{Code: code, Message: msg, Data: data},
 	}
+}
+
+func NewJsonEventNotifyResponse(subscriptionID string, result interface{}) (RPCResponse, error) {
+	if "" == subscriptionID || nil == result {
+		return RPCResponse{}, fmt.Errorf("Empty notify event ")
+	}
+	notify := make(map[string]interface{})
+	notify["subscription"] = subscriptionID
+	notify["result"] = result
+	var js []byte
+	js, err := json.Marshal(notify)
+	if err != nil {
+		return RPCResponse{}, fmt.Errorf("Failed to marshal %v to json, as: %v", notify, err)
+	}
+	rawMsg := json.RawMessage(js)
+	return RPCResponse{
+		JSONRPC: "2.0",
+		Method:  "eth_subscription",
+		Params:  rawMsg,
+	}, nil
 }
 
 func (resp RPCResponse) String() string {
@@ -160,9 +181,46 @@ type WSRPCConnection interface {
 
 // EventSubscriber mirros DSiSc/apigateway/types.EventBusSubscriber
 type EventSubscriber interface {
-	Subscribe(ctx context.Context, subscriber string, query tmpubsub.Query, out chan<- interface{}) error
-	Unsubscribe(ctx context.Context, subscriber string, query tmpubsub.Query) error
-	UnsubscribeAll(ctx context.Context, subscriber string) error
+	// Subscribe subscribe event
+	Subscribe(eventTypes ...types.EventType) (*Subscription, error)
+	// Unsubscribe unsubscribe by subscribe id
+	Unsubscribe(id string) error
+	// Unsubscribe unsubscribe all event
+	UnsubscribeAll() error
+}
+
+// Subscription is created when the client registers itself for a particular event.
+type Subscription struct {
+	ID          string
+	quitChan    chan interface{}
+	eventChan   chan interface{}
+	subscribers map[types.EventType]types.Subscriber
+}
+
+func NewSubscription(ID string, eventChan chan interface{}, subscribers map[types.EventType]types.Subscriber) *Subscription {
+	return &Subscription{
+		ID:          ID,
+		eventChan:   eventChan,
+		quitChan:    make(chan interface{}),
+		subscribers: subscribers,
+	}
+}
+
+func (sub *Subscription) EventChan() chan interface{} {
+	return sub.eventChan
+}
+
+func (sub *Subscription) QuitChan() chan interface{} {
+	return sub.quitChan
+}
+
+func (sub *Subscription) Stop() {
+	close(sub.eventChan)
+	close(sub.quitChan)
+}
+
+func (sub *Subscription) Subscribers() map[types.EventType]types.Subscriber {
+	return sub.subscribers
 }
 
 // websocket-only RPCFuncs take this as the first parameter.

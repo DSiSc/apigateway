@@ -15,6 +15,7 @@ import (
 	rpccore "github.com/DSiSc/apigateway/rpc/core"
 	rpcserver "github.com/DSiSc/apigateway/rpc/lib/server"
 	craftlog "github.com/DSiSc/craft/log"
+	"github.com/DSiSc/craft/types"
 )
 
 var colorFn = func(keyvals ...interface{}) term.FgBgColor {
@@ -32,7 +33,7 @@ var colorFn = func(keyvals ...interface{}) term.FgBgColor {
 
 var logger = log.NewTMLoggerWithColorFn(log.NewSyncWriter(os.Stdout), colorFn)
 
-func StartRPC(listenAddr string) ([]net.Listener, error) {
+func StartRPC(listenAddr string, eventCenter types.EventCenter) ([]net.Listener, error) {
 
 	listenAddrs := cmn.SplitAndTrim(listenAddr, ",", " ")
 	coreCodec := amino.NewCodec()
@@ -44,7 +45,7 @@ func StartRPC(listenAddr string) ([]net.Listener, error) {
 	for i, listenAddr := range listenAddrs {
 		mux := http.NewServeMux()
 		rpcLogger := logger.With("module", "rpc-server")
-		wm := rpcserver.NewWebsocketManager(rpccore.Routes, coreCodec, rpcserver.ReadWait(5*time.Second))
+		wm := rpcserver.NewWebsocketManager(rpccore.Routes, coreCodec, rpcserver.ReadWait(5*time.Second), rpcserver.EventSubscriber(eventCenter))
 		// TODO(peerlink): rpcserver get eventBus from input vars.
 		//rpcserver.EventSubscriber(n.eventBus))
 		wm.SetLogger(rpcLogger.With("protocol", "websocket"))

@@ -23,7 +23,7 @@ import (
 	"strconv"
 
 	cmn "github.com/DSiSc/apigateway/common"
-	"github.com/ethereum/go-ethereum/crypto/sha3"
+	"github.com/DSiSc/crypto-suite/crypto/sha3"
 )
 
 // Lengths of hashes and addresses in bytes.

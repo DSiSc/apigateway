@@ -24,6 +24,8 @@ var Routes = map[string]*rpc.RPCFunc{
 	"eth_gasPrice":    rpc.NewRPCFunc(GasPrice, ""),
 	"eth_estimateGas": rpc.NewRPCFunc(EstimateGas, "args"),
 	"eth_accounts":    rpc.NewRPCFunc(Accounts, ""),
+	"eth_subscribe":   rpc.NewWSRPCFunc(Subscribe, "rawMsg"),
+	"eth_unsubscribe": rpc.NewWSRPCFunc(UnSubscribe, "subID"),
 	"net_listening":   rpc.NewRPCFunc(Listening, ""),
 	"net_version":     rpc.NewRPCFunc(Version, ""),
 	"net_nodeInfo":    rpc.NewRPCFunc(NodeInfo, ""),

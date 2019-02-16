@@ -2,7 +2,6 @@ package rpcserver
 
 import (
 	"bytes"
-	"context"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -21,7 +20,9 @@ import (
 	"github.com/DSiSc/apigateway/log"
 	types "github.com/DSiSc/apigateway/rpc/lib/types"
 	craftlog "github.com/DSiSc/craft/log"
+	craftTypes "github.com/DSiSc/craft/types"
 	"github.com/tendermint/go-amino"
+	"sync"
 )
 
 // RegisterRPCFuncs adds a route for each function in the funcMap, as well as general jsonrpc and websocket handlers for all functions.
@@ -189,6 +190,25 @@ func mapParamsToArgs(rpcFunc *RPCFunc, cdc *amino.Codec, params map[string]json.
 	return values, nil
 }
 
+func paramsToArrayArgs(rpcFunc *RPCFunc, cdc *amino.Codec, param []byte, argsOffset int) ([]reflect.Value, error) {
+	if len(rpcFunc.args) <= 0 {
+		return nil, errors.New("Argument is not slice type")
+	}
+
+	argType := rpcFunc.args[argsOffset]
+	if reflect.Slice != argType.Kind() {
+		return nil, errors.New("Argument is not slice type")
+	}
+	values := make([]reflect.Value, 1)
+	val := reflect.New(argType)
+	err := cdc.UnmarshalJSON(param, val.Interface())
+	if err != nil {
+		return nil, err
+	}
+	values[0] = val.Elem()
+	return values, nil
+}
+
 func arrayParamsToArgs(rpcFunc *RPCFunc, cdc *amino.Codec, params []json.RawMessage, argsOffset int) ([]reflect.Value, error) {
 	if len(rpcFunc.argNames) != len(params) {
 		return nil, errors.Errorf("Expected %v parameters (%v), got %v (%v)",
@@ -222,6 +242,11 @@ func jsonParamsToArgs(rpcFunc *RPCFunc, cdc *amino.Codec, raw []byte, argsOffset
 	err := json.Unmarshal(raw, &m)
 	if err == nil {
 		return mapParamsToArgs(rpcFunc, cdc, m, argsOffset)
+	}
+
+	vals, err := paramsToArrayArgs(rpcFunc, cdc, raw, argsOffset)
+	if err == nil {
+		return vals, nil
 	}
 
 	// Otherwise, try an array.
@@ -413,6 +438,68 @@ const (
 	defaultWSPingPeriod        = (defaultWSReadWait * 9) / 10
 )
 
+// WSConnEventEventSubscriber eventsubscriber implementation bounded by a single websocket connection
+type WSConnEventEventSubscriber struct {
+	lock        sync.Mutex
+	eventCenter craftTypes.EventCenter
+	subscribes  map[string]*types.Subscription
+}
+
+// NewWSConnEventEventSubscriber create a new NewWSConnEventEventSubscriber instance
+func NewWSConnEventEventSubscriber(eventCenter craftTypes.EventCenter) types.EventSubscriber {
+	return &WSConnEventEventSubscriber{
+		eventCenter: eventCenter,
+		subscribes:  make(map[string]*types.Subscription),
+	}
+}
+
+func (ws *WSConnEventEventSubscriber) Subscribe(eventTypes ...craftTypes.EventType) (*types.Subscription, error) {
+	id := cmn.NewID()
+	eventChan := make(chan interface{})
+	subscribers := make(map[craftTypes.EventType]craftTypes.Subscriber)
+	for _, eventType := range eventTypes {
+		subscriber := ws.eventCenter.Subscribe(eventType, func(v interface{}) {
+			eventChan <- v
+		})
+		subscribers[eventType] = subscriber
+	}
+
+	subscription := types.NewSubscription(id, eventChan, subscribers)
+	ws.lock.Lock()
+	ws.subscribes[subscription.ID] = subscription
+	ws.lock.Unlock()
+	return subscription, nil
+
+}
+
+func (ws *WSConnEventEventSubscriber) Unsubscribe(id string) error {
+	ws.lock.Lock()
+	defer ws.lock.Unlock()
+	if subscription, ok := ws.subscribes[id]; ok {
+		for et, s := range subscription.Subscribers() {
+			ws.eventCenter.UnSubscribe(et, s)
+		}
+		subscription.Stop()
+		delete(ws.subscribes, id)
+		return nil
+	} else {
+		return fmt.Errorf("subscription with id %s not found", id)
+	}
+}
+
+func (ws *WSConnEventEventSubscriber) UnsubscribeAll() error {
+	ws.lock.Lock()
+	defer ws.lock.Unlock()
+	for _, subscription := range ws.subscribes {
+		for et, s := range subscription.Subscribers() {
+			ws.eventCenter.UnSubscribe(et, s)
+		}
+		subscription.Stop()
+		delete(ws.subscribes, subscription.ID)
+	}
+	return nil
+}
+
 // A single websocket connection contains listener id, underlying ws
 // connection, and the event switch for subscribing to events.
 //
@@ -476,9 +563,9 @@ func NewWSConnection(
 // EventSubscriber sets object that is used to subscribe / unsubscribe from
 // events - not Goroutine-safe. If none given, default node's eventBus will be
 // used.
-func EventSubscriber(eventSub types.EventSubscriber) func(*wsConnection) {
+func EventSubscriber(eventCenter craftTypes.EventCenter) func(*wsConnection) {
 	return func(wsc *wsConnection) {
-		wsc.eventSub = eventSub
+		wsc.eventSub = NewWSConnEventEventSubscriber(eventCenter)
 	}
 }
 
@@ -532,7 +619,7 @@ func (wsc *wsConnection) OnStop() {
 	// Both read and write loops close the websocket connection when they exit their loops.
 	// The writeChan is never closed, to allow WriteRPCResponse() to fail.
 	if wsc.eventSub != nil {
-		wsc.eventSub.UnsubscribeAll(context.TODO(), wsc.remoteAddr)
+		wsc.eventSub.UnsubscribeAll()
 	}
 }
 
@@ -593,20 +680,11 @@ func (wsc *wsConnection) readRoutine() {
 		}
 	}()
 
-	wsc.baseConn.SetPongHandler(func(m string) error {
-		return wsc.baseConn.SetReadDeadline(time.Now().Add(wsc.readWait))
-	})
-
 	for {
 		select {
 		case <-wsc.Quit():
 			return
 		default:
-			// reset deadline for every type of message (control or data)
-			if err := wsc.baseConn.SetReadDeadline(time.Now().Add(wsc.readWait)); err != nil {
-				//wsc.Logger.Error("failed to set read deadline", "err", err)
-				craftlog.ErrorKV("failed to set read deadline", map[string]interface{}{"err": err})
-			}
 			var in []byte
 			_, in, err := wsc.baseConn.ReadMessage()
 			if err != nil {
@@ -645,6 +723,7 @@ func (wsc *wsConnection) readRoutine() {
 			}
 			var args []reflect.Value
 			if rpcFunc.ws {
+				// Otherwise, try an array.
 				wsCtx := types.WSRPCContext{Request: request, WSRPCConnection: wsc}
 				if len(request.Params) > 0 {
 					args, err = jsonParamsToArgsWS(rpcFunc, wsc.cdc, request.Params, wsCtx)
@@ -677,41 +756,13 @@ func (wsc *wsConnection) readRoutine() {
 
 // receives on a write channel and writes out on the socket
 func (wsc *wsConnection) writeRoutine() {
-	pingTicker := time.NewTicker(wsc.pingPeriod)
 	defer func() {
-		pingTicker.Stop()
 		if err := wsc.baseConn.Close(); err != nil {
-			//wsc.Logger.Error("Error closing connection", "err", err)
-			craftlog.ErrorKV("Error closing connection", map[string]interface{}{"err": err})
+			wsc.Logger.Error("Error closing connection", "err", err)
 		}
 	}()
-
-	// https://github.com/gorilla/websocket/issues/97
-	pongs := make(chan string, 1)
-	wsc.baseConn.SetPingHandler(func(m string) error {
-		select {
-		case pongs <- m:
-		default:
-		}
-		return nil
-	})
-
 	for {
 		select {
-		case m := <-pongs:
-			err := wsc.writeMessageWithDeadline(websocket.PongMessage, []byte(m))
-			if err != nil {
-				//wsc.Logger.Info("Failed to write pong (client may disconnect)", "err", err)
-				craftlog.ErrorKV("Failed to write pong (client may disconnect)", map[string]interface{}{"err": err})
-			}
-		case <-pingTicker.C:
-			err := wsc.writeMessageWithDeadline(websocket.PingMessage, []byte{})
-			if err != nil {
-				//wsc.Logger.Error("Failed to write ping", "err", err)
-				craftlog.ErrorKV("Failed to write ping", map[string]interface{}{"err": err})
-				wsc.Stop()
-				return
-			}
 		case msg := <-wsc.writeChan:
 			jsonBytes, err := json.MarshalIndent(msg, "", "  ")
 			if err != nil {

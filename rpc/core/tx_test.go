@@ -170,8 +170,8 @@ func TestGetTransactionByHash(t *testing.T) {
 		{
 
 			fmt.Sprintf(`{"jsonrpc": "2.0", "method": "eth_getTransactionByHash", "id": 1, "params": [
-              "0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99"]}`),
-			"", `{"jsonrpc":"2.0","id":1,"result":{"blockHash":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","blockNumber":"0x5","from":"0xb60e8dd61c5d32be8058bb8eb970870f07233155","gas":"0x76c0","gasPrice":"0x9184e72a0000","hash":"0x88da6692896bd38bf3145afef63088632f74ca0c74b0221b8940ba8eb996d1f0","input":"0xd46e8dd67c5d32be8d46e8dd67c5d32be8058bb8eb970870f072445675058bb8eb970870f072445675","nonce":"0x10","to":"0xd46e8dd67c5d32be8058bb8eb970870f07244567","transactionIndex":"0x7","value":"0x0","v":"0x0","r":"0x0","s":"0x0"}}`},
+              "0x5fc451a0d0db609bfeb1d73ebe72b5ac9cd544b47c9b5546e4e12caa5598b10c"]}`),
+			"", `{"jsonrpc":"2.0","id":1,"result":{"blockHash":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","blockNumber":"0x5","from":"0xb60e8dd61c5d32be8058bb8eb970870f07233155","gas":"0x76c0","gasPrice":"0x9184e72a0000","hash":"0x5fc451a0d0db609bfeb1d73ebe72b5ac9cd544b47c9b5546e4e12caa5598b10c","input":"0xd46e8dd67c5d32be8d46e8dd67c5d32be8058bb8eb970870f072445675058bb8eb970870f072445675","nonce":"0x10","to":"0xd46e8dd67c5d32be8058bb8eb970870f07244567","transactionIndex":"0x7","value":"0x0","v":"0x0","r":"0x0","s":"0x0"}}`},
 	}
 	// ------------------------
 	// httptest API
@@ -214,7 +214,7 @@ func TestGetTransactionReceipt(t *testing.T) {
 
 			fmt.Sprintf(`{"jsonrpc": "2.0", "method": "eth_getTransactionReceipt", "id": 1, "params": [
               "0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99"]}`),
-			"", `{"jsonrpc":"2.0","id":1,"result":{"blockHash":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","blockNumber":"0x5","transactionHash":"0x88da6692896bd38bf3145afef63088632f74ca0c74b0221b8940ba8eb996d1f0","transactionIndex":"0x7","from":"0xb60e8dd61c5d32be8058bb8eb970870f07233155","to":"0xd46e8dd67c5d32be8058bb8eb970870f07244567","root":"e0ogr1SPXLN0gVeOE/bpYcUensG5k214HBBhMjmz6Sk=","status":"0x2","gasUsed":"0x5e6","cumulativeGasUsed":"0x4d7","logsBloom":null,"logs":null,"contractAddress":"0xb60e8dd61c5d32be8058bb8eb970870f07233155"}}`},
+			"", `{"jsonrpc":"2.0","id":1,"result":{"blockHash":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","blockNumber":"0x5","transactionHash":"0x5fc451a0d0db609bfeb1d73ebe72b5ac9cd544b47c9b5546e4e12caa5598b10c","transactionIndex":"0x7","from":"0xb60e8dd61c5d32be8058bb8eb970870f07233155","to":"0xd46e8dd67c5d32be8058bb8eb970870f07244567","root":"e0ogr1SPXLN0gVeOE/bpYcUensG5k214HBBhMjmz6Sk=","status":"0x2","gasUsed":"0x5e6","cumulativeGasUsed":"0x4d7","logsBloom":null,"logs":null,"contractAddress":"0xb60e8dd61c5d32be8058bb8eb970870f07233155"}}`},
 	}
 	// ------------------------
 	// httptest API
@@ -242,7 +242,7 @@ func TestGetTransactionByBlockHashAndIndex(t *testing.T) {
 
 			fmt.Sprintf(`{"jsonrpc": "2.0", "method": "eth_getTransactionByBlockHashAndIndex", "id": 1, "params": [
               "0xc6ef2fc5426d6ad6fd9e2a26abeab0aa2411b7ab17f30a99d3cb96aed1d1055b", "0x0"]}`),
-			"", `{"jsonrpc":"2.0","id":1,"result":{"blockHash":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","blockNumber":"0xc","from":"0xb60e8dd61c5d32be8058bb8eb970870f07233155","gas":"0x76c0","gasPrice":"0x9184e72a0000","hash":"0xec415a5415907387bf6f24ba16409370d0b457548b0b2d4bca05c5bd5263e507","input":"0xd46e8dd67c5d32be8d46e8dd67c5d32be8058bb8eb970870f072445675058bb8eb970870f072445675","nonce":"0x10","to":"0xd46e8dd67c5d32be8058bb8eb970870f07244567","transactionIndex":"0x0","value":"0x9184e72a","v":"0x0","r":"0x0","s":"0x0"}}`},
+			"", `{"jsonrpc":"2.0","id":1,"result":{"blockHash":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","blockNumber":"0xc","from":"0xb60e8dd61c5d32be8058bb8eb970870f07233155","gas":"0x76c0","gasPrice":"0x9184e72a0000","hash":"0xa10baf6bf5c4defebf8bff69226302351724245327b5cee59c788adfd1473663","input":"0xd46e8dd67c5d32be8d46e8dd67c5d32be8058bb8eb970870f072445675058bb8eb970870f072445675","nonce":"0x10","to":"0xd46e8dd67c5d32be8058bb8eb970870f07244567","transactionIndex":"0x0","value":"0x9184e72a","v":"0x0","r":"0x0","s":"0x0"}}`},
 	}
 	// ------------------------
 	// httptest API
@@ -276,12 +276,12 @@ func TestGetTransactionByBlockNumberAndIndex(t *testing.T) {
 
 			fmt.Sprintf(`{"jsonrpc": "2.0", "method": "eth_getTransactionByBlockNumberAndIndex", "id": 1, "params": [
               "0x1b4", "0x0"]}`),
-			"", `{"jsonrpc":"2.0","id":1,"result":{"blockHash":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","blockNumber":"0xc","from":"0xb60e8dd61c5d32be8058bb8eb970870f07233155","gas":"0x76c0","gasPrice":"0x9184e72a0000","hash":"0xec415a5415907387bf6f24ba16409370d0b457548b0b2d4bca05c5bd5263e507","input":"0xd46e8dd67c5d32be8d46e8dd67c5d32be8058bb8eb970870f072445675058bb8eb970870f072445675","nonce":"0x10","to":"0xd46e8dd67c5d32be8058bb8eb970870f07244567","transactionIndex":"0x0","value":"0x9184e72a","v":"0x0","r":"0x0","s":"0x0"}}`},
+			"", `{"jsonrpc":"2.0","id":1,"result":{"blockHash":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","blockNumber":"0xc","from":"0xb60e8dd61c5d32be8058bb8eb970870f07233155","gas":"0x76c0","gasPrice":"0x9184e72a0000","hash":"0xa10baf6bf5c4defebf8bff69226302351724245327b5cee59c788adfd1473663","input":"0xd46e8dd67c5d32be8d46e8dd67c5d32be8058bb8eb970870f072445675058bb8eb970870f072445675","nonce":"0x10","to":"0xd46e8dd67c5d32be8058bb8eb970870f07244567","transactionIndex":"0x0","value":"0x9184e72a","v":"0x0","r":"0x0","s":"0x0"}}`},
 		{
 
 			fmt.Sprintf(`{"jsonrpc": "2.0", "method": "eth_getTransactionByBlockNumberAndIndex", "id": 1, "params": [
               "latest", "0x0"]}`),
-			"", `{"jsonrpc":"2.0","id":1,"result":{"blockHash":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","blockNumber":"0xc","from":"0xb60e8dd61c5d32be8058bb8eb970870f07233155","gas":"0x76c0","gasPrice":"0x9184e72a0000","hash":"0xec415a5415907387bf6f24ba16409370d0b457548b0b2d4bca05c5bd5263e507","input":"0xd46e8dd67c5d32be8d46e8dd67c5d32be8058bb8eb970870f072445675058bb8eb970870f072445675","nonce":"0x10","to":"0xd46e8dd67c5d32be8058bb8eb970870f07244567","transactionIndex":"0x0","value":"0x9184e72a","v":"0x0","r":"0x0","s":"0x0"}}`},
+			"", `{"jsonrpc":"2.0","id":1,"result":{"blockHash":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","blockNumber":"0xc","from":"0xb60e8dd61c5d32be8058bb8eb970870f07233155","gas":"0x76c0","gasPrice":"0x9184e72a0000","hash":"0xa10baf6bf5c4defebf8bff69226302351724245327b5cee59c788adfd1473663","input":"0xd46e8dd67c5d32be8d46e8dd67c5d32be8058bb8eb970870f072445675058bb8eb970870f072445675","nonce":"0x10","to":"0xd46e8dd67c5d32be8058bb8eb970870f07244567","transactionIndex":"0x0","value":"0x9184e72a","v":"0x0","r":"0x0","s":"0x0"}}`},
 	}
 	// ------------------------
 	// httptest API

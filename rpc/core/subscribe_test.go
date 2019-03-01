@@ -8,6 +8,7 @@ import (
 	"github.com/DSiSc/apigateway/rpc/lib/types"
 	"github.com/DSiSc/blockchain"
 	bcconf "github.com/DSiSc/blockchain/config"
+	"github.com/DSiSc/craft/log"
 	"github.com/DSiSc/craft/types"
 	"github.com/DSiSc/monkey"
 	"github.com/gorilla/websocket"
@@ -19,7 +20,6 @@ import (
 	"sync"
 	"testing"
 	"time"
-	"github.com/DSiSc/craft/log"
 )
 
 func mockBlock() *types.Block {

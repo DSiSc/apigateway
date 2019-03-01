@@ -2,11 +2,13 @@ package core
 
 import (
 	"errors"
+	acmn "github.com/DSiSc/apigateway/common"
 	cmn "github.com/DSiSc/apigateway/common"
 	"github.com/DSiSc/apigateway/core/types"
 	ctypes "github.com/DSiSc/apigateway/rpc/core/types"
 	"github.com/DSiSc/blockchain"
 	"github.com/DSiSc/craft/monitor"
+	"github.com/DSiSc/craft/rlp"
 	craft "github.com/DSiSc/craft/types"
 	"github.com/DSiSc/evm-NG"
 	"github.com/DSiSc/txpool"
@@ -149,6 +151,66 @@ func SendTransaction(args ctypes.SendTxArgs) (cmn.Hash, error) {
 		monitor.JTMetrics.SwitchTakenTx.Add(1)
 	}()
 	return (cmn.Hash)(txId), nil
+}
+
+//#### eth_sendRawTransaction
+//
+//Creates new message call transaction or a contract creation for signed transactions.
+//
+//##### Parameters
+//
+//1. `DATA` - The signed transaction data.
+//- `from`: `DATA`, 20 Bytes - The address the transaction is send from.
+//- `to`: `DATA`, 20 Bytes - (optional when creating new contract) The address the transaction is directed to.
+//- `gas`: `QUANTITY`  - (optional, default: 90000) Integer of the gas provided for the transaction execution. It will return unused gas.
+//- `gasPrice`: `QUANTITY`  - (optional, default: To-Be-Determined) Integer of the gasPrice used for each paid gas
+//- `value`: `QUANTITY`  - (optional) Integer of the value sent with this transaction
+//- `data`: `DATA`  - The compiled code of a contract OR the hash of the invoked method signature and encoded parameters. For details see [Ethereum Contract ABI](https://github.com/ethereum/wiki/wiki/Ethereum-Contract-ABI)
+//- `nonce`: `QUANTITY`  - (optional) Integer of a nonce. This allows to overwrite your own pending transactions that use the same nonce.
+//
+//```js
+//  params: ["0xf8acf8a70b869184e72a00008276c094d46e8dd67c5d32be8058bb8eb970870f0724456794b60e8dd61c5d32be8058bb8eb970870f07233155849184e72aa9d46e8dd67c5d32be8d46e8dd67c5d32be8058bb8eb970870f072445675058bb8eb970870f0724456751ba0a81f79d00e342f5df1c47acabfd0ccc77a3f9ab919a15d5a6699d6de2c4ffbdda07b721e0eb6a50e7bce582dbd71f690004eab409abe7b6cb57b04a240d814ee6dc0c0c0"]
+//```
+//
+//##### Returns
+//
+//`DATA`, 32 Bytes - the transaction hash, or the zero hash if the transaction is not yet available.
+
+//
+//Use [eth_getTransactionReceipt](#eth_gettransactionreceipt) to get the contract address, after the transaction was mined, when you created a contract.
+//
+//##### Example
+//```js
+//// Request
+//curl -X POST --data '{"jsonrpc":"2.0","method":"eth_sendRawTransaction","params":[{see above}],"id":1}'
+//
+//// Result
+//{
+//"id":1,
+//"jsonrpc": "2.0",
+//"result": "0x919d38fa5c395fa0f677e6554eef74fc7a48a64c087e320d538114c714d67d8f"
+//}
+//```
+//
+//***
+func SendRawTransaction(encodedTx acmn.Bytes) (cmn.Hash, error) {
+	monitor.JTMetrics.ApigatewayReceivedTx.Add(1)
+
+	tx := new(craft.Transaction)
+	if err := rlp.DecodeBytes(encodedTx, tx); err != nil {
+		return cmn.Hash{}, err
+	}
+	// give an initValue when nonce is nil
+	// Send Tx to gossip switch
+	go func() {
+		// send transaction to switch, wait for transaction ID
+		var swMsg interface{}
+		swMsg = tx
+		swch <- swMsg
+		monitor.JTMetrics.SwitchTakenTx.Add(1)
+	}()
+	txHash := types.TxHash(tx)
+	return (cmn.Hash)(txHash), nil
 }
 
 //#### eth_getTransactionByHash

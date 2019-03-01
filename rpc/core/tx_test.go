@@ -21,6 +21,7 @@ import (
 	cmn "github.com/DSiSc/apigateway/common"
 	ctypes "github.com/DSiSc/apigateway/core/types"
 	"github.com/DSiSc/apigateway/rpc/lib/types"
+	"github.com/DSiSc/craft/rlp"
 	crafttypes "github.com/DSiSc/craft/types"
 	wtypes "github.com/DSiSc/wallet/core/types"
 	"github.com/stretchr/testify/assert"
@@ -35,7 +36,6 @@ var hashtest = cmn.HexToHash("0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d7
 // package Test*
 
 func TestSendTransaction(t *testing.T) {
-
 	// -------------------------
 	// Mock:  mockTransaction
 	mockTransaction := ctypes.NewTransaction(uint64(11), &to, value, gas, gasPrice, data, from)
@@ -96,6 +96,117 @@ func TestSendTransaction(t *testing.T) {
 
 			fmt.Sprintf(`{"jsonrpc": "2.0", "method": "eth_sendTransaction", "id": "0", "params": [{
               "from": "%s"}]}`, request.from),
+			"", mockContractHash, mockContract},
+	}
+
+	// ------------------------
+	// httptest API
+	mux := testMux()
+	for i, tt := range tests {
+		req, _ := http.NewRequest("POST", "http://localhost/", strings.NewReader(tt.payload))
+		rec := httptest.NewRecorder()
+		mux.ServeHTTP(rec, req)
+
+		// --------------
+		// Test Response
+		res := rec.Result()
+		// Always expecting back a JSONRPCResponse
+		assert.True(t, statusOK(res.StatusCode), "#%d: should always return 2XX", i)
+		blob, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			t.Errorf("#%d: err reading body: %v", i, err)
+			continue
+		}
+
+		// --------------------
+		// Test read from swch for SwitchMsg
+		var swMsg interface{}
+		swMsg = <-mockSwCh
+
+		// assert: Type, Content.
+		assert.Equal(t, reflect.TypeOf(tt.mockTransaction), reflect.TypeOf(swMsg), "swMsg type should be types.Transaction")
+
+		// exceptData := new(big.Int).SetBytes(cmn.HexDecode("0x9184e72a000"))
+		actualTransaction := swMsg.(*crafttypes.Transaction)
+		assert.Equal(t, tt.mockTransaction, actualTransaction, "transaction price should equal request input")
+
+		// ----------------
+		// Test reponse
+		recv := new(rpctypes.RPCResponse)
+		json.Unmarshal(blob, recv)
+
+		if tt.wantErr == "" {
+			assert.Nil(t, recv.Error, "#%d: not expecting an error", i)
+			// FIXME(peerlink): check return Hash and mockTransaction.Hash()
+			var result cmn.Hash
+			json.Unmarshal(recv.Result, &result)
+			assert.Equal(t, tt.wantReturn, result.Bytes(), "Hash should equals")
+		} else {
+			assert.True(t, recv.Error.Code < 0, "#%d: not expecting a positive JSONRPC code", i)
+			// The wanted error is either in the message or the data
+			assert.Contains(t, recv.Error.Message+recv.Error.Data, tt.wantErr, "#%d: expected substring", i)
+		}
+	}
+
+	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetNonce")
+	monkey.Unpatch(txpool.GetPoolNonce)
+	monkey.Unpatch(blockchain.NewLatestStateBlockChain)
+}
+
+func TestSendRawTransaction(t *testing.T) {
+	// -------------------------
+	// Mock:  mockTransaction
+	mockTransaction := ctypes.NewTransaction(uint64(11), &to, value, gas, gasPrice, data, from)
+	mockContract := ctypes.NewTransaction(uint64(1), nil, nil, math.MaxUint64/2, new(big.Int).SetUint64(1), getBytes(requestContract.data), ctypes.BytesToAddress(getBytes(requestContract.from)))
+	// SignTx
+	key, _ := wtypes.DefaultTestKey()
+	mockTransaction, _ = wtypes.SignTx(mockTransaction, new(wtypes.FrontierSigner), key)
+	mockContract, _ = wtypes.SignTx(mockContract, new(wtypes.FrontierSigner), key)
+
+	// NOTE(peerlink): tx.hash changed when call tx.Hash()
+	txId := ctypes.TxHash(mockTransaction)
+	mockTxHash := ctypes.HashBytes(txId)
+
+	ContractId := ctypes.TxHash(mockContract)
+	mockContractHash := ctypes.HashBytes(ContractId)
+	// -------------------------
+	// set mock swch, before node start http server.
+	mockSwCh := make(chan interface{})
+	defer close(mockSwCh)
+	SetSwCh(mockSwCh)
+
+	monkey.Patch(blockchain.NewLatestStateBlockChain, func() (*blockchain.BlockChain, error) {
+		return b, nil
+	})
+
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetNonce", func(*blockchain.BlockChain, crafttypes.Address) uint64 {
+		return uint64(10)
+	})
+
+	monkey.Patch(txpool.GetPoolNonce, func(crafttypes.Address) uint64 {
+		return uint64(10)
+	})
+
+	encodedMockTx, _ := rlp.EncodeToBytes(mockTransaction)
+	encodedMockTxStr := fmt.Sprintf("0x%x", encodedMockTx)
+	encodedMockContract, _ := rlp.EncodeToBytes(mockContract)
+	encodedMockContractStr := fmt.Sprintf("0x%x", encodedMockContract)
+
+	// ---------------------------
+	// tests case
+	tests := []struct {
+		payload         string
+		wantErr         string
+		wantReturn      []byte
+		mockTransaction *crafttypes.Transaction
+	}{
+		{
+
+			fmt.Sprintf(`{"jsonrpc": "2.0", "method": "eth_sendRawTransaction", "id": "0", "params": ["%s"]}`, encodedMockTxStr),
+			"", mockTxHash, mockTransaction},
+		{
+
+			fmt.Sprintf(`{"jsonrpc": "2.0", "method": "eth_sendRawTransaction", "id": "0", "params": ["%s"]}`, encodedMockContractStr),
 			"", mockContractHash, mockContract},
 	}
 

@@ -22,6 +22,7 @@ import (
 	ctypes "github.com/DSiSc/apigateway/core/types"
 	"github.com/DSiSc/apigateway/rpc/lib/types"
 	"github.com/DSiSc/craft/rlp"
+	"github.com/DSiSc/craft/types"
 	crafttypes "github.com/DSiSc/craft/types"
 	wtypes "github.com/DSiSc/wallet/core/types"
 	"github.com/stretchr/testify/assert"
@@ -465,8 +466,8 @@ func TestCall(t *testing.T) {
 			return &evm.EVM{}
 		})
 
-		monkey.Patch(worker.ApplyTransaction, func(*evm.EVM, *crafttypes.Transaction, *common.GasPool) ([]byte, uint64, bool, error) {
-			return getBytes("0x38"), uint64(0), true, nil
+		monkey.Patch(worker.ApplyTransaction, func(*evm.EVM, *crafttypes.Transaction, *common.GasPool) ([]byte, uint64, bool, error, types.Address) {
+			return getBytes("0x38"), uint64(0), true, nil, types.Address{}
 		})
 
 		req, _ := http.NewRequest("POST", "http://localhost/", strings.NewReader(tt.payload))

@@ -85,7 +85,7 @@ func SendTransaction(args ctypes.SendTxArgs) (cmn.Hash, error) {
 	if noncePool > nonceChain {
 		nonce = noncePool + 1
 	} else {
-		nonce = nonceChain + 1
+		nonce = nonceChain
 	}
 
 	// value can be nil

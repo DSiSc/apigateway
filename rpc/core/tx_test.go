@@ -454,6 +454,13 @@ func TestCall(t *testing.T) {
 		return b, nil
 	})
 
+	monkey.Patch(blockchain.NewLatestStateBlockChain, func() (*blockchain.BlockChain, error) {
+		return b, nil
+	})
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetNonce", func(*blockchain.BlockChain, types.Address) uint64 {
+		return uint64(0)
+	})
+
 	mux := testMux()
 	for i, tt := range tests {
 

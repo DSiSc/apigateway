@@ -2,6 +2,7 @@ package core
 
 import (
 	"errors"
+	"fmt"
 	acmn "github.com/DSiSc/apigateway/common"
 	cmn "github.com/DSiSc/apigateway/common"
 	"github.com/DSiSc/apigateway/core/types"
@@ -671,9 +672,13 @@ func Call(args ctypes.SendTxArgs, blockNr types.BlockNumber) (cmn.Bytes, error) 
 		from = args.From
 	}
 
+	bc, err := blockchain.NewLatestStateBlockChain()
+	if err != nil {
+		return cmn.Bytes{}, fmt.Errorf("new block chain failed")
+	}
 	// new types.Transaction base on SendTxArgs
 	tx := types.NewTransaction(
-		0,
+		bc.GetNonce(*types.TypeConvert(&from)),
 		to,
 		value,
 		gas,

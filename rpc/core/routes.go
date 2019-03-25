@@ -7,7 +7,7 @@ import (
 // NOTE: Amino is registered in rpc/core/types/wire.go.
 var Routes = map[string]*rpc.RPCFunc{
 	// namespace "eth" API
-	//"eth_sendTransaction":                     rpc.NewRPCFunc(SendTransaction, "args"),
+	"eth_sendTransaction":                     rpc.NewRPCFunc(SendTransaction, "args"),
 	"eth_sendRawTransaction":                  rpc.NewRPCFunc(SendRawTransaction, "encodedTx"),
 	"eth_getBlockByHash":                      rpc.NewRPCFunc(GetBlockByHash, "blockHash, fullTx"),
 	"eth_getBlockByNumber":                    rpc.NewRPCFunc(GetBlockByNumber, "blockNr, fullTx"),

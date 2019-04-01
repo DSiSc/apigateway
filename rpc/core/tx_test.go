@@ -39,8 +39,8 @@ var hashtest = cmn.HexToHash("0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d7
 func TestSendTransaction(t *testing.T) {
 	// -------------------------
 	// Mock:  mockTransaction
-	mockTransaction := ctypes.NewTransaction(uint64(10), &to, value, gas, gasPrice, data, from)
-	mockContract := ctypes.NewTransaction(uint64(10), nil, nil, math.MaxUint64/2, new(big.Int).SetUint64(1), nil, from)
+	mockTransaction := ctypes.NewTransaction(uint64(16), &to, value, gas, gasPrice, data, from)
+	mockContract := ctypes.NewTransaction(uint64(17), nil, nil, math.MaxUint64/2, new(big.Int).SetUint64(1), nil, from)
 
 	// SignTx
 	key, _ := wtypes.DefaultTestKey()
@@ -65,11 +65,11 @@ func TestSendTransaction(t *testing.T) {
 	})
 
 	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetNonce", func(*blockchain.BlockChain, crafttypes.Address) uint64 {
-		return uint64(10)
+		return mockTransaction.Data.AccountNonce + 1
 	})
 
 	monkey.Patch(txpool.GetPoolNonce, func(crafttypes.Address) uint64 {
-		return uint64(10)
+		return mockTransaction.Data.AccountNonce + 1
 	})
 
 	// ---------------------------

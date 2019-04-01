@@ -79,14 +79,17 @@ func SendTransaction(args ctypes.SendTxArgs) (cmn.Hash, error) {
 
 	// give an initValue when nonce is nil
 	var nonce uint64
-	bc, _ := blockchain.NewLatestStateBlockChain()
-	noncePool := txpool.GetPoolNonce((craft.Address)(args.From))
-	nonceChain := bc.GetNonce((craft.Address)(args.From))
-
-	if noncePool > nonceChain {
-		nonce = noncePool + 1
+	if args.Nonce == nil {
+		bc, _ := blockchain.NewLatestStateBlockChain()
+		noncePool := txpool.GetPoolNonce((craft.Address)(args.From))
+		nonceChain := bc.GetNonce((craft.Address)(args.From))
+		if noncePool > nonceChain {
+			nonce = noncePool + 1
+		} else {
+			nonce = nonceChain
+		}
 	} else {
-		nonce = nonceChain
+		nonce = args.Nonce.Touint64()
 	}
 
 	// value can be nil

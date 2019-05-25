@@ -211,20 +211,19 @@ func SendRawTransaction(encodedTx acmn.Bytes) (cmn.Hash, error) {
 		}
 
 	//Caculate from and fill in Transaction
-	_, err := config.GetChainIdFromConfig()
+	chainId, err := config.GetChainIdFromConfig()
 	if err != nil {
 		log.Error("get chainId failed, err = ", err)
 		return cmn.Hash{}, err
 	}
 
-	from, err := wtypes.Sender(wtypes.NewEIP155Signer(big.NewInt(int64(1))), tx);
+	from, err := wtypes.Sender(wtypes.NewEIP155Signer(big.NewInt(int64(chainId))), tx);
 	if err != nil {
 		log.Error("get from address failed, err =  ", err)
 		return cmn.Hash{}, err
 	}
 	from_tmp := craft.Address(from)
 	tx.Data.From = &from_tmp
-
 	// give an initValue when nonce is nil
 	// Send Tx to gossip switch
 	go func() {
@@ -798,7 +797,7 @@ func GasPrice() (*cmn.Big, error) {
 //
 //***
 func EstimateGas(args ctypes.SendTxArgs) (cmn.Uint64, error) {
-	return cmn.Uint64(100), nil
+	return cmn.Uint64(21000), nil
 }
 
 func Accounts() ([]types.Address, error) {
@@ -816,9 +815,9 @@ func Listening() (bool, error) {
 func Version() (string, error) {
 	chainId, err := config.GetChainIdFromConfig()
 	if err != nil {
-		return "0", nil
+		return "1", nil
 	}
 
-
-	return string(chainId), nil
+	id := fmt.Sprint(chainId)
+	return id, nil
 }

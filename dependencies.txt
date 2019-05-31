@@ -5,7 +5,7 @@
 github.com/DSiSc/gossipswitch:master
 github.com/DSiSc/craft:master
 github.com/DSiSc/wallet:master
-github.com/DSiSc/blockchain:master
+github.com/DSiSc/repository:master
 github.com/DSiSc/monkey:master
 github.com/DSiSc/txpool:master
 github.com/DSiSc/evm-NG:master

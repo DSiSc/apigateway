@@ -6,11 +6,11 @@ import (
 	coretypes "github.com/DSiSc/apigateway/core/types"
 	"github.com/DSiSc/apigateway/rpc/lib/server"
 	"github.com/DSiSc/apigateway/rpc/lib/types"
-	"github.com/DSiSc/blockchain"
-	bcconf "github.com/DSiSc/blockchain/config"
 	"github.com/DSiSc/craft/log"
 	"github.com/DSiSc/craft/types"
 	"github.com/DSiSc/monkey"
+	"github.com/DSiSc/repository"
+	bcconf "github.com/DSiSc/repository/config"
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
 	"github.com/tendermint/go-amino"
@@ -167,8 +167,8 @@ func TestLogs(t *testing.T) {
 	assert.NotNil(result)
 
 	block := mockBlock()
-	blockchain.InitBlockChain(bcconf.BlockChainConfig{PluginName: blockchain.PLUGIN_MEMDB}, ec)
-	bChain, _ := blockchain.NewLatestStateBlockChain()
+	repository.InitRepository(bcconf.RepositoryConfig{PluginName: repository.PLUGIN_MEMDB}, ec)
+	bChain, _ := repository.NewLatestStateRepository()
 	receipts := mockReceipts()
 	bChain.WriteBlockWithReceipts(block, receipts)
 

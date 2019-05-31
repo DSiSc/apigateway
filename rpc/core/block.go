@@ -4,8 +4,8 @@ import (
 	cmn "github.com/DSiSc/apigateway/common"
 	apitypes "github.com/DSiSc/apigateway/core/types"
 	rpctypes "github.com/DSiSc/apigateway/rpc/core/types"
-	"github.com/DSiSc/blockchain"
 	"github.com/DSiSc/craft/types"
+	"github.com/DSiSc/repository"
 	"github.com/DSiSc/txpool"
 )
 
@@ -64,7 +64,7 @@ import (
 //
 //***
 func GetBlockByHash(blockHash cmn.Hash, fullTx bool) (*rpctypes.Blockdata, error) {
-	bc, err := blockchain.NewLatestStateBlockChain()
+	bc, err := repository.NewLatestStateRepository()
 	if err == nil {
 		block, err := bc.GetBlockByHash(TypeConvert(&blockHash))
 		if block != nil {
@@ -110,7 +110,7 @@ func GetBlockByHash(blockHash cmn.Hash, fullTx bool) (*rpctypes.Blockdata, error
 //
 //***
 func GetBlockTransactionCountByHash(blockHash cmn.Hash) (*cmn.Uint, error) {
-	bc, err := blockchain.NewLatestStateBlockChain()
+	bc, err := repository.NewLatestStateRepository()
 	if block, err := bc.GetBlockByHash(TypeConvert(&blockHash)); block != nil {
 		n := cmn.Uint(len(block.Transactions))
 		return &n, err
@@ -152,7 +152,7 @@ func GetBlockTransactionCountByHash(blockHash cmn.Hash) (*cmn.Uint, error) {
 //
 //***
 func GetBlockTransactionCountByNumber(blockNr apitypes.BlockNumber) (*cmn.Uint, error) {
-	bc, err := blockchain.NewLatestStateBlockChain()
+	bc, err := repository.NewLatestStateRepository()
 	height := blockNr.Touint64()
 	if block, err := bc.GetBlockByHeight(height); block != nil {
 		n := cmn.Uint(len(block.Transactions))
@@ -191,7 +191,7 @@ func GetBlockTransactionCountByNumber(blockNr apitypes.BlockNumber) (*cmn.Uint, 
 //
 //***
 func GetBlockByNumber(blockNr apitypes.BlockNumber, fullTx bool) (*rpctypes.Blockdata, error) {
-	bc, err := blockchain.NewLatestStateBlockChain()
+	bc, err := repository.NewLatestStateRepository()
 	var block *types.Block
 	if err == nil {
 		if blockNr == apitypes.LatestBlockNumber {
@@ -234,7 +234,7 @@ func GetBlockByNumber(blockNr apitypes.BlockNumber, fullTx bool) (*rpctypes.Bloc
 //
 //***
 func BlockNumber() (*cmn.Uint64, error) {
-	blockchain, err := blockchain.NewLatestStateBlockChain()
+	blockchain, err := repository.NewLatestStateRepository()
 	if err == nil {
 		blockHeight := blockchain.GetCurrentBlockHeight()
 		lastHeight := (*cmn.Uint64)(&blockHeight)
@@ -279,7 +279,7 @@ func BlockNumber() (*cmn.Uint64, error) {
 //
 //***
 func GetBalance(address apitypes.Address, blockNr apitypes.BlockNumber) (*cmn.Big, error) {
-	bc, err := blockchain.NewLatestStateBlockChain()
+	bc, err := repository.NewLatestStateRepository()
 	var block *types.Block
 	if err == nil {
 		if blockNr == apitypes.LatestBlockNumber {
@@ -289,7 +289,7 @@ func GetBalance(address apitypes.Address, blockNr apitypes.BlockNumber) (*cmn.Bi
 			block, err = bc.GetBlockByHeight(height)
 		}
 		if &block.HeaderHash != nil {
-			bchash, errbc := blockchain.NewBlockChainByBlockHash(block.HeaderHash)
+			bchash, errbc := repository.NewRepositoryByBlockHash(block.HeaderHash)
 			if errbc == nil {
 				balance := (bchash.GetBalance((types.Address)(address)))
 				return (*cmn.Big)(balance), nil
@@ -337,7 +337,7 @@ func GetBalance(address apitypes.Address, blockNr apitypes.BlockNumber) (*cmn.Bi
 //
 //***
 func GetCode(address apitypes.Address, blockNr apitypes.BlockNumber) (*cmn.Bytes, error) {
-	bc, err := blockchain.NewLatestStateBlockChain()
+	bc, err := repository.NewLatestStateRepository()
 	var block *types.Block
 	if err == nil {
 		if blockNr == apitypes.LatestBlockNumber {
@@ -347,7 +347,7 @@ func GetCode(address apitypes.Address, blockNr apitypes.BlockNumber) (*cmn.Bytes
 			block, err = bc.GetBlockByHeight(height)
 		}
 		if &block.HeaderHash != nil {
-			bchash, errbc := blockchain.NewBlockChainByBlockHash(block.HeaderHash)
+			bchash, errbc := repository.NewRepositoryByBlockHash(block.HeaderHash)
 			if errbc == nil {
 				code := (bchash.GetCode((types.Address)(address)))
 				return cmn.NewBytes(code), nil
@@ -400,7 +400,7 @@ func GetTransactionCount(address apitypes.Address, blockNr apitypes.BlockNumber)
 		noncePool := txpool.GetPoolNonce((types.Address)(address))
 		return (*cmn.Uint64)(&noncePool), nil
 	} else {
-		bc, err := blockchain.NewLatestStateBlockChain()
+		bc, err := repository.NewLatestStateRepository()
 		var block *types.Block
 		if blockNr == apitypes.LatestBlockNumber {
 			block = bc.GetCurrentBlock()
@@ -409,7 +409,7 @@ func GetTransactionCount(address apitypes.Address, blockNr apitypes.BlockNumber)
 			block, err = bc.GetBlockByHeight(height)
 		}
 		if &block.HeaderHash != nil {
-			bchash, errbc := blockchain.NewBlockChainByBlockHash(block.HeaderHash)
+			bchash, errbc := repository.NewRepositoryByBlockHash(block.HeaderHash)
 			if errbc == nil {
 				nonce := (bchash.GetNonce((types.Address)(address)))
 				return (*cmn.Uint64)(&nonce), nil

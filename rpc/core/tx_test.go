@@ -3,7 +3,6 @@ package core
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/DSiSc/blockchain"
 	"github.com/DSiSc/evm-NG"
 	"github.com/DSiSc/monkey"
 	"github.com/DSiSc/txpool"
@@ -24,6 +23,7 @@ import (
 	"github.com/DSiSc/craft/rlp"
 	"github.com/DSiSc/craft/types"
 	crafttypes "github.com/DSiSc/craft/types"
+	"github.com/DSiSc/repository"
 	wtypes "github.com/DSiSc/wallet/core/types"
 	"github.com/stretchr/testify/assert"
 )
@@ -39,8 +39,8 @@ var hashtest = cmn.HexToHash("0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d7
 func TestSendTransaction(t *testing.T) {
 	// -------------------------
 	// Mock:  mockTransaction
-	mockTransaction := ctypes.NewTransaction(uint64(10), &to, value, gas, gasPrice, data, from)
-	mockContract := ctypes.NewTransaction(uint64(10), nil, nil, math.MaxUint64/2, new(big.Int).SetUint64(1), nil, from)
+	mockTransaction := ctypes.NewTransaction(uint64(16), &to, value, gas, gasPrice, data, from)
+	mockContract := ctypes.NewTransaction(uint64(17), nil, nil, math.MaxUint64/2, new(big.Int).SetUint64(1), nil, from)
 
 	// SignTx
 	key, _ := wtypes.DefaultTestKey()
@@ -60,16 +60,16 @@ func TestSendTransaction(t *testing.T) {
 	defer close(mockSwCh)
 	SetSwCh(mockSwCh)
 
-	monkey.Patch(blockchain.NewLatestStateBlockChain, func() (*blockchain.BlockChain, error) {
+	monkey.Patch(repository.NewLatestStateRepository, func() (*repository.Repository, error) {
 		return b, nil
 	})
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetNonce", func(*blockchain.BlockChain, crafttypes.Address) uint64 {
-		return uint64(10)
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetNonce", func(*repository.Repository, crafttypes.Address) uint64 {
+		return mockTransaction.Data.AccountNonce + 1
 	})
 
 	monkey.Patch(txpool.GetPoolNonce, func(crafttypes.Address) uint64 {
-		return uint64(10)
+		return mockTransaction.Data.AccountNonce + 1
 	})
 
 	// ---------------------------
@@ -151,7 +151,7 @@ func TestSendTransaction(t *testing.T) {
 
 	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetNonce")
 	monkey.Unpatch(txpool.GetPoolNonce)
-	monkey.Unpatch(blockchain.NewLatestStateBlockChain)
+	monkey.Unpatch(repository.NewLatestStateRepository)
 }
 
 func TestSendRawTransaction(t *testing.T) {
@@ -176,11 +176,11 @@ func TestSendRawTransaction(t *testing.T) {
 	defer close(mockSwCh)
 	SetSwCh(mockSwCh)
 
-	monkey.Patch(blockchain.NewLatestStateBlockChain, func() (*blockchain.BlockChain, error) {
+	monkey.Patch(repository.NewLatestStateRepository, func() (*repository.Repository, error) {
 		return b, nil
 	})
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetNonce", func(*blockchain.BlockChain, crafttypes.Address) uint64 {
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetNonce", func(*repository.Repository, crafttypes.Address) uint64 {
 		return uint64(10)
 	})
 
@@ -262,18 +262,18 @@ func TestSendRawTransaction(t *testing.T) {
 
 	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetNonce")
 	monkey.Unpatch(txpool.GetPoolNonce)
-	monkey.Unpatch(blockchain.NewLatestStateBlockChain)
+	monkey.Unpatch(repository.NewLatestStateRepository)
 }
 
 func TestGetTransactionByHash(t *testing.T) {
 	// ------------------------
 	// mock
 	mockReturnTx := getMockTx()
-	monkey.Patch(blockchain.NewLatestStateBlockChain, func() (*blockchain.BlockChain, error) {
+	monkey.Patch(repository.NewLatestStateRepository, func() (*repository.Repository, error) {
 		return b, nil
 	})
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetTransactionByHash", func(*blockchain.BlockChain, crafttypes.Hash) (*crafttypes.Transaction, crafttypes.Hash, uint64, uint64, error) {
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetTransactionByHash", func(*repository.Repository, crafttypes.Hash) (*crafttypes.Transaction, crafttypes.Hash, uint64, uint64, error) {
 		return mockReturnTx, (crafttypes.Hash)(hashtest), 5, 7, nil
 	})
 
@@ -290,7 +290,7 @@ func TestGetTransactionByHash(t *testing.T) {
 	doRpcTest(t, tests)
 
 	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetTransactionByHash")
-	monkey.Unpatch(blockchain.NewLatestStateBlockChain)
+	monkey.Unpatch(repository.NewLatestStateRepository)
 
 }
 
@@ -308,15 +308,15 @@ func TestGetTransactionReceipt(t *testing.T) {
 		ContractAddress:   (crafttypes.Address)(ctypes.BytesToAddress(getBytes(request.from))),
 		GasUsed:           uint64(1510),
 	}
-	monkey.Patch(blockchain.NewLatestStateBlockChain, func() (*blockchain.BlockChain, error) {
+	monkey.Patch(repository.NewLatestStateRepository, func() (*repository.Repository, error) {
 		return b, nil
 	})
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetTransactionByHash", func(*blockchain.BlockChain, crafttypes.Hash) (*crafttypes.Transaction, crafttypes.Hash, uint64, uint64, error) {
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetTransactionByHash", func(*repository.Repository, crafttypes.Hash) (*crafttypes.Transaction, crafttypes.Hash, uint64, uint64, error) {
 		return mockReturnTx, (crafttypes.Hash)(hashtest), 5, 7, nil
 	})
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetReceiptByTxHash", func(*blockchain.BlockChain, crafttypes.Hash) (*crafttypes.Receipt, crafttypes.Hash, uint64, uint64, error) {
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetReceiptByTxHash", func(*repository.Repository, crafttypes.Hash) (*crafttypes.Receipt, crafttypes.Hash, uint64, uint64, error) {
 		return mockReturnReceipt, (crafttypes.Hash)(hashtest), 5, 7, nil
 	})
 
@@ -333,17 +333,17 @@ func TestGetTransactionReceipt(t *testing.T) {
 	doRpcTest(t, tests)
 	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetReceiptByTxHash")
 	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetTransactionByHash")
-	monkey.Unpatch(blockchain.NewLatestStateBlockChain)
+	monkey.Unpatch(repository.NewLatestStateRepository)
 }
 
 func TestGetTransactionByBlockHashAndIndex(t *testing.T) {
 	// ------------------------
 	// mock
-	monkey.Patch(blockchain.NewLatestStateBlockChain, func() (*blockchain.BlockChain, error) {
+	monkey.Patch(repository.NewLatestStateRepository, func() (*repository.Repository, error) {
 		return b, nil
 	})
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHash", func(*blockchain.BlockChain, crafttypes.Hash) (*crafttypes.Block, error) {
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHash", func(*repository.Repository, crafttypes.Hash) (*crafttypes.Block, error) {
 		blockdata := getMockBlock()
 		return blockdata, nil
 	})
@@ -361,23 +361,23 @@ func TestGetTransactionByBlockHashAndIndex(t *testing.T) {
 	doRpcTest(t, tests)
 
 	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHash")
-	monkey.Unpatch(blockchain.NewLatestStateBlockChain)
+	monkey.Unpatch(repository.NewLatestStateRepository)
 
 }
 
 func TestGetTransactionByBlockNumberAndIndex(t *testing.T) {
 	// ------------------------
 	// mock
-	monkey.Patch(blockchain.NewLatestStateBlockChain, func() (*blockchain.BlockChain, error) {
+	monkey.Patch(repository.NewLatestStateRepository, func() (*repository.Repository, error) {
 		return b, nil
 	})
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHeight", func(*blockchain.BlockChain, uint64) (*crafttypes.Block, error) {
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHeight", func(*repository.Repository, uint64) (*crafttypes.Block, error) {
 		blockdata := getMockBlock()
 		return blockdata, nil
 	})
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlock", func(*blockchain.BlockChain) *crafttypes.Block {
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlock", func(*repository.Repository) *crafttypes.Block {
 		blockdata := getMockBlock()
 		return blockdata
 	})
@@ -401,7 +401,7 @@ func TestGetTransactionByBlockNumberAndIndex(t *testing.T) {
 
 	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHeight")
 	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlock")
-	monkey.Unpatch(blockchain.NewLatestStateBlockChain)
+	monkey.Unpatch(repository.NewLatestStateRepository)
 
 }
 
@@ -437,39 +437,39 @@ func TestCall(t *testing.T) {
 			"", `{"jsonrpc":"2.0","id":1,"result":"0x38"}`, mockTx2},
 	}
 
-	monkey.Patch(blockchain.NewLatestStateBlockChain, func() (*blockchain.BlockChain, error) {
+	monkey.Patch(repository.NewLatestStateRepository, func() (*repository.Repository, error) {
 		return b, nil
 	})
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHeight", func(*blockchain.BlockChain, uint64) (*crafttypes.Block, error) {
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHeight", func(*repository.Repository, uint64) (*crafttypes.Block, error) {
 		blockdata := getMockBlock()
 		return blockdata, nil
 	})
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlock", func(*blockchain.BlockChain) *crafttypes.Block {
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlock", func(*repository.Repository) *crafttypes.Block {
 		blockdata := getMockBlock()
 		return blockdata
 	})
-	monkey.Patch(blockchain.NewBlockChainByBlockHash, func(crafttypes.Hash) (*blockchain.BlockChain, error) {
+	monkey.Patch(repository.NewRepositoryByBlockHash, func(crafttypes.Hash) (*repository.Repository, error) {
 		return b, nil
 	})
 
-	monkey.Patch(blockchain.NewLatestStateBlockChain, func() (*blockchain.BlockChain, error) {
+	monkey.Patch(repository.NewLatestStateRepository, func() (*repository.Repository, error) {
 		return b, nil
 	})
-	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetNonce", func(*blockchain.BlockChain, types.Address) uint64 {
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetNonce", func(*repository.Repository, types.Address) uint64 {
 		return uint64(0)
 	})
 
 	mux := testMux()
 	for i, tt := range tests {
 
-		monkey.Patch(evm.NewEVMContext, func(tx crafttypes.Transaction, header *crafttypes.Header, bc *blockchain.BlockChain, addr crafttypes.Address) evm.Context {
+		monkey.Patch(evm.NewEVMContext, func(tx crafttypes.Transaction, header *crafttypes.Header, bc *repository.Repository, addr crafttypes.Address) evm.Context {
 			//assert.Equal(t, tt.mockTransaction, &tx)
 			return evm.Context{}
 		})
 
-		monkey.Patch(evm.NewEVM, func(evm.Context, *blockchain.BlockChain) *evm.EVM {
+		monkey.Patch(evm.NewEVM, func(evm.Context, *repository.Repository) *evm.EVM {
 			return &evm.EVM{}
 		})
 
@@ -506,8 +506,8 @@ func TestCall(t *testing.T) {
 	}
 	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlock")
 	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHeight")
-	monkey.Unpatch(blockchain.NewBlockChainByBlockHash)
-	monkey.Unpatch(blockchain.NewLatestStateBlockChain)
+	monkey.Unpatch(repository.NewRepositoryByBlockHash)
+	monkey.Unpatch(repository.NewLatestStateRepository)
 }
 
 func getMockTx() *crafttypes.Transaction {

@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"github.com/DSiSc/apigateway/core/types"
 	"github.com/DSiSc/apigateway/rpc/lib/types"
-	"github.com/DSiSc/blockchain"
 	"github.com/DSiSc/craft/log"
 	crafttypes "github.com/DSiSc/craft/types"
+	"github.com/DSiSc/repository"
 	"github.com/pkg/errors"
 	"math/big"
 )
@@ -131,7 +131,7 @@ func Logs(wsCtx rpctypes.WSRPCContext, rawMsg json.RawMessage) (string, error) {
 			case event := <-sub.EventChan():
 				if block, ok := event.(*crafttypes.Block); ok {
 					headerHash := types.HeaderHash(block)
-					blockChain, err := blockchain.NewLatestStateBlockChain()
+					blockChain, err := repository.NewLatestStateRepository()
 					if err != nil {
 						log.Warn("Failed to get latest blockchain, as: %v ", err)
 						continue

@@ -7,11 +7,11 @@ import (
 	cmn "github.com/DSiSc/apigateway/common"
 	"github.com/DSiSc/apigateway/core/types"
 	ctypes "github.com/DSiSc/apigateway/rpc/core/types"
-	"github.com/DSiSc/blockchain"
 	"github.com/DSiSc/craft/monitor"
 	"github.com/DSiSc/craft/rlp"
 	craft "github.com/DSiSc/craft/types"
 	"github.com/DSiSc/evm-NG"
+	"github.com/DSiSc/repository"
 	"github.com/DSiSc/txpool"
 	"github.com/DSiSc/validator/worker"
 	"github.com/DSiSc/validator/worker/common"
@@ -81,14 +81,17 @@ func SendTransaction(args ctypes.SendTxArgs) (cmn.Hash, error) {
 
 	// give an initValue when nonce is nil
 	var nonce uint64
-	bc, _ := blockchain.NewLatestStateBlockChain()
-	noncePool := txpool.GetPoolNonce((craft.Address)(args.From))
-	nonceChain := bc.GetNonce((craft.Address)(args.From))
-
-	if noncePool > nonceChain {
-		nonce = noncePool + 1
+	if args.Nonce == nil {
+		bc, _ := repository.NewLatestStateRepository()
+		noncePool := txpool.GetPoolNonce((craft.Address)(args.From))
+		nonceChain := bc.GetNonce((craft.Address)(args.From))
+		if noncePool > nonceChain {
+			nonce = noncePool + 1
+		} else {
+			nonce = nonceChain
+		}
 	} else {
-		nonce = nonceChain
+		nonce = args.Nonce.Touint64()
 	}
 
 	// value can be nil
@@ -301,7 +304,7 @@ func SendRawTransaction(encodedTx acmn.Bytes) (cmn.Hash, error) {
 //***
 func GetTransactionByHash(hash cmn.Hash) (*ctypes.RPCTransaction, error) {
 	// Try to return an already finalized transaction
-	bc, _ := blockchain.NewLatestStateBlockChain()
+	bc, _ := repository.NewLatestStateRepository()
 	if tx, blockHash, blockNumber, index, _ := bc.GetTransactionByHash(TypeConvert(&hash)); tx != nil {
 		return newRPCTransaction(tx, (cmn.Hash)(blockHash), blockNumber, index)
 	}
@@ -441,7 +444,7 @@ func newRPCPendingTransaction(tx *craft.Transaction) (*ctypes.RPCTransaction, er
 //***
 func GetTransactionReceipt(hash cmn.Hash) (*ctypes.RPCReceipt, error) {
 	// Try to return an already finalized transaction
-	bc, _ := blockchain.NewLatestStateBlockChain()
+	bc, _ := repository.NewLatestStateRepository()
 	if tx, blockHash, blockNumber, index, _ := bc.GetTransactionByHash(TypeConvert(&hash)); tx != nil {
 		if receipt, _, _, _, _ := bc.GetReceiptByTxHash(TypeConvert(&hash)); receipt != nil {
 			return newRPCReceipt(tx, receipt, (cmn.Hash)(blockHash), blockNumber, index)
@@ -556,7 +559,7 @@ func newRPCTransactionFromBlockIndex(b *craft.Block, index uint64) (*ctypes.RPCT
 //Result see [eth_getTransactionByHash](#eth_gettransactionbyhash)
 //***
 func GetTransactionByBlockHashAndIndex(blockHash cmn.Hash, index cmn.Uint) (*ctypes.RPCTransaction, error) {
-	bc, err := blockchain.NewLatestStateBlockChain()
+	bc, err := repository.NewLatestStateRepository()
 	if block, _ := bc.GetBlockByHash(TypeConvert(&blockHash)); block != nil {
 		return newRPCTransactionFromBlockIndex(block, uint64(index))
 	}
@@ -594,7 +597,7 @@ func GetTransactionByBlockHashAndIndex(blockHash cmn.Hash, index cmn.Uint) (*cty
 //
 //***
 func GetTransactionByBlockNumberAndIndex(blockNr types.BlockNumber, index cmn.Uint) (*ctypes.RPCTransaction, error) {
-	bc, err := blockchain.NewLatestStateBlockChain()
+	bc, err := repository.NewLatestStateRepository()
 	var block *craft.Block
 	if blockNr == types.LatestBlockNumber {
 		block = bc.GetCurrentBlock()
@@ -695,7 +698,7 @@ func Call(args ctypes.SendTxArgs, blockNr types.BlockNumber) (cmn.Bytes, error) 
 		from = args.From
 	}
 
-	bc, err := blockchain.NewLatestStateBlockChain()
+	bc, err := repository.NewLatestStateRepository()
 	if err != nil {
 		return cmn.Bytes{}, fmt.Errorf("new block chain failed")
 	}
@@ -714,7 +717,7 @@ func Call(args ctypes.SendTxArgs, blockNr types.BlockNumber) (cmn.Bytes, error) 
 }
 
 func doCall(tx *craft.Transaction, blockNr types.BlockNumber) ([]byte, uint64, bool, error) {
-	bc, err := blockchain.NewLatestStateBlockChain()
+	bc, err := repository.NewLatestStateRepository()
 	if err != nil {
 		return nil, 0, true, err
 	}
@@ -729,7 +732,7 @@ func doCall(tx *craft.Transaction, blockNr types.BlockNumber) ([]byte, uint64, b
 		}
 	}
 
-	bchash, err := blockchain.NewBlockChainByBlockHash(block.HeaderHash)
+	bchash, err := repository.NewRepositoryByBlockHash(block.HeaderHash)
 	if err != nil {
 		return nil, 0, true, err
 	}

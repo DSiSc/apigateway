@@ -2,9 +2,9 @@ package core
 
 import (
 	"fmt"
-	"github.com/DSiSc/blockchain"
 	"github.com/DSiSc/craft/types"
 	"github.com/DSiSc/monkey"
+	"github.com/DSiSc/repository"
 	"math/big"
 	"reflect"
 	"testing"
@@ -12,7 +12,7 @@ import (
 
 // ------------------------
 
-var b *blockchain.BlockChain
+var b *repository.Repository
 
 // -------------------------
 
@@ -20,11 +20,11 @@ var b *blockchain.BlockChain
 // package Test*
 
 func TestGetBlockByHash(t *testing.T) {
-	monkey.Patch(blockchain.NewLatestStateBlockChain, func() (*blockchain.BlockChain, error) {
+	monkey.Patch(repository.NewLatestStateRepository, func() (*repository.Repository, error) {
 		return b, nil
 	})
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHash", func(*blockchain.BlockChain, types.Hash) (*types.Block, error) {
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHash", func(*repository.Repository, types.Hash) (*types.Block, error) {
 		blockdata := getMockBlock()
 		return blockdata, nil
 	})
@@ -43,21 +43,21 @@ func TestGetBlockByHash(t *testing.T) {
 	doRpcTest(t, tests)
 
 	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHash")
-	monkey.Unpatch(blockchain.NewLatestStateBlockChain)
+	monkey.Unpatch(repository.NewLatestStateRepository)
 }
 
 func TestGetBlockByNumber(t *testing.T) {
 
-	monkey.Patch(blockchain.NewLatestStateBlockChain, func() (*blockchain.BlockChain, error) {
+	monkey.Patch(repository.NewLatestStateRepository, func() (*repository.Repository, error) {
 		return b, nil
 	})
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHeight", func(*blockchain.BlockChain, uint64) (*types.Block, error) {
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHeight", func(*repository.Repository, uint64) (*types.Block, error) {
 		blockdata := getMockBlock()
 		return blockdata, nil
 	})
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlock", func(*blockchain.BlockChain) *types.Block {
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlock", func(*repository.Repository) *types.Block {
 		blockdata := getMockBlock()
 		return blockdata
 	})
@@ -83,16 +83,16 @@ func TestGetBlockByNumber(t *testing.T) {
 
 	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHeight")
 	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlock")
-	monkey.Unpatch(blockchain.NewLatestStateBlockChain)
+	monkey.Unpatch(repository.NewLatestStateRepository)
 }
 
 func TestGetBlockTransactionCountByHash(t *testing.T) {
 
-	monkey.Patch(blockchain.NewLatestStateBlockChain, func() (*blockchain.BlockChain, error) {
+	monkey.Patch(repository.NewLatestStateRepository, func() (*repository.Repository, error) {
 		return b, nil
 	})
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHash", func(*blockchain.BlockChain, types.Hash) (*types.Block, error) {
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHash", func(*repository.Repository, types.Hash) (*types.Block, error) {
 		blockdata := getMockBlock()
 		return blockdata, nil
 	})
@@ -110,15 +110,15 @@ func TestGetBlockTransactionCountByHash(t *testing.T) {
 	doRpcTest(t, tests)
 
 	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHash")
-	monkey.Unpatch(blockchain.NewLatestStateBlockChain)
+	monkey.Unpatch(repository.NewLatestStateRepository)
 }
 
 func TestGetBlockTransactionCountByNumber(t *testing.T) {
-	monkey.Patch(blockchain.NewLatestStateBlockChain, func() (*blockchain.BlockChain, error) {
+	monkey.Patch(repository.NewLatestStateRepository, func() (*repository.Repository, error) {
 		return b, nil
 	})
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHeight", func(*blockchain.BlockChain, uint64) (*types.Block, error) {
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHeight", func(*repository.Repository, uint64) (*types.Block, error) {
 		blockdata := getMockBlock()
 		return blockdata, nil
 	})
@@ -136,15 +136,15 @@ func TestGetBlockTransactionCountByNumber(t *testing.T) {
 	doRpcTest(t, tests)
 
 	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHeight")
-	monkey.Unpatch(blockchain.NewLatestStateBlockChain)
+	monkey.Unpatch(repository.NewLatestStateRepository)
 }
 
 func TestBlockNumber(t *testing.T) {
-	monkey.Patch(blockchain.NewLatestStateBlockChain, func() (*blockchain.BlockChain, error) {
+	monkey.Patch(repository.NewLatestStateRepository, func() (*repository.Repository, error) {
 		return b, nil
 	})
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlockHeight", func(*blockchain.BlockChain) uint64 {
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlockHeight", func(*repository.Repository) uint64 {
 		return uint64(56)
 	})
 
@@ -160,28 +160,28 @@ func TestBlockNumber(t *testing.T) {
 	doRpcTest(t, tests)
 
 	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlockHeight")
-	monkey.Unpatch(blockchain.NewLatestStateBlockChain)
+	monkey.Unpatch(repository.NewLatestStateRepository)
 }
 
 func TestGetBalance(t *testing.T) {
-	monkey.Patch(blockchain.NewLatestStateBlockChain, func() (*blockchain.BlockChain, error) {
+	monkey.Patch(repository.NewLatestStateRepository, func() (*repository.Repository, error) {
 		return b, nil
 	})
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHeight", func(*blockchain.BlockChain, uint64) (*types.Block, error) {
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHeight", func(*repository.Repository, uint64) (*types.Block, error) {
 		blockdata := getMockBlock()
 		return blockdata, nil
 	})
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlock", func(*blockchain.BlockChain) *types.Block {
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlock", func(*repository.Repository) *types.Block {
 		blockdata := getMockBlock()
 		return blockdata
 	})
-	monkey.Patch(blockchain.NewBlockChainByBlockHash, func(types.Hash) (*blockchain.BlockChain, error) {
+	monkey.Patch(repository.NewRepositoryByBlockHash, func(types.Hash) (*repository.Repository, error) {
 		return b, nil
 	})
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetBalance", func(*blockchain.BlockChain, types.Address) *big.Int {
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetBalance", func(*repository.Repository, types.Address) *big.Int {
 		return big.NewInt(int64(56))
 	})
 
@@ -203,29 +203,29 @@ func TestGetBalance(t *testing.T) {
 	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetBalance")
 	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlock")
 	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHeight")
-	monkey.Unpatch(blockchain.NewLatestStateBlockChain)
-	monkey.Unpatch(blockchain.NewBlockChainByBlockHash)
+	monkey.Unpatch(repository.NewLatestStateRepository)
+	monkey.Unpatch(repository.NewRepositoryByBlockHash)
 }
 
 func TestGetCode(t *testing.T) {
-	monkey.Patch(blockchain.NewLatestStateBlockChain, func() (*blockchain.BlockChain, error) {
+	monkey.Patch(repository.NewLatestStateRepository, func() (*repository.Repository, error) {
 		return b, nil
 	})
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHeight", func(*blockchain.BlockChain, uint64) (*types.Block, error) {
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHeight", func(*repository.Repository, uint64) (*types.Block, error) {
 		blockdata := getMockBlock()
 		return blockdata, nil
 	})
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlock", func(*blockchain.BlockChain) *types.Block {
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlock", func(*repository.Repository) *types.Block {
 		blockdata := getMockBlock()
 		return blockdata
 	})
-	monkey.Patch(blockchain.NewBlockChainByBlockHash, func(types.Hash) (*blockchain.BlockChain, error) {
+	monkey.Patch(repository.NewRepositoryByBlockHash, func(types.Hash) (*repository.Repository, error) {
 		return b, nil
 	})
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetCode", func(*blockchain.BlockChain, types.Address) []byte {
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetCode", func(*repository.Repository, types.Address) []byte {
 		return []byte(`abc`)
 	})
 
@@ -247,30 +247,30 @@ func TestGetCode(t *testing.T) {
 	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetBalance")
 	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlock")
 	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHeight")
-	monkey.Unpatch(blockchain.NewLatestStateBlockChain)
-	monkey.Unpatch(blockchain.NewBlockChainByBlockHash)
-	monkey.Unpatch(blockchain.NewLatestStateBlockChain)
+	monkey.Unpatch(repository.NewLatestStateRepository)
+	monkey.Unpatch(repository.NewRepositoryByBlockHash)
+	monkey.Unpatch(repository.NewLatestStateRepository)
 }
 
 func TestGetTransactionCount(t *testing.T) {
-	monkey.Patch(blockchain.NewLatestStateBlockChain, func() (*blockchain.BlockChain, error) {
+	monkey.Patch(repository.NewLatestStateRepository, func() (*repository.Repository, error) {
 		return b, nil
 	})
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHeight", func(*blockchain.BlockChain, uint64) (*types.Block, error) {
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHeight", func(*repository.Repository, uint64) (*types.Block, error) {
 		blockdata := getMockBlock()
 		return blockdata, nil
 	})
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlock", func(*blockchain.BlockChain) *types.Block {
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlock", func(*repository.Repository) *types.Block {
 		blockdata := getMockBlock()
 		return blockdata
 	})
-	monkey.Patch(blockchain.NewBlockChainByBlockHash, func(types.Hash) (*blockchain.BlockChain, error) {
+	monkey.Patch(repository.NewRepositoryByBlockHash, func(types.Hash) (*repository.Repository, error) {
 		return b, nil
 	})
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetNonce", func(*blockchain.BlockChain, types.Address) uint64 {
+	monkey.PatchInstanceMethod(reflect.TypeOf(b), "GetNonce", func(*repository.Repository, types.Address) uint64 {
 		return uint64(57)
 	})
 
@@ -292,7 +292,7 @@ func TestGetTransactionCount(t *testing.T) {
 	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetNonce")
 	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetCurrentBlock")
 	monkey.UnpatchInstanceMethod(reflect.TypeOf(b), "GetBlockByHeight")
-	monkey.Unpatch(blockchain.NewLatestStateBlockChain)
-	monkey.Unpatch(blockchain.NewBlockChainByBlockHash)
-	monkey.Unpatch(blockchain.NewLatestStateBlockChain)
+	monkey.Unpatch(repository.NewLatestStateRepository)
+	monkey.Unpatch(repository.NewRepositoryByBlockHash)
+	monkey.Unpatch(repository.NewLatestStateRepository)
 }

@@ -115,11 +115,20 @@ func makeJSONRPCHandler(funcMap map[string]*RPCFunc, cdc *amino.Codec, logger lo
 			return
 		}
 
+		var isArray bool
 		var request types.RPCRequest
 		err = json.Unmarshal(b, &request)
 		if err != nil {
-			WriteRPCResponseHTTP(w, types.RPCParseError("", errors.Wrap(err, "Error unmarshalling request")))
-			return
+			//adaptor imtoken
+			//requests := make([]types.RPCRequest, 1)
+			var requests [1]types.RPCRequest
+			err = json.Unmarshal(b, &requests)
+			if err != nil {
+				WriteRPCResponseHTTP(w, types.RPCParseError("", errors.Wrap(err, "Error unmarshalling request")))
+				return
+			}
+			request = requests[0]
+			isArray = true
 		}
 		// A Notification is a Request object without an "id" member.
 		// The Server MUST NOT reply to a Notification, including those that are within a batch request
@@ -153,7 +162,13 @@ func makeJSONRPCHandler(funcMap map[string]*RPCFunc, cdc *amino.Codec, logger lo
 			WriteRPCResponseHTTP(w, types.RPCInternalError(request.ID, err))
 			return
 		}
-		WriteRPCResponseHTTP(w, types.NewRPCSuccessResponse(cdc, request.ID, result))
+
+		if isArray {
+			WriteRPCResponseArrayHTTP(w, types.NewRPCSuccessResponse(cdc, request.ID, result))
+		} else {
+			WriteRPCResponseHTTP(w, types.NewRPCSuccessResponse(cdc, request.ID, result))
+		}
+
 	}
 }
 

@@ -140,6 +140,7 @@ func WriteRPCResponseHTTPError(
 }
 
 func WriteRPCResponseHTTP(w http.ResponseWriter, res types.RPCResponse) {
+
 	jsonBytes, err := json.MarshalIndent(res, "", "  ")
 	if err != nil {
 		panic(err)
@@ -149,6 +150,18 @@ func WriteRPCResponseHTTP(w http.ResponseWriter, res types.RPCResponse) {
 	w.Write(jsonBytes) // nolint: errcheck, gas
 }
 
+func WriteRPCResponseArrayHTTP(w http.ResponseWriter, res types.RPCResponse) {
+	var obj [1]types.RPCResponse
+	obj[0] = res
+
+	jsonBytes, err := json.MarshalIndent(obj, "", "  ")
+	if err != nil {
+		panic(err)
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	w.Write(jsonBytes) // nolint: errcheck, gas
+}
 //-----------------------------------------------------------------------------
 
 // Wraps an HTTP handler, adding error logging.

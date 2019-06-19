@@ -7,6 +7,8 @@ import (
 	"github.com/DSiSc/craft/types"
 	"github.com/DSiSc/repository"
 	"github.com/DSiSc/txpool"
+	"fmt"
+	util "github.com/DSiSc/statedb-NG/util"
 )
 
 //#### eth_getBlockByHash
@@ -201,6 +203,7 @@ func GetBlockByNumber(blockNr apitypes.BlockNumber, fullTx bool) (*rpctypes.Bloc
 			block, err = bc.GetBlockByHeight(height)
 		}
 		if block != nil {
+			block.Header.GasLimit = 6721975
 			return rpcOutputBlock(block, true, fullTx)
 		}
 		return nil, err
@@ -448,6 +451,7 @@ func RPCMarshalBlock(b *types.Block, inclTx bool, fullTx bool) (*rpctypes.Blockd
 		Timestamp:        (cmn.Uint64)(head.Timestamp),
 		TransactionsRoot: (cmn.Hash)(head.TxRoot),
 		ReceiptsRoot:     (cmn.Hash)(head.ReceiptsRoot),
+		GasLimit:         (cmn.Uint64)(head.GasLimit),
 	}
 
 	if inclTx {

@@ -21,6 +21,7 @@ type Blockdata struct {
 	TransactionsRoot cmn.Hash            `json:"transactionsRoot"`
 	ReceiptsRoot     cmn.Hash            `json:"receiptsRoot"`
 	Transactions     []*BlockTransaction `json:"transactions"`
+	GasLimit         cmn.Uint64          `json:"gasLimit"`
 }
 
 type RPCTransaction struct {

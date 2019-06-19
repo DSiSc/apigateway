@@ -10,6 +10,7 @@ import (
 	"github.com/DSiSc/craft/monitor"
 	"github.com/DSiSc/craft/rlp"
 	craft "github.com/DSiSc/craft/types"
+	"github.com/DSiSc/crypto-suite/crypto"
 	"github.com/DSiSc/evm-NG"
 	"github.com/DSiSc/repository"
 	"github.com/DSiSc/txpool"
@@ -215,6 +216,73 @@ func SendRawTransaction(encodedTx acmn.Bytes) (cmn.Hash, error) {
 	}()
 	txHash := types.TxHash(tx)
 	return (cmn.Hash)(txHash), nil
+}
+
+func SendCrossRawTransaction(encodedTx acmn.Bytes, url string) (cmn.Hash, error) {
+	monitor.JTMetrics.ApigatewayReceivedTx.Add(1)
+
+	tx := new(craft.Transaction)
+	if err := rlp.DecodeBytes(encodedTx, tx); err != nil {
+		return cmn.Hash{}, err
+	}
+
+	var args ctypes.SendTxArgs
+	// need verify tx is legality提前验证一下
+
+	// TODO：call the destination chain rpc(receiveCrossRawTransaction), like a sendTransaction
+	receiveCrossRawTransactionReq(args)
+
+	// return destination chain's tx hash
+	return cmn.Hash{}, nil
+}
+
+func receiveCrossRawTransactionReq(args ctypes.SendTxArgs) (cmn.Hash, error) {
+	monitor.JTMetrics.ApigatewayReceivedTx.Add(1)
+	// Patchwork tx，fix from -- get publicAccount
+	addr, err := getPubliceAcccount()
+	if err != nil {
+		return cmn.Hash{}, err
+	}
+	crossFrom :=  args.From
+
+	args.From = addr
+	// like sendTransaction, need sig
+	private := "29ad43a4ebb4a65436d9fb116d471d96516b3d5cc153e045b384664bed5371b9"
+
+	//get nonce
+	bc, _ := repository.NewLatestStateRepository()
+	noncePool := txpool.GetPoolNonce((craft.Address)(args.From))
+	nonceChain := bc.GetNonce((craft.Address)(args.From))
+	nonce := uint64(0)
+	if noncePool > nonceChain {
+		nonce = noncePool + 1
+	} else {
+		nonce = nonceChain
+	}
+
+	//amount & gasPrice
+	amount := args.Value.ToBigInt()
+	gasPrice := args.GasPrice.ToBigInt()
+	tx := types.NewTransaction(uint64(nonce), args.To, amount, args.Gas.Touint64(), gasPrice, crossFrom.Bytes(), args.From)
+
+	//sign tx
+	priKey, err := crypto.HexToECDSA(private)
+	if err != nil {
+		return cmn.Hash{}, err
+	}
+	chainID := big.NewInt(1)
+	wtypes.SignTx(tx, wtypes.NewEIP155Signer(chainID), priKey)
+
+
+	return cmn.Hash{}, nil
+}
+
+func getPubliceAcccount() (types.Address, error){
+	//get from config or genesis ?
+	addr := "0x0fA3E9c7065Cf9b5f513Fb878284f902d167870c"
+	address := types.HexToAddress(addr)
+
+	return address, nil
 }
 
 //#### eth_getTransactionByHash

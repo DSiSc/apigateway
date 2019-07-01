@@ -7,8 +7,6 @@ import (
 	"github.com/DSiSc/craft/types"
 	"github.com/DSiSc/repository"
 	"github.com/DSiSc/txpool"
-	"fmt"
-	util "github.com/DSiSc/statedb-NG/util"
 )
 
 //#### eth_getBlockByHash

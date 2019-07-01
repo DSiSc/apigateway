@@ -19,6 +19,8 @@ import (
 	wtypes "github.com/DSiSc/wallet/core/types"
 	"math"
 	"math/big"
+	"github.com/DSiSc/justitia/config"
+	"github.com/DSiSc/craft/log"
 )
 
 var (
@@ -203,8 +205,29 @@ func SendRawTransaction(encodedTx acmn.Bytes) (cmn.Hash, error) {
 
 	tx := new(craft.Transaction)
 	if err := rlp.DecodeBytes(encodedTx, tx); err != nil {
+		ethTx := new(craft.ETransaction)
+		err = ethTx.DecodeBytes(encodedTx)
+		if err != nil {
+			log.Info("sendRawTransaction tx decode as ethereum error, err = ", err)
+			return cmn.Hash{}, err
+		}
+		ethTx.SetTxData(&tx.Data)
+		}
+
+	//Caculate from and fill in Transaction
+	chainId, err := config.GetChainIdFromConfig()
+	if err != nil {
+		log.Error("get chainId failed, err = ", err)
 		return cmn.Hash{}, err
 	}
+
+	from, err := wtypes.Sender(wtypes.NewEIP155Signer(big.NewInt(int64(chainId))), tx);
+	if err != nil {
+		log.Error("get from address failed, err =  ", err)
+		return cmn.Hash{}, err
+	}
+	from_tmp := craft.Address(from)
+	tx.Data.From = &from_tmp
 	// give an initValue when nonce is nil
 	// Send Tx to gossip switch
 	go func() {
@@ -845,7 +868,7 @@ func GasPrice() (*cmn.Big, error) {
 //
 //***
 func EstimateGas(args ctypes.SendTxArgs) (cmn.Uint64, error) {
-	return cmn.Uint64(100), nil
+	return cmn.Uint64(21000), nil
 }
 
 func Accounts() ([]types.Address, error) {
@@ -861,5 +884,11 @@ func Listening() (bool, error) {
 }
 
 func Version() (string, error) {
-	return "5777", nil
+	chainId, err := config.GetChainIdFromConfig()
+	if err != nil {
+		return "1", nil
+	}
+
+	id := fmt.Sprint(chainId)
+	return id, nil
 }

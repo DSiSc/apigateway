@@ -33,6 +33,24 @@ import (
 
 var hashtest = cmn.HexToHash("0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99")
 
+func TestETransaction_GetTxData(t *testing.T) {
+	addr1 := ctypes.HexToAddress("0x59b3f85ba6eb737fd0fad93bc4b5f92fd8c591de")
+	addr := ctypes.TypeConvert(&addr1)
+	tx := &types.Transaction{
+		Data: types.TxData{
+			AccountNonce: 10,
+			Price:        big.NewInt(1),
+			GasLimit:     21000,
+			Recipient:    addr,
+			Amount:       big.NewInt(16),
+		},
+	}
+	key, _ := wtypes.DefaultTestKey()
+	signer := wtypes.NewEIP155Signer(big.NewInt(100))
+	tx, _ = wtypes.SignTx(tx, signer, key)
+	fmt.Printf("%x\n", ctypes.TxHash(tx))
+}
+
 // ------------------------
 // package Test*
 

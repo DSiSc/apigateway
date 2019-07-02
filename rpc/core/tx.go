@@ -7,11 +7,13 @@ import (
 	cmn "github.com/DSiSc/apigateway/common"
 	"github.com/DSiSc/apigateway/core/types"
 	ctypes "github.com/DSiSc/apigateway/rpc/core/types"
+	"github.com/DSiSc/craft/log"
 	"github.com/DSiSc/craft/monitor"
 	"github.com/DSiSc/craft/rlp"
 	craft "github.com/DSiSc/craft/types"
 	"github.com/DSiSc/crypto-suite/crypto"
 	"github.com/DSiSc/evm-NG"
+	"github.com/DSiSc/justitia/config"
 	"github.com/DSiSc/repository"
 	"github.com/DSiSc/txpool"
 	"github.com/DSiSc/validator/worker"
@@ -19,8 +21,6 @@ import (
 	wtypes "github.com/DSiSc/wallet/core/types"
 	"math"
 	"math/big"
-	"github.com/DSiSc/justitia/config"
-	"github.com/DSiSc/craft/log"
 )
 
 var (
@@ -143,8 +143,13 @@ func SendTransaction(args ctypes.SendTxArgs) (cmn.Hash, error) {
 
 	// SignTx
 	key, _ := wtypes.DefaultTestKey()
-	signer := new(wtypes.FrontierSigner)
-	tx, err := wtypes.SignTx(tx, signer, key)
+	chainId, err := config.GetChainIdFromConfig()
+	if err != nil {
+		log.Error("get chainId failed, err = ", err)
+		return cmn.Hash{}, err
+	}
+	signer := wtypes.NewEIP155Signer(big.NewInt(int64(chainId)))
+	tx, err = wtypes.SignTx(tx, signer, key)
 	if err != nil {
 		return cmn.BytesToHash([]byte("Fail to signTx")), err
 	}
@@ -212,7 +217,7 @@ func SendRawTransaction(encodedTx acmn.Bytes) (cmn.Hash, error) {
 			return cmn.Hash{}, err
 		}
 		ethTx.SetTxData(&tx.Data)
-		}
+	}
 
 	//Caculate from and fill in Transaction
 	chainId, err := config.GetChainIdFromConfig()
@@ -221,7 +226,7 @@ func SendRawTransaction(encodedTx acmn.Bytes) (cmn.Hash, error) {
 		return cmn.Hash{}, err
 	}
 
-	from, err := wtypes.Sender(wtypes.NewEIP155Signer(big.NewInt(int64(chainId))), tx);
+	from, err := wtypes.Sender(wtypes.NewEIP155Signer(big.NewInt(int64(chainId))), tx)
 	if err != nil {
 		log.Error("get from address failed, err =  ", err)
 		return cmn.Hash{}, err
@@ -266,7 +271,7 @@ func receiveCrossRawTransactionReq(args ctypes.SendTxArgs) (cmn.Hash, error) {
 	if err != nil {
 		return cmn.Hash{}, err
 	}
-	crossFrom :=  args.From
+	crossFrom := args.From
 
 	args.From = addr
 	// like sendTransaction, need sig
@@ -296,11 +301,10 @@ func receiveCrossRawTransactionReq(args ctypes.SendTxArgs) (cmn.Hash, error) {
 	chainID := big.NewInt(1)
 	wtypes.SignTx(tx, wtypes.NewEIP155Signer(chainID), priKey)
 
-
 	return cmn.Hash{}, nil
 }
 
-func getPubliceAcccount() (types.Address, error){
+func getPubliceAcccount() (types.Address, error) {
 	//get from config or genesis ?
 	addr := "0x0fA3E9c7065Cf9b5f513Fb878284f902d167870c"
 	address := types.HexToAddress(addr)

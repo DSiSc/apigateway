@@ -17,12 +17,14 @@ import (
 	"strings"
 	"testing"
 
+	"encoding/hex"
 	cmn "github.com/DSiSc/apigateway/common"
 	ctypes "github.com/DSiSc/apigateway/core/types"
 	"github.com/DSiSc/apigateway/rpc/lib/types"
 	"github.com/DSiSc/craft/rlp"
 	"github.com/DSiSc/craft/types"
 	crafttypes "github.com/DSiSc/craft/types"
+	"github.com/DSiSc/justitia/config"
 	"github.com/DSiSc/repository"
 	wtypes "github.com/DSiSc/wallet/core/types"
 	"github.com/stretchr/testify/assert"
@@ -57,13 +59,23 @@ func TestETransaction_GetTxData(t *testing.T) {
 func TestSendTransaction(t *testing.T) {
 	// -------------------------
 	// Mock:  mockTransaction
-	mockTransaction := ctypes.NewTransaction(uint64(16), &to, value, gas, gasPrice, data, from)
-	mockContract := ctypes.NewTransaction(uint64(17), nil, nil, math.MaxUint64/2, new(big.Int).SetUint64(1), nil, from)
+	nonce := uint64(16)
+	from := ctypes.HexToAddress("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b")
+	to := ctypes.HexToAddress("0x59b3f85ba6eb737fd0fad93bc4b5f92fd8c591de")
+	value := big.NewInt(0x10)
+	gasLimit := uint64(0x5208)
+	gasPrice := big.NewInt(0x1)
+	data := "6080604052348015600f57600080fd5b50603580601d6000396000f3006080604052600080fd00a165627a7a72305820799fbb709d76627f42ecb481ef39ca4cebc2feb3c2314a3a9e3c2b872827cc7b0029"
+	dataB, _ := hex.DecodeString(data)
+	mockTransaction := ctypes.NewTransaction(nonce, &to, value, gasLimit, gasPrice, nil, from)
+	mockContract := ctypes.NewTransaction(nonce+1, nil, nil, gasLimit, gasPrice, dataB, from)
 
 	// SignTx
 	key, _ := wtypes.DefaultTestKey()
-	mockTransaction, _ = wtypes.SignTx(mockTransaction, new(wtypes.FrontierSigner), key)
-	mockContract, _ = wtypes.SignTx(mockContract, new(wtypes.FrontierSigner), key)
+	chainId, _ := config.GetChainIdFromConfig()
+	signer := wtypes.NewEIP155Signer(big.NewInt(int64(chainId)))
+	mockTransaction, _ = wtypes.SignTx(mockTransaction, signer, key)
+	mockContract, _ = wtypes.SignTx(mockContract, signer, key)
 
 	// NOTE(peerlink): tx.hash changed when call tx.Hash()
 	txId := ctypes.TxHash(mockTransaction)
@@ -101,20 +113,23 @@ func TestSendTransaction(t *testing.T) {
 		{
 
 			fmt.Sprintf(`{"jsonrpc": "2.0", "method": "eth_sendTransaction", "id": "0", "params": [{
-              "from": "%s",
-              "to": "%s",
-              "gas": "%s",
-              "gasPrice": "%s",
-              "value": "%s",
-			  "nonce": "%s",
-              "data": "%s"
-              }]}`, request.from, request.to, request.gas, request.gasPrice,
-				request.value, request.nonce, request.data),
-			"", mockTxHash, mockTransaction},
+              "from": "0x%x",
+              "to": "0x%x",
+              "gas": "0x%x",
+              "gasPrice": "0x%x",
+              "value": "0x%x",
+			  "nonce": "0x%x"
+              }]}`, from, to, gasLimit, gasPrice,
+				value, nonce),
+			"", mockTxHash, mockTransaction,
+		},
 		{
 
 			fmt.Sprintf(`{"jsonrpc": "2.0", "method": "eth_sendTransaction", "id": "0", "params": [{
-              "from": "%s"}]}`, request.from),
+             "from": "%s",
+  			 "gas": "0x%x",
+             "gasPrice": "0x%x",
+			 "data":"0x%s"}]}`, request.from, gasLimit, gasPrice, data),
 			"", mockContractHash, mockContract},
 	}
 
@@ -174,13 +189,28 @@ func TestSendTransaction(t *testing.T) {
 
 func TestSendRawTransaction(t *testing.T) {
 	// -------------------------
+	monkey.Patch(config.GetChainIdFromConfig, func() (uint64, error) { return 1, nil })
+	defer monkey.UnpatchAll()
 	// Mock:  mockTransaction
-	mockTransaction := ctypes.NewTransaction(uint64(11), &to, value, gas, gasPrice, data, from)
-	mockContract := ctypes.NewTransaction(uint64(1), nil, nil, math.MaxUint64/2, new(big.Int).SetUint64(1), getBytes(requestContract.data), ctypes.BytesToAddress(getBytes(requestContract.from)))
+	nonce := uint64(16)
+	from := ctypes.HexToAddress("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b")
+	to := ctypes.HexToAddress("0x59b3f85ba6eb737fd0fad93bc4b5f92fd8c591de")
+	value := big.NewInt(0x10)
+	gasLimit := uint64(0x5208)
+	gasPrice := big.NewInt(0x1)
+	data := "6080604052348015600f57600080fd5b50603580601d6000396000f3006080604052600080fd00a165627a7a72305820799fbb709d76627f42ecb481ef39ca4cebc2feb3c2314a3a9e3c2b872827cc7b0029"
+	dataB, _ := hex.DecodeString(data)
+	mockTransaction := ctypes.NewTransaction(nonce, &to, value, gasLimit, gasPrice, make([]byte, 0), from)
+	mockContract := ctypes.NewTransaction(nonce+1, nil, nil, gasLimit, gasPrice, dataB, from)
+
 	// SignTx
 	key, _ := wtypes.DefaultTestKey()
-	mockTransaction, _ = wtypes.SignTx(mockTransaction, new(wtypes.FrontierSigner), key)
-	mockContract, _ = wtypes.SignTx(mockContract, new(wtypes.FrontierSigner), key)
+	chainId, _ := config.GetChainIdFromConfig()
+	signer := wtypes.NewEIP155Signer(big.NewInt(int64(chainId)))
+	mockTransaction, _ = wtypes.SignTx(mockTransaction, signer, key)
+	wtypes.Sender(signer, mockTransaction)
+	mockContract, _ = wtypes.SignTx(mockContract, signer, key)
+	wtypes.Sender(signer, mockContract)
 
 	// NOTE(peerlink): tx.hash changed when call tx.Hash()
 	txId := ctypes.TxHash(mockTransaction)
@@ -207,8 +237,10 @@ func TestSendRawTransaction(t *testing.T) {
 	})
 
 	encodedMockTx, _ := rlp.EncodeToBytes(mockTransaction)
+	mockTransaction.Size.Store(types.StorageSize(len(encodedMockTx)))
 	encodedMockTxStr := fmt.Sprintf("0x%x", encodedMockTx)
 	encodedMockContract, _ := rlp.EncodeToBytes(mockContract)
+	mockContract.Size.Store(types.StorageSize(len(encodedMockContract)))
 	encodedMockContractStr := fmt.Sprintf("0x%x", encodedMockContract)
 
 	// ---------------------------
@@ -300,8 +332,8 @@ func TestGetTransactionByHash(t *testing.T) {
 		{
 
 			fmt.Sprintf(`{"jsonrpc": "2.0", "method": "eth_getTransactionByHash", "id": 1, "params": [
-              "0x5fc451a0d0db609bfeb1d73ebe72b5ac9cd544b47c9b5546e4e12caa5598b10c"]}`),
-			"", `{"jsonrpc":"2.0","id":1,"result":{"blockHash":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","blockNumber":"0x5","from":"0xb60e8dd61c5d32be8058bb8eb970870f07233155","gas":"0x76c0","gasPrice":"0x9184e72a0000","hash":"0x5fc451a0d0db609bfeb1d73ebe72b5ac9cd544b47c9b5546e4e12caa5598b10c","input":"0xd46e8dd67c5d32be8d46e8dd67c5d32be8058bb8eb970870f072445675058bb8eb970870f072445675","nonce":"0x10","to":"0xd46e8dd67c5d32be8058bb8eb970870f07244567","transactionIndex":"0x7","value":"0x0","v":"0x0","r":"0x0","s":"0x0"}}`},
+              "0x95d191e78062c420e863df03311e5a09b28b431ced6e65048362d65515cd5770"]}`),
+			"", `{"jsonrpc":"2.0","id":1,"result":{"blockHash":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","blockNumber":"0x5","from":"0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b","gas":"0x76c0","gasPrice":"0x9184e72a0000","hash":"0x95d191e78062c420e863df03311e5a09b28b431ced6e65048362d65515cd5770","input":"0xd46e8dd67c5d32be8d46e8dd67c5d32be8058bb8eb970870f072445675058bb8eb970870f072445675","nonce":"0x10","to":"0xd46e8dd67c5d32be8058bb8eb970870f07244567","transactionIndex":"0x7","value":"0x0","v":"0x0","r":"0x0","s":"0x0"}}`},
 	}
 	// ------------------------
 	// httptest API
@@ -344,7 +376,7 @@ func TestGetTransactionReceipt(t *testing.T) {
 
 			fmt.Sprintf(`{"jsonrpc": "2.0", "method": "eth_getTransactionReceipt", "id": 1, "params": [
               "0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99"]}`),
-			"", `{"jsonrpc":"2.0","id":1,"result":{"blockHash":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","blockNumber":"0x5","transactionHash":"0x5fc451a0d0db609bfeb1d73ebe72b5ac9cd544b47c9b5546e4e12caa5598b10c","transactionIndex":"0x7","from":"0xb60e8dd61c5d32be8058bb8eb970870f07233155","to":"0xd46e8dd67c5d32be8058bb8eb970870f07244567","root":"e0ogr1SPXLN0gVeOE/bpYcUensG5k214HBBhMjmz6Sk=","status":"0x2","gasUsed":"0x5e6","cumulativeGasUsed":"0x4d7","logsBloom":null,"logs":null,"contractAddress":"0xb60e8dd61c5d32be8058bb8eb970870f07233155"}}`},
+			"", `{"jsonrpc":"2.0","id":1,"result":{"blockHash":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","blockNumber":"0x5","transactionHash":"0x95d191e78062c420e863df03311e5a09b28b431ced6e65048362d65515cd5770","transactionIndex":"0x7","from":"0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b","to":"0xd46e8dd67c5d32be8058bb8eb970870f07244567","root":"e0ogr1SPXLN0gVeOE/bpYcUensG5k214HBBhMjmz6Sk=","status":"0x2","gasUsed":"0x5e6","cumulativeGasUsed":"0x4d7","logsBloom":null,"logs":null,"contractAddress":"0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"}}`},
 	}
 	// ------------------------
 	// httptest API
@@ -372,7 +404,7 @@ func TestGetTransactionByBlockHashAndIndex(t *testing.T) {
 
 			fmt.Sprintf(`{"jsonrpc": "2.0", "method": "eth_getTransactionByBlockHashAndIndex", "id": 1, "params": [
               "0xc6ef2fc5426d6ad6fd9e2a26abeab0aa2411b7ab17f30a99d3cb96aed1d1055b", "0x0"]}`),
-			"", `{"jsonrpc":"2.0","id":1,"result":{"blockHash":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","blockNumber":"0xc","from":"0xb60e8dd61c5d32be8058bb8eb970870f07233155","gas":"0x76c0","gasPrice":"0x9184e72a0000","hash":"0xa10baf6bf5c4defebf8bff69226302351724245327b5cee59c788adfd1473663","input":"0xd46e8dd67c5d32be8d46e8dd67c5d32be8058bb8eb970870f072445675058bb8eb970870f072445675","nonce":"0x10","to":"0xd46e8dd67c5d32be8058bb8eb970870f07244567","transactionIndex":"0x0","value":"0x9184e72a","v":"0x0","r":"0x0","s":"0x0"}}`},
+			"", `{"jsonrpc":"2.0","id":1,"result":{"blockHash":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","blockNumber":"0xc","from":"0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b","gas":"0x76c0","gasPrice":"0x9184e72a0000","hash":"0xbedd625a813484aca74b38242fd7f439735be6211a033bf088c8b7b3656f4192","input":"0xd46e8dd67c5d32be8d46e8dd67c5d32be8058bb8eb970870f072445675058bb8eb970870f072445675","nonce":"0x10","to":"0xd46e8dd67c5d32be8058bb8eb970870f07244567","transactionIndex":"0x0","value":"0x9184e72a","v":"0x0","r":"0x0","s":"0x0"}}`},
 	}
 	// ------------------------
 	// httptest API
@@ -406,12 +438,12 @@ func TestGetTransactionByBlockNumberAndIndex(t *testing.T) {
 
 			fmt.Sprintf(`{"jsonrpc": "2.0", "method": "eth_getTransactionByBlockNumberAndIndex", "id": 1, "params": [
               "0x1b4", "0x0"]}`),
-			"", `{"jsonrpc":"2.0","id":1,"result":{"blockHash":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","blockNumber":"0xc","from":"0xb60e8dd61c5d32be8058bb8eb970870f07233155","gas":"0x76c0","gasPrice":"0x9184e72a0000","hash":"0xa10baf6bf5c4defebf8bff69226302351724245327b5cee59c788adfd1473663","input":"0xd46e8dd67c5d32be8d46e8dd67c5d32be8058bb8eb970870f072445675058bb8eb970870f072445675","nonce":"0x10","to":"0xd46e8dd67c5d32be8058bb8eb970870f07244567","transactionIndex":"0x0","value":"0x9184e72a","v":"0x0","r":"0x0","s":"0x0"}}`},
+			"", `{"jsonrpc":"2.0","id":1,"result":{"blockHash":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","blockNumber":"0xc","from":"0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b","gas":"0x76c0","gasPrice":"0x9184e72a0000","hash":"0xbedd625a813484aca74b38242fd7f439735be6211a033bf088c8b7b3656f4192","input":"0xd46e8dd67c5d32be8d46e8dd67c5d32be8058bb8eb970870f072445675058bb8eb970870f072445675","nonce":"0x10","to":"0xd46e8dd67c5d32be8058bb8eb970870f07244567","transactionIndex":"0x0","value":"0x9184e72a","v":"0x0","r":"0x0","s":"0x0"}}`},
 		{
 
 			fmt.Sprintf(`{"jsonrpc": "2.0", "method": "eth_getTransactionByBlockNumberAndIndex", "id": 1, "params": [
               "latest", "0x0"]}`),
-			"", `{"jsonrpc":"2.0","id":1,"result":{"blockHash":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","blockNumber":"0xc","from":"0xb60e8dd61c5d32be8058bb8eb970870f07233155","gas":"0x76c0","gasPrice":"0x9184e72a0000","hash":"0xa10baf6bf5c4defebf8bff69226302351724245327b5cee59c788adfd1473663","input":"0xd46e8dd67c5d32be8d46e8dd67c5d32be8058bb8eb970870f072445675058bb8eb970870f072445675","nonce":"0x10","to":"0xd46e8dd67c5d32be8058bb8eb970870f07244567","transactionIndex":"0x0","value":"0x9184e72a","v":"0x0","r":"0x0","s":"0x0"}}`},
+			"", `{"jsonrpc":"2.0","id":1,"result":{"blockHash":"0x27b4a20af548f5cb37481578e13f6e961c51e9ec1b9936d781c10613239b3e99","blockNumber":"0xc","from":"0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b","gas":"0x76c0","gasPrice":"0x9184e72a0000","hash":"0xbedd625a813484aca74b38242fd7f439735be6211a033bf088c8b7b3656f4192","input":"0xd46e8dd67c5d32be8d46e8dd67c5d32be8058bb8eb970870f072445675058bb8eb970870f072445675","nonce":"0x10","to":"0xd46e8dd67c5d32be8058bb8eb970870f07244567","transactionIndex":"0x0","value":"0x9184e72a","v":"0x0","r":"0x0","s":"0x0"}}`},
 	}
 	// ------------------------
 	// httptest API
@@ -579,7 +611,7 @@ func TestEstimateGas(t *testing.T) {
               "data": "%s"
               }]}`, request.from, request.to, request.gas, request.gasPrice,
 				request.value, request.nonce, request.data),
-			"", `{"jsonrpc":"2.0","id":1,"result":"0x64"}`},
+			"", `{"jsonrpc":"2.0","id":1,"result":"0x5208"}`},
 	}
 	// ------------------------
 	// httptest API

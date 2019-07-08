@@ -405,7 +405,7 @@ func GetTransactionCount(address apitypes.Address, blockNr apitypes.BlockNumber)
 	}
 	bc, err := repository.NewLatestStateRepository()
 	var block *types.Block
-	if blockNr == apitypes.LatestBlockNumber {
+	if blockNr == apitypes.LatestBlockNumber || blockNr == apitypes.PendingBlockNumber {
 		block = bc.GetCurrentBlock()
 	} else {
 		height := blockNr.Touint64()

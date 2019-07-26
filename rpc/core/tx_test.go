@@ -523,7 +523,7 @@ func TestCall(t *testing.T) {
 			return &evm.EVM{}
 		})
 
-		monkey.Patch(worker.ApplyTransaction, func(*evm.EVM, *crafttypes.Transaction, *common.GasPool) ([]byte, uint64, bool, error, types.Address) {
+		monkey.Patch(worker.ApplyTransaction, func(types.Address, *types.Header, *repository.Repository, *crafttypes.Transaction, *common.GasPool) ([]byte, uint64, bool, error, types.Address) {
 			return getBytes("0x38"), uint64(0), true, nil, types.Address{}
 		})
 

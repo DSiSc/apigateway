@@ -12,7 +12,6 @@ import (
 	"github.com/DSiSc/craft/rlp"
 	craft "github.com/DSiSc/craft/types"
 	"github.com/DSiSc/crypto-suite/crypto"
-	"github.com/DSiSc/evm-NG"
 	"github.com/DSiSc/justitia/config"
 	"github.com/DSiSc/repository"
 	"github.com/DSiSc/txpool"
@@ -809,10 +808,8 @@ func doCall(tx *craft.Transaction, blockNr types.BlockNumber) ([]byte, uint64, b
 		return nil, 0, true, err
 	}
 
-	context := evm.NewEVMContext(*tx, block.Header, bchash, block.Header.CoinBase)
-	evmEnv := evm.NewEVM(context, bchash)
 	gp := new(common.GasPool).AddGas(uint64(65536))
-	result, gas, failed, err, _ := worker.ApplyTransaction(evmEnv, tx, gp)
+	result, gas, failed, err, _ := worker.ApplyTransaction(block.Header.Coinbase, block.Header, bchash, tx, gp)
 	return result, gas, failed, err
 }
 

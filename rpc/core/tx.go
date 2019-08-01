@@ -14,10 +14,13 @@ import (
 	"github.com/DSiSc/crypto-suite/crypto"
 	"github.com/DSiSc/justitia/config"
 	"github.com/DSiSc/repository"
+	"github.com/DSiSc/statedb-NG/util"
 	"github.com/DSiSc/txpool"
 	"github.com/DSiSc/validator/worker"
 	"github.com/DSiSc/validator/worker/common"
 	wtypes "github.com/DSiSc/wallet/core/types"
+	wutils "github.com/DSiSc/wallet/utils"
+	"github.com/DSiSc/web3go/web3"
 	"math"
 	"math/big"
 )
@@ -144,7 +147,7 @@ func SendTransaction(args ctypes.SendTxArgs) (cmn.Hash, error) {
 	key, _ := wtypes.DefaultTestKey()
 	chainId, err := config.GetChainIdFromConfig()
 	if err != nil {
-		log.Error("get chainId failed, err = ", err)
+		log.Error("get chainId failed, err = %v", err)
 		return cmn.Hash{}, err
 	}
 	signer := wtypes.NewEIP155Signer(big.NewInt(int64(chainId)))
@@ -209,10 +212,11 @@ func SendRawTransaction(encodedTx acmn.Bytes) (cmn.Hash, error) {
 
 	tx := new(craft.Transaction)
 	if err := rlp.DecodeBytes(encodedTx, tx); err != nil {
+
 		ethTx := new(craft.ETransaction)
 		err = ethTx.DecodeBytes(encodedTx)
 		if err != nil {
-			log.Info("sendRawTransaction tx decode as ethereum error, err = ", err)
+			log.Info("sendRawTransaction tx decode as ethereum error, err = %v", err)
 			return cmn.Hash{}, err
 		}
 		ethTx.SetTxData(&tx.Data)
@@ -221,17 +225,18 @@ func SendRawTransaction(encodedTx acmn.Bytes) (cmn.Hash, error) {
 	//Caculate from and fill in Transaction
 	chainId, err := config.GetChainIdFromConfig()
 	if err != nil {
-		log.Error("get chainId failed, err = ", err)
+		log.Error("get chainId failed, err = %v", err)
 		return cmn.Hash{}, err
 	}
 
 	from, err := wtypes.Sender(wtypes.NewEIP155Signer(big.NewInt(int64(chainId))), tx)
 	if err != nil {
-		log.Error("get from address failed, err =  ", err)
+		log.Error("get from address failed, err = %v", err)
 		return cmn.Hash{}, err
 	}
 	from_tmp := craft.Address(from)
 	tx.Data.From = &from_tmp
+
 	// give an initValue when nonce is nil
 	// Send Tx to gossip switch
 	go func() {
@@ -242,6 +247,8 @@ func SendRawTransaction(encodedTx acmn.Bytes) (cmn.Hash, error) {
 		monitor.JTMetrics.SwitchTakenTx.Add(1)
 	}()
 	txHash := types.TxHash(tx)
+	log.Info("haitao raw tx: %x", txHash)
+	
 	return (cmn.Hash)(txHash), nil
 }
 
@@ -253,62 +260,112 @@ func SendCrossRawTransaction(encodedTx acmn.Bytes, url string) (cmn.Hash, error)
 		return cmn.Hash{}, err
 	}
 
-	var args ctypes.SendTxArgs
+	//var args ctypes.SendTxArgs
 	// need verify tx is legality提前验证一下
 
+	// need transform tx to sendTxArgs
+	//args.From = util.AddressToHex(tx.Data.From)
+	//args.To = types.Address(tx.Data.Recipient)
+	//args.Data = util.AddressToBytes(tx.Data.From)
+	//args.GasPrice = tx.Data.Price
+	//args.Gas = tx.Data.GasLimit
+	//args.Value = tx.Data.Amount
+	//args.Nonce = tx.Data.AccountNonce
+	//args.Input = tx.Data.Payload
+
 	// TODO：call the destination chain rpc(receiveCrossRawTransaction), like a sendTransaction
-	receiveCrossRawTransactionReq(args)
+	txBytes, _ := rlp.EncodeToBytes(tx)
+	web, err := wutils.NewWeb3("127.0.0.1", "47769", false)
+	if err != nil {
+		return cmn.Hash{}, err
+	}
+
+	txHash, err := callCrossRawTransaction(web, txBytes)
+	if err != nil {
+		return cmn.Hash{}, err
+	}
 
 	// return destination chain's tx hash
-	return cmn.Hash{}, nil
+	return txHash, nil
 }
 
-func receiveCrossRawTransactionReq(args ctypes.SendTxArgs) (cmn.Hash, error) {
+func ReceiveCrossRawTransactionReq(encodedTx acmn.Bytes) (cmn.Hash, error) {
 	monitor.JTMetrics.ApigatewayReceivedTx.Add(1)
+
+	tx := new(craft.Transaction)
+	rlp.DecodeBytes(encodedTx, tx)
+
 	// Patchwork tx，fix from -- get publicAccount
 	addr, err := getPubliceAcccount()
 	if err != nil {
 		return cmn.Hash{}, err
 	}
-	crossFrom := args.From
 
-	args.From = addr
+	crossFrom :=  *tx.Data.From
+
+	tx.Data.From = &addr
 	// like sendTransaction, need sig
 	private := "29ad43a4ebb4a65436d9fb116d471d96516b3d5cc153e045b384664bed5371b9"
 
 	//get nonce
 	bc, _ := repository.NewLatestStateRepository()
-	noncePool := txpool.GetPoolNonce((craft.Address)(args.From))
-	nonceChain := bc.GetNonce((craft.Address)(args.From))
+	noncePool := txpool.GetPoolNonce(*tx.Data.From)
+	nonceChain := bc.GetNonce(*tx.Data.From)
 	nonce := uint64(0)
 	if noncePool > nonceChain {
 		nonce = noncePool + 1
 	} else {
 		nonce = nonceChain
 	}
+	tx.Data.AccountNonce = nonce
+	tx1 := new(craft.Transaction)
+	tx1.Data.AccountNonce = tx.Data.AccountNonce
+	tx1.Data.Price = tx.Data.Price
+	tx1.Data.GasLimit = tx.Data.GasLimit
+	tx1.Data.Recipient = tx.Data.Recipient
+	tx1.Data.From = tx.Data.From
+	tx1.Data.Amount = tx.Data.Amount
 
-	//amount & gasPrice
-	amount := args.Value.ToBigInt()
-	gasPrice := args.GasPrice.ToBigInt()
-	tx := types.NewTransaction(uint64(nonce), args.To, amount, args.Gas.Touint64(), gasPrice, crossFrom.Bytes(), args.From)
+	//payload
+	tx1.Data.Payload = []byte(util.AddressToHex(crossFrom))
 
 	//sign tx
 	priKey, err := crypto.HexToECDSA(private)
 	if err != nil {
 		return cmn.Hash{}, err
 	}
-	chainID := big.NewInt(1)
-	wtypes.SignTx(tx, wtypes.NewEIP155Signer(chainID), priKey)
 
-	return cmn.Hash{}, nil
+	chainId, err := config.GetChainIdFromConfig()
+	if err != nil {
+		return cmn.Hash{}, err
+	}
+
+	chainID := big.NewInt(int64(chainId))
+	tx1, err = wtypes.SignTx(tx1, wtypes.NewEIP155Signer(chainID), priKey)
+	if err != nil {
+		return cmn.Hash{}, err
+	}
+
+	txRlpcode, err := wtypes.EncodeToRLP(tx1)
+	if err != nil {
+		return cmn.Hash{}, err
+	}
+
+	//call the broadcast the tx
+	txHash, err := SendRawTransaction(txRlpcode)
+	if err != nil {
+		return cmn.Hash{}, err
+	}
+
+	return (cmn.Hash)(txHash), nil
 }
 
-func getPubliceAcccount() (types.Address, error) {
+func getPubliceAcccount() (craft.Address, error){
 	//get from config or genesis ?
 	addr := "0x0fA3E9c7065Cf9b5f513Fb878284f902d167870c"
 	address := types.HexToAddress(addr)
 
-	return address, nil
+	return craft.Address(address), nil
 }
 
 //#### eth_getTransactionByHash
@@ -515,9 +572,11 @@ func newRPCPendingTransaction(tx *craft.Transaction) (*ctypes.RPCTransaction, er
 //***
 func GetTransactionReceipt(hash cmn.Hash) (*ctypes.RPCReceipt, error) {
 	// Try to return an already finalized transaction
+	log.Info("GetTransactionReceipt -- coming")
 	bc, _ := repository.NewLatestStateRepository()
 	if tx, blockHash, blockNumber, index, _ := bc.GetTransactionByHash(TypeConvert(&hash)); tx != nil {
 		if receipt, _, _, _, _ := bc.GetReceiptByTxHash(TypeConvert(&hash)); receipt != nil {
+			log.Info("GetTransactionReceipt -- tx, blockNumber %d, index %d", blockNumber, index)
 			return newRPCReceipt(tx, receipt, (cmn.Hash)(blockHash), blockNumber, index)
 		}
 	}
@@ -892,4 +951,16 @@ func Version() (string, error) {
 
 	id := fmt.Sprint(chainId)
 	return id, nil
+}
+
+func callCrossRawTransaction(web *web3.Web3, txBytes []byte) (cmn.Hash, error) {
+	if web == nil {
+		return cmn.Hash{}, errors.New("callCrossRawTransaction has call error web is nil")
+	}
+	hash, err := web.Eth.ReceiveCrossRawTransactionReq(txBytes)
+	if err != nil {
+		return cmn.Hash{}, err
+	}
+
+	return cmn.Hash(hash), nil
 }

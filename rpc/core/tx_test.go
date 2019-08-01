@@ -3,7 +3,9 @@ package core
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/DSiSc/craft/rlp"
 	"github.com/DSiSc/evm-NG"
+	//"github.com/DSiSc/justitia/config"
 	"github.com/DSiSc/monkey"
 	"github.com/DSiSc/txpool"
 	"github.com/DSiSc/validator/worker"
@@ -21,7 +23,6 @@ import (
 	cmn "github.com/DSiSc/apigateway/common"
 	ctypes "github.com/DSiSc/apigateway/core/types"
 	"github.com/DSiSc/apigateway/rpc/lib/types"
-	"github.com/DSiSc/craft/rlp"
 	"github.com/DSiSc/craft/types"
 	crafttypes "github.com/DSiSc/craft/types"
 	"github.com/DSiSc/justitia/config"
@@ -188,6 +189,10 @@ func TestSendTransaction(t *testing.T) {
 }
 
 func TestSendRawTransaction(t *testing.T) {
+
+	//chainId, err := config.GetChainIdFromConfig()
+	//assert.Equal(t, err, nil)
+
 	// -------------------------
 	monkey.Patch(config.GetChainIdFromConfig, func() (uint64, error) { return 1, nil })
 	defer monkey.UnpatchAll()

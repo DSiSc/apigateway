@@ -102,6 +102,7 @@ func doRpcTest(t *testing.T, tests []*Requestdata) {
 		json.Unmarshal(blob, recv)
 
 		b, _ := json.Marshal(recv)
+
 		assert.Equal(t, tt.wantRetrun, string(b))
 	}
 }

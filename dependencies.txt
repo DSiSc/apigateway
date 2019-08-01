@@ -11,3 +11,4 @@ github.com/DSiSc/txpool:master
 github.com/DSiSc/evm-NG:master
 github.com/DSiSc/validator:master
 github.com/DSiSc/crypto-suite:master
+github.com/DSiSc/justitia:master

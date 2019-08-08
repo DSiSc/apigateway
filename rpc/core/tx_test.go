@@ -138,6 +138,11 @@ func TestSendTransaction(t *testing.T) {
 	// httptest API
 	mux := testMux()
 	for i, tt := range tests {
+		txRecvChan := make(chan interface{})
+		go func() {
+			m := <-mockSwCh
+			txRecvChan <- m
+		}()
 		req, _ := http.NewRequest("POST", "http://localhost/", strings.NewReader(tt.payload))
 		rec := httptest.NewRecorder()
 		mux.ServeHTTP(rec, req)
@@ -156,7 +161,7 @@ func TestSendTransaction(t *testing.T) {
 		// --------------------
 		// Test read from swch for SwitchMsg
 		var swMsg interface{}
-		swMsg = <-mockSwCh
+		swMsg = <-txRecvChan
 
 		// assert: Type, Content.
 		assert.Equal(t, reflect.TypeOf(tt.mockTransaction), reflect.TypeOf(swMsg), "swMsg type should be types.Transaction")
@@ -270,6 +275,11 @@ func TestSendRawTransaction(t *testing.T) {
 	// httptest API
 	mux := testMux()
 	for i, tt := range tests {
+		txRecvChan := make(chan interface{})
+		go func() {
+			m := <-mockSwCh
+			txRecvChan <- m
+		}()
 		req, _ := http.NewRequest("POST", "http://localhost/", strings.NewReader(tt.payload))
 		rec := httptest.NewRecorder()
 		mux.ServeHTTP(rec, req)
@@ -288,7 +298,7 @@ func TestSendRawTransaction(t *testing.T) {
 		// --------------------
 		// Test read from swch for SwitchMsg
 		var swMsg interface{}
-		swMsg = <-mockSwCh
+		swMsg = <-txRecvChan
 
 		// assert: Type, Content.
 		assert.Equal(t, reflect.TypeOf(tt.mockTransaction), reflect.TypeOf(swMsg), "swMsg type should be types.Transaction")

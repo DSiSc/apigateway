@@ -2,6 +2,7 @@ package core
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/DSiSc/apigateway/core/types"
 	"github.com/DSiSc/apigateway/rpc/lib/types"
 	"github.com/DSiSc/craft/log"
@@ -100,6 +101,7 @@ func NewHeaders(wsCtx rpctypes.WSRPCContext) (string, error) {
 		for {
 			select {
 			case event := <-sub.EventChan():
+				fmt.Println("sssssssssss")
 				if block, ok := event.(*crafttypes.Block); ok {
 					if resp, err := rpctypes.NewJsonEventNotifyResponse(sub.ID, block.Header); err == nil {
 						wsCtx.WriteRPCResponse(resp)
@@ -171,8 +173,8 @@ func NewPendingTransactions(wsCtx rpctypes.WSRPCContext) (string, error) {
 		for {
 			select {
 			case event := <-sub.EventChan():
-				if txHash, ok := event.(crafttypes.Hash); ok {
-					if resp, err := rpctypes.NewJsonEventNotifyResponse(sub.ID, txHash); err == nil {
+				if tx, ok := event.(*crafttypes.Transaction); ok {
+					if resp, err := rpctypes.NewJsonEventNotifyResponse(sub.ID, tx.Hash.Load()); err == nil {
 						wsCtx.WriteRPCResponse(resp)
 					}
 				}

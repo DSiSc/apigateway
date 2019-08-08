@@ -155,15 +155,10 @@ func SendTransaction(args ctypes.SendTxArgs) (cmn.Hash, error) {
 	if err != nil {
 		return cmn.BytesToHash([]byte("Fail to signTx")), err
 	}
+
+	swch <- tx
+	monitor.JTMetrics.SwitchTakenTx.Add(1)
 	txId := types.TxHash(tx)
-	// Send Tx to gossip switch
-	go func() {
-		// send transaction to switch, wait for transaction ID
-		var swMsg interface{}
-		swMsg = tx
-		swch <- swMsg
-		monitor.JTMetrics.SwitchTakenTx.Add(1)
-	}()
 	return (cmn.Hash)(txId), nil
 }
 
@@ -239,13 +234,8 @@ func SendRawTransaction(encodedTx acmn.Bytes) (cmn.Hash, error) {
 
 	// give an initValue when nonce is nil
 	// Send Tx to gossip switch
-	go func() {
-		// send transaction to switch, wait for transaction ID
-		var swMsg interface{}
-		swMsg = tx
-		swch <- swMsg
-		monitor.JTMetrics.SwitchTakenTx.Add(1)
-	}()
+	swch <- tx
+	monitor.JTMetrics.SwitchTakenTx.Add(1)
 	txHash := types.TxHash(tx)
 	log.Info("haitao raw tx: %x", txHash)
 	

@@ -3,7 +3,7 @@ package core
 import (
 	"encoding/json"
 	"errors"
-	coretypes "github.com/DSiSc/apigateway/core/types"
+	types2 "github.com/DSiSc/apigateway/core/types"
 	"github.com/DSiSc/apigateway/rpc/lib/server"
 	"github.com/DSiSc/apigateway/rpc/lib/types"
 	"github.com/DSiSc/craft/log"
@@ -133,7 +133,8 @@ func TestNewPendingTransactions(t *testing.T) {
 	assert.NotNil(result)
 
 	tx := mockTx()
-	ec.Notify(types.EventAddTxToTxPool, coretypes.TxHash(tx))
+	types2.TxHash(tx)
+	ec.Notify(types.EventAddTxToTxPool, tx)
 	timer := time.NewTicker(time.Second)
 	select {
 	case returnResp := <-twsc.WriteChan:

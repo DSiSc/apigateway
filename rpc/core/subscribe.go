@@ -2,7 +2,6 @@ package core
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/DSiSc/apigateway/core/types"
 	"github.com/DSiSc/apigateway/rpc/lib/types"
 	"github.com/DSiSc/craft/log"
@@ -101,7 +100,6 @@ func NewHeaders(wsCtx rpctypes.WSRPCContext) (string, error) {
 		for {
 			select {
 			case event := <-sub.EventChan():
-				fmt.Println("sssssssssss")
 				if block, ok := event.(*crafttypes.Block); ok {
 					if resp, err := rpctypes.NewJsonEventNotifyResponse(sub.ID, block.Header); err == nil {
 						wsCtx.WriteRPCResponse(resp)

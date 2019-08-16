@@ -238,7 +238,7 @@ func SendRawTransaction(encodedTx acmn.Bytes) (cmn.Hash, error) {
 	monitor.JTMetrics.SwitchTakenTx.Add(1)
 	txHash := types.TxHash(tx)
 	log.Info("haitao raw tx: %x", txHash)
-	
+
 	return (cmn.Hash)(txHash), nil
 }
 
@@ -291,7 +291,7 @@ func ReceiveCrossRawTransactionReq(encodedTx acmn.Bytes) (cmn.Hash, error) {
 		return cmn.Hash{}, err
 	}
 
-	crossFrom :=  *tx.Data.From
+	crossFrom := *tx.Data.From
 
 	tx.Data.From = &addr
 	// like sendTransaction, need sig
@@ -350,7 +350,7 @@ func ReceiveCrossRawTransactionReq(encodedTx acmn.Bytes) (cmn.Hash, error) {
 	return (cmn.Hash)(txHash), nil
 }
 
-func getPubliceAcccount() (craft.Address, error){
+func getPubliceAcccount() (craft.Address, error) {
 	//get from config or genesis ?
 	addr := "0x0fA3E9c7065Cf9b5f513Fb878284f902d167870c"
 	address := types.HexToAddress(addr)

@@ -27,7 +27,8 @@ type Config struct {
 const (
 	// maxBodyBytes controls the maximum number of bytes the
 	// server will read parsing the request body.
-	maxBodyBytes = int64(1000000) // 1MB
+	maxBodyBytes             = int64(1000000) // 1MB
+	defaultHeaderReadTimeout = 10
 )
 
 // StartHTTPServer starts an HTTP server on listenAddr with the given handler.
@@ -59,10 +60,11 @@ func StartHTTPServer(
 	}
 
 	go func() {
-		err := http.Serve(
-			listener,
-			RecoverAndLogHandler(maxBytesHandler{h: handler, n: maxBodyBytes}, logger),
-		)
+		server := http.Server{
+			ReadHeaderTimeout: time.Second * time.Duration(defaultHeaderReadTimeout),
+			Handler:           RecoverAndLogHandler(maxBytesHandler{h: handler, n: maxBodyBytes}, logger),
+		}
+		err := server.Serve(listener)
 		//logger.Error("RPC HTTP server stopped", "err", err)
 		craftlog.ErrorKV("RPC HTTP server stopped", map[string]interface{}{"err": err})
 	}()

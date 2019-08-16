@@ -10,7 +10,7 @@ var Routes = map[string]*rpc.RPCFunc{
 	"eth_sendTransaction":                     rpc.NewRPCFunc(SendTransaction, "args"),
 	"eth_sendRawTransaction":                  rpc.NewRPCFunc(SendRawTransaction, "encodedTx"),
 	"eth_sendCrossRawTransaction":             rpc.NewRPCFunc(SendCrossRawTransaction, "encodedTx, url"),
-	"eth_receiveCrossRawTransactionReq":	   rpc.NewRPCFunc(ReceiveCrossRawTransactionReq, "encodedTx"),
+	"eth_receiveCrossRawTransactionReq":       rpc.NewRPCFunc(ReceiveCrossRawTransactionReq, "encodedTx"),
 	"eth_getBlockByHash":                      rpc.NewRPCFunc(GetBlockByHash, "blockHash, fullTx"),
 	"eth_getBlockByNumber":                    rpc.NewRPCFunc(GetBlockByNumber, "blockNr, fullTx"),
 	"eth_getTransactionByHash":                rpc.NewRPCFunc(GetTransactionByHash, "hash"),

@@ -178,13 +178,12 @@ func SendTransaction(args ctypes.SendTxArgs) (cmn.Hash, error) {
 //- `nonce`: `QUANTITY`  - (optional) Integer of a nonce. This allows to overwrite your own pending transactions that use the same nonce.
 //
 //```js
-//  params: ["0xf8acf8a70b869184e72a00008276c094d46e8dd67c5d32be8058bb8eb970870f0724456794b60e8dd61c5d32be8058bb8eb970870f07233155849184e72aa9d46e8dd67c5d32be8d46e8dd67c5d32be8058bb8eb970870f072445675058bb8eb970870f0724456751ba0a81f79d00e342f5df1c47acabfd0ccc77a3f9ab919a15d5a6699d6de2c4ffbdda07b721e0eb6a50e7bce582dbd71f690004eab409abe7b6cb57b04a240d814ee6dc0c0c0"]
+//params: ["0xf8acf8a70b869184e72a00008276c094d46e8dd67c5d32be8058bb8eb970870f0724456794b60e8dd61c5d32be8058bb8eb970870f07233155849184e72aa9d46e8dd67c5d32be8d46e8dd67c5d32be8058bb8eb970870f072445675058bb8eb970870f0724456751ba0a81f79d00e342f5df1c47acabfd0ccc77a3f9ab919a15d5a6699d6de2c4ffbdda07b721e0eb6a50e7bce582dbd71f690004eab409abe7b6cb57b04a240d814ee6dc0c0c0"]
 //```
 //
 //##### Returns
 //
 //`DATA`, 32 Bytes - the transaction hash, or the zero hash if the transaction is not yet available.
-
 //
 //Use [eth_getTransactionReceipt](#eth_gettransactionreceipt) to get the contract address, after the transaction was mined, when you created a contract.
 //
@@ -238,7 +237,7 @@ func SendRawTransaction(encodedTx acmn.Bytes) (cmn.Hash, error) {
 	monitor.JTMetrics.SwitchTakenTx.Add(1)
 	txHash := types.TxHash(tx)
 	log.Info("haitao raw tx: %x", txHash)
-	
+
 	return (cmn.Hash)(txHash), nil
 }
 
@@ -291,7 +290,7 @@ func ReceiveCrossRawTransactionReq(encodedTx acmn.Bytes) (cmn.Hash, error) {
 		return cmn.Hash{}, err
 	}
 
-	crossFrom :=  *tx.Data.From
+	crossFrom := *tx.Data.From
 
 	tx.Data.From = &addr
 	// like sendTransaction, need sig
@@ -350,7 +349,7 @@ func ReceiveCrossRawTransactionReq(encodedTx acmn.Bytes) (cmn.Hash, error) {
 	return (cmn.Hash)(txHash), nil
 }
 
-func getPubliceAcccount() (craft.Address, error){
+func getPubliceAcccount() (craft.Address, error) {
 	//get from config or genesis ?
 	addr := "0x0fA3E9c7065Cf9b5f513Fb878284f902d167870c"
 	address := types.HexToAddress(addr)

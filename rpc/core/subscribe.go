@@ -47,14 +47,10 @@ type FilterCriteria struct {
 //
 //##### Parameters
 //
-//1. `TAG` - subscription name `"newHeads"`, `"logs"` or `"newPendingTransactions"`（newHeads: new header is appended to the chain; logs: new logs are included in new blocks; newPendingTransactions: new transactions are added to the pending state and are signed with a key that is available in the node）.
-//2. `Object` - the transaction index position.
+//1. `Data` - subscription name `"newHeads"`, `"logs"` or `"newPendingTransactions"`（newHeads: new header is appended to the chain; logs: new logs are included in new blocks; newPendingTransactions: new transactions are added to the pending state and are signed with a key that is available in the node）.
 //
 //```js
-//params: [
-//   '0x29c', // 668
-//   '0x0' // 0
-//]
+//params: ["newHeads"]
 //```
 //
 //##### Returns
@@ -64,15 +60,15 @@ type FilterCriteria struct {
 //##### Example
 //```js
 //// Request
-//curl -X POST --data '{"jsonrpc":"2.0","method":"eth_subscribe","params":["newHeads"],"id":1}'
-//```
+//curl -X POST --data '{"jsonrpc":"2.0","method":"eth_subscribe","params":[{see above}],"id":1}'
 //
 //// Result
-//{
-//"id":1,
-//"jsonrpc": "2.0",
-//"result": "0x919d38fa5c395fa0f677e6554eef74fc7"
-//}
+// {
+//	"id":1,
+//	"jsonrpc": "2.0",
+//	"result": "0x919d38fa5c395fa0f677e6554eef74fc7"
+// }
+//```
 //***
 //Subscribe for events via WebSocket.
 func Subscribe(wsCtx rpctypes.WSRPCContext, rawMsg []json.RawMessage) (string, error) {
@@ -190,7 +186,37 @@ func NewPendingTransactions(wsCtx rpctypes.WSRPCContext) (string, error) {
 	return subscription.ID, nil
 }
 
-//Subscribe for events via WebSocket.
+//#### eth_unsubscribe
+//
+//Unsubscribe events via WebSocket.
+//
+//
+//##### Parameters
+//
+//1. `Data` - subscription id
+//
+//```js
+//params: ["0x919d38fa5c395fa0f677e6554eef74fc7"]
+//```
+//
+//##### Returns
+//
+//unsubscribe result
+//
+//##### Example
+//```js
+//// Request
+//curl -X POST --data '{"jsonrpc":"2.0","method":"eth_unsubscribe","params":[{see above}],"id":1}'
+//
+//// Result
+// {
+//	"id":1,
+//	"jsonrpc": "2.0",
+//	"result": "true"
+// }
+//```
+//***
+//Unsubscribe events via WebSocket.
 func UnSubscribe(wsCtx rpctypes.WSRPCContext, subID string) (bool, error) {
 	err := wsCtx.GetEventSubscriber().Unsubscribe(subID)
 	return nil == err, err

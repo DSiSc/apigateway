@@ -64,11 +64,15 @@ type FilterCriteria struct {
 //##### Example
 //```js
 //// Request
-//curl -X POST --data '{"jsonrpc":"2.0","method":"eth_getTransactionByBlockNumberAndIndex","params":["0x29c", "0x0"],"id":1}'
+//curl -X POST --data '{"jsonrpc":"2.0","method":"eth_subscribe","params":["newHeads"],"id":1}'
 //```
 //
-//Result see [eth_getTransactionByHash](#eth_gettransactionbyhash)
-//
+//// Result
+//{
+//"id":1,
+//"jsonrpc": "2.0",
+//"result": "0x919d38fa5c395fa0f677e6554eef74fc7"
+//}
 //***
 //Subscribe for events via WebSocket.
 func Subscribe(wsCtx rpctypes.WSRPCContext, rawMsg []json.RawMessage) (string, error) {

@@ -1,7 +1,10 @@
 package core
 
 import (
+	"fmt"
 	ctypes "github.com/DSiSc/apigateway/rpc/core/types"
+	"github.com/DSiSc/craft/types"
+	"github.com/DSiSc/repository"
 )
 
 func ChannelInfo() ([]ctypes.ChannelInfo, error) {
@@ -23,4 +26,43 @@ func NodeInfo() ([]ctypes.NodeInfo, error) {
 	}
 	nodeInfos = append(nodeInfos, NodeInfo)
 	return nodeInfos, nil
+}
+
+//#### net_sysContract
+//
+//Get system contracts info.
+//
+//
+//##### Parameters
+//
+//
+//##### Returns
+//
+//`Map` - system contract info:
+//
+//- `Key`: `DATA` - contract name.
+//- `Value`: `DATA` - contract address.
+//
+//##### Example
+//```js
+//// Request
+//curl -X POST --data '{"jsonrpc":"2.0","method":"net_sysContract","id":1}'
+//
+//// Result
+//{
+//  "jsonrpc": "2.0",
+//  "id": "",
+//  "result": {
+//    "DposPbft": "bd770416a3345f91e4b34576cb804a576fa48eb1"
+//  }
+//}
+//```
+//***
+func SystemContract() (map[string]string, error) {
+	bc, _ := repository.NewLatestStateRepository()
+	sysContracts := make(map[string]string)
+	if dposContract, err := bc.Get([]byte(types.DposBftVotingContract)); err == nil {
+		sysContracts[types.DposBftVotingContract] = fmt.Sprintf("%x", dposContract)
+	}
+	return sysContracts, nil
 }

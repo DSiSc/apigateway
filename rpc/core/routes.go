@@ -32,6 +32,7 @@ var Routes = map[string]*rpc.RPCFunc{
 	"net_listening":   rpc.NewRPCFunc(Listening, ""),
 	"net_version":     rpc.NewRPCFunc(Version, ""),
 	"net_nodeInfo":    rpc.NewRPCFunc(NodeInfo, ""),
+	"net_sysContract": rpc.NewRPCFunc(SystemContract, ""),
 	"net_channelInfo": rpc.NewRPCFunc(ChannelInfo, ""),
 }
 

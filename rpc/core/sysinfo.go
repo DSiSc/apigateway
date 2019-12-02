@@ -53,7 +53,8 @@ func NodeInfo() ([]ctypes.NodeInfo, error) {
 //  "jsonrpc": "2.0",
 //  "id": "",
 //  "result": {
-//    "DposPbft": "bd770416a3345f91e4b34576cb804a576fa48eb1"
+//    "DposPbft": "bd770416a3345f91e4b34576cb804a576fa48eb1",
+//    "MspContract": "02370416a3556f91e4a6d576cb804a576fa483da"
 //  }
 //}
 //```
@@ -63,6 +64,9 @@ func SystemContract() (map[string]string, error) {
 	sysContracts := make(map[string]string)
 	if dposContract, err := bc.Get([]byte(types.DposBftVotingContract)); err == nil {
 		sysContracts[types.DposBftVotingContract] = fmt.Sprintf("%x", dposContract)
+	}
+	if mspContract, err := bc.Get([]byte(types.MspContract)); err == nil {
+		sysContracts[types.MspContract] = fmt.Sprintf("%x", mspContract)
 	}
 	return sysContracts, nil
 }
